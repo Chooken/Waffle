@@ -1,15 +1,30 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
+	<OutputType Condition=" '$(Configuration)' == 'Release' ">WinExe</OutputType>
+	<OutputType Condition=" '$(Configuration)' == 'Debug' ">Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 	<PublishAot>true</PublishAot>
+	<RootNamespace>WaffleEngine</RootNamespace>
+	<ApplicationIcon>assets\icon.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="assets\icon.ico" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Raylib-cs" Version="6.0.0" />
   </ItemGroup>
 
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="if exist $(ProjectDir)assets\*.* copy $(ProjectDir)assets\* $(ProjectDir)$(OutDir)" />
+  </Target>
+
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="if exist $(ProjectDir)$(OutDir) RD /S /Q &quot;$(ProjectDir)$(OutDir)&quot;" />
+  </Target>
+	
 </Project>

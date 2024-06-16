@@ -1,9 +1,4 @@
-﻿using Game.Core;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Raylib_cs;
 
 namespace WaffleEngine
 {
@@ -11,14 +6,15 @@ namespace WaffleEngine
     {
         private static Application? Instance;
 
-        private World _GameWorld;
+        private Scene _CurrentScene;
+        private Window _Window;
 
-        public Application(World game_world)
+        public Application(Scene scene)
         {
-            _GameWorld = game_world;
+            _CurrentScene = scene;
         }
 
-        public static void StartWorld(World game_world)
+        public static void StartingScene(Scene scene)
         {
             if (Instance != null)
                 return;
@@ -28,7 +24,7 @@ namespace WaffleEngine
             // Will eventually add a World to the app where
             // Waffle can call Game World code.
 
-            Instance = new Application(game_world);
+            Instance = new Application(scene);
 
             Instance.Init();
 
@@ -43,13 +39,25 @@ namespace WaffleEngine
         public void Init()
         {
             // Init Window and stuff
+
+            _Window = new Window();
         }
 
         public void Run()
         {
-            while (true)
+            while (!_Window.ShouldClose())
             {
-                _GameWorld.InternalUpdate();
+                // Update Game Logic
+                _CurrentScene.InternalUpdate();
+
+                Raylib.ClearBackground(Color.Black);
+
+                Raylib.BeginDrawing();
+
+                // Render Stuff
+                _CurrentScene.Render();
+
+                Raylib.EndDrawing();
             }
         }
     }
