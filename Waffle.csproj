@@ -9,6 +9,7 @@
 	<PublishAot>true</PublishAot>
 	<RootNamespace>WaffleEngine</RootNamespace>
 	<ApplicationIcon>assets\icon.ico</ApplicationIcon>
+	<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,7 +21,7 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="if exist $(ProjectDir)assets\*.* copy $(ProjectDir)assets\* $(ProjectDir)$(OutDir)" />
+    <Exec Command="if exist $(ProjectDir)assets\* xcopy $(ProjectDir)assets\* $(ProjectDir)$(OutDir) /s" />
   </Target>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">

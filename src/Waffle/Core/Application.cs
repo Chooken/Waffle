@@ -1,4 +1,5 @@
 ﻿using Raylib_cs;
+using WaffleEngine.src.Waffle.Core;
 
 namespace WaffleEngine
 {
@@ -7,7 +8,6 @@ namespace WaffleEngine
         private static Application? Instance;
 
         private Scene _CurrentScene;
-        private Window _Window;
 
         public Application(Scene scene)
         {
@@ -34,18 +34,30 @@ namespace WaffleEngine
         public void Exit()
         {
             // Run Exit code.
+
+            Log.Info("Closing Application.");
+
+            AssetLoader.UnloadAllTextures();
         }
 
         public void Init()
         {
             // Init Window and stuff
 
-            _Window = new Window();
+            unsafe
+            {
+                Log.Info("Setting Raylib Logging to internal logging tools.");
+                Raylib.SetTraceLogCallback(&Log.RaylibLog);
+            }
+
+            Window.Init();
+
+            AssetLoader.LoadFolder("core");
         }
 
         public void Run()
         {
-            while (!_Window.ShouldClose())
+            while (!Window.ShouldClose())
             {
                 // Update Game Logic
                 _CurrentScene.InternalUpdate();
@@ -59,6 +71,8 @@ namespace WaffleEngine
 
                 Raylib.EndDrawing();
             }
+
+            Exit();
         }
     }
 }

@@ -4,10 +4,8 @@ namespace WaffleEngine
 {
     public class Mouse
     {
-        private static int x, y;
-
-        public static int X => x;
-        public static int Y => y;
+        public static int X => Raylib.GetMouseX();
+        public static int Y => Raylib.GetMouseY();
 
         public static bool IsLeft() => Raylib.IsMouseButtonDown(Raylib_cs.MouseButton.Left);
         public static bool IsRight() => Raylib.IsMouseButtonDown(Raylib_cs.MouseButton.Right);
