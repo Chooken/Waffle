@@ -36,7 +36,7 @@ namespace WaffleEngine
             Task.Factory.StartNew(() => {
 
                 var files = Directory.EnumerateFiles(full_path, "*.*", SearchOption.AllDirectories)
-                    .Where(s => s.EndsWith(".jpeg") || s.EndsWith(".png"));
+                    .Where(s => s.EndsWith(".jpeg") || s.EndsWith(".png") || s.EndsWith(".jpg"));
 
                 foreach (var file in files)
                 {
@@ -60,6 +60,23 @@ namespace WaffleEngine
             _waiting_for_load.TryDequeue(out (string, string, Image) result);
 
             _texture_dictionary.Add((result.Item1, result.Item2), Raylib.LoadTextureFromImage(result.Item3));
+        }
+
+        public static bool LoadFile(string folder, string file)
+        {
+            string full_path = $"{Environment.CurrentDirectory}/textures/{folder}/{file}";
+
+            if (!File.Exists(full_path))
+            {
+                Log.Error("Tried to load file from \"{0}\" but it doesn't exist.", full_path);
+                return false;
+            }
+
+            Texture2D texture = Raylib.LoadTexture(file);
+
+            _texture_dictionary.Add((folder, Path.GetFileNameWithoutExtension(file)), texture);
+
+            return true;
         }
 
         /// <summary>
@@ -91,6 +108,18 @@ namespace WaffleEngine
             }
 
             return true;
+        }
+
+        public static void UnloadFile(string folder, string file)
+        {
+            if (_texture_dictionary.TryGetValue((folder, file), out Texture2D texture))
+            {
+                Raylib.UnloadTexture(texture);
+                _texture_dictionary.Remove((folder, file));
+                return;
+            }
+
+            Log.Error("Tried to unload file from {0} - {1} but it doesn't exist.", folder, file);
         }
 
         public static void UnloadFolder(string folder)

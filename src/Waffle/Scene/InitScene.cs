@@ -15,6 +15,13 @@ namespace WaffleEngine
 
         private DateTime _start;
 
+        private Scene _next_scene;
+
+        public InitScene(Scene next_scene)
+        {
+            _next_scene = next_scene;
+        }
+
         public override void Start()
         {
             AssetLoader.LoadFolderAsync("core");
@@ -26,12 +33,17 @@ namespace WaffleEngine
             _logo.PixelsPerUnit = 64;
         }
 
+        public override void End()
+        {
+            AssetLoader.UnloadFile("init", "codeaphobic_logo_horizontal");
+        }
+
         public override void Update()
         {
             if (!AssetLoader.IsAsyncFinished || (DateTime.Now - _start).TotalSeconds < 3)
                 return;
 
-            SceneManager.ChangeScene(new TestScene());
+            SceneManager.ChangeScene(_next_scene);
         }
 
         public override void Render()

@@ -11,14 +11,11 @@ namespace WaffleEngine
             if (Instance != null)
                 return;
 
-            // Creates new Application
-            // 
-            // Will eventually add a World to the app where
-            // Waffle can call Game World code.
-
             Instance = new Application();
 
             Instance.Init();
+
+            SceneManager.ChangeScene(new InitScene(scene));
 
             Instance.Run();
         }
@@ -43,8 +40,6 @@ namespace WaffleEngine
             }
 
             Window.Init();
-
-            SceneManager.ChangeScene(new InitScene());
         }
 
         public void Run()
