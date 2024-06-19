@@ -1,11 +1,12 @@
 ﻿using Raylib_cs;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace WaffleEngine.src.Waffle.Core
+namespace WaffleEngine
 {
     public static class AssetLoader
     {
@@ -13,6 +14,53 @@ namespace WaffleEngine.src.Waffle.Core
         /// Dictionary of Loaded Textures indexed by (Folder, TextureName)
         /// </summary>
         private static Dictionary<(string, string), Texture2D> _texture_dictionary = new();
+
+
+        private static int _async_loading = 0;
+        private static ConcurrentQueue<(string, string, Image)> _waiting_for_load = new();
+
+        public static bool IsAsyncFinished => _async_loading == 0 && _waiting_for_load.IsEmpty;
+
+        public static void LoadFolderAsync(string folder)
+        {
+            Interlocked.Increment(ref _async_loading);
+
+            string full_path = $"{Environment.CurrentDirectory}/textures/{folder}";
+
+            if (!Directory.Exists(full_path))
+            {
+                Log.Error("Tried to load files from \"{0}\" but it doesn't exist.", full_path);
+                return;
+            }
+
+            Task.Factory.StartNew(() => {
+
+                var files = Directory.EnumerateFiles(full_path, "*.*", SearchOption.AllDirectories)
+                    .Where(s => s.EndsWith(".jpeg") || s.EndsWith(".png"));
+
+                foreach (var file in files)
+                {
+                    if (file == null)
+                        continue;
+
+                    Image image = Raylib.LoadImage(file);
+
+                    _waiting_for_load.Enqueue((folder, Path.GetFileNameWithoutExtension(file), image));
+                }
+
+                Interlocked.Decrement(ref _async_loading);
+            });
+        }
+
+        public static void UpdateQueue()
+        {
+            if (_waiting_for_load.IsEmpty)
+                return;
+
+            _waiting_for_load.TryDequeue(out (string, string, Image) result);
+
+            _texture_dictionary.Add((result.Item1, result.Item2), Raylib.LoadTextureFromImage(result.Item3));
+        }
 
         /// <summary>
         /// Loads all textures from folder in textures folder.
@@ -25,7 +73,7 @@ namespace WaffleEngine.src.Waffle.Core
 
             if (!Directory.Exists(full_path))
             {
-                Log.Error("Failed to load files from \"{0}\" but it doesn't exist.", full_path);
+                Log.Error("Tried to load files from \"{0}\" but it doesn't exist.", full_path);
                 return false;
             }
 

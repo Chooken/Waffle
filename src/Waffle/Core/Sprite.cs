@@ -5,13 +5,12 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
-using WaffleEngine.src.Waffle.Core;
 
 namespace WaffleEngine
 {
     public class Sprite
     {
-        public static int PixelsPerUnit = 16;
+        public int PixelsPerUnit = 16;
 
         public Vector2 Position;
         public float Rotation;

@@ -10,8 +10,12 @@
             Update();
         }
 
-        public abstract void Update();
+        public virtual void Start() { }
 
-        public abstract void Render();
+        public virtual void Update() { }
+
+        public virtual void Render() { }
+
+        public virtual void End() { }
     }
 }

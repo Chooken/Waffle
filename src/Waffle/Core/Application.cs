@@ -1,18 +1,10 @@
 ﻿using Raylib_cs;
-using WaffleEngine.src.Waffle.Core;
 
 namespace WaffleEngine
 {
     public class Application
     {
         private static Application? Instance;
-
-        private Scene _CurrentScene;
-
-        public Application(Scene scene)
-        {
-            _CurrentScene = scene;
-        }
 
         public static void StartingScene(Scene scene)
         {
@@ -24,7 +16,7 @@ namespace WaffleEngine
             // Will eventually add a World to the app where
             // Waffle can call Game World code.
 
-            Instance = new Application(scene);
+            Instance = new Application();
 
             Instance.Init();
 
@@ -52,22 +44,26 @@ namespace WaffleEngine
 
             Window.Init();
 
-            AssetLoader.LoadFolder("core");
+            SceneManager.ChangeScene(new InitScene());
         }
 
         public void Run()
         {
             while (!Window.ShouldClose())
             {
-                // Update Game Logic
-                _CurrentScene.InternalUpdate();
+                SceneManager.Update();
 
-                Raylib.ClearBackground(Color.Black);
+                AssetLoader.UpdateQueue();
+
+                // Update Game Logic
+                SceneManager.CurrentScene.InternalUpdate();
+
+                Raylib.ClearBackground(Color.White);
 
                 Raylib.BeginDrawing();
 
                 // Render Stuff
-                _CurrentScene.Render();
+                SceneManager.CurrentScene.Render();
 
                 Raylib.EndDrawing();
             }
