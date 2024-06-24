@@ -4,8 +4,11 @@ namespace WaffleEngine
 {
     public static class Window
     {
-        public static int Width => Raylib.GetRenderWidth();
+        public static int Width => Raylib.GetScreenWidth();
         public static int Height => Raylib.GetScreenHeight();
+
+        public static int RenderWidth => Raylib.GetRenderWidth();
+        public static int RenderHeight => Raylib.GetRenderHeight();
 
         public static void Init(int width = 960, int height = 960 / 16 * 9, string title = "Waffle Engine")
         {

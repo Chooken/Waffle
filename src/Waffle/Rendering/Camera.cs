@@ -14,7 +14,7 @@ namespace WaffleEngine
 
         public Camera(float x, float y, float rotation)
         {
-            _camera = new Camera3D(new Vector3(x, y, -10), new Vector3(x,y,1), new Vector3(0,1,0), 8f, CameraProjection.Orthographic);
+            _camera = new Camera3D(new Vector3(x, y, 10), new Vector3(x,y,0), new Vector3(0,1,0), 8f, CameraProjection.Orthographic);
         }
 
         public void SetPosition(float x, float y)
@@ -31,8 +31,8 @@ namespace WaffleEngine
             _camera.Position.X += x;
             _camera.Position.Y += y;
 
-            _camera.Target.X = _camera.Position.X;
-            _camera.Target.Y = _camera.Position.Y;
+            //_camera.Target.X = _camera.Position.X;
+            //_camera.Target.Y = _camera.Position.Y;
         }
 
         public static implicit operator Camera3D(Camera camera) => camera._camera;

@@ -16,7 +16,6 @@ namespace WaffleEngine
         {
             Raylib.BeginMode3D(camera);
 
-            //Raylib.DrawRectangleV(new Vector2(-0.5f,-0.5f), new Vector2(1, 1), Color.Pink);
             sprite.Draw();
 
             Raylib.EndMode3D();

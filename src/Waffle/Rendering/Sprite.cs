@@ -46,7 +46,7 @@ namespace WaffleEngine
             Raylib.DrawTexturePro(
                 texture,
                 new Rectangle(0, 0, -texture.Width, -texture.Height),
-                new Rectangle(-local_width * 0.5f, -local_height * 0.5f, local_width, local_height),
+                new Rectangle(local_width * 0.5f, -local_height * 0.5f, -local_width, local_height),
                 Position,
                 Rotation,
                 Color.White

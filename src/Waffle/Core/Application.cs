@@ -4,20 +4,20 @@ namespace WaffleEngine
 {
     public class Application
     {
-        private static Application? Instance;
+        private static Application _instance;
 
         public static void StartingScene(Scene scene)
         {
-            if (Instance != null)
+            if (_instance != null)
                 return;
 
-            Instance = new Application();
+            _instance = new Application();
 
-            Instance.Init();
+            _instance.Init();
 
             SceneManager.ChangeScene(new InitScene(scene));
 
-            Instance.Run();
+            _instance.Run();
         }
 
         public void Exit()
@@ -27,6 +27,8 @@ namespace WaffleEngine
             Log.Info("Closing Application.");
 
             AssetLoader.UnloadAllTextures();
+
+            SceneManager.CurrentScene.End();
         }
 
         public void Init()
@@ -53,7 +55,7 @@ namespace WaffleEngine
                 // Update Game Logic
                 SceneManager.CurrentScene.InternalUpdate();
 
-                Raylib.ClearBackground(Color.White);
+                Raylib.ClearBackground(Color.DarkGray);
 
                 Raylib.BeginDrawing();
 
