@@ -25,7 +25,7 @@ namespace WaffleEngine
         {
             Interlocked.Increment(ref _async_loading);
 
-            string full_path = $"{Environment.CurrentDirectory}/textures/{folder}";
+            string full_path = $"{Environment.CurrentDirectory}/assets/textures/{folder}";
 
             if (!Directory.Exists(full_path))
             {
@@ -64,7 +64,7 @@ namespace WaffleEngine
 
         public static bool LoadFile(string folder, string file)
         {
-            string full_path = $"{Environment.CurrentDirectory}/textures/{folder}/{file}";
+            string full_path = $"{Environment.CurrentDirectory}/assets/textures/{folder}/{file}";
 
             if (!File.Exists(full_path))
             {
@@ -86,7 +86,7 @@ namespace WaffleEngine
         /// <returns>whether it was successful.</returns>
         public static bool LoadFolder(string folder)
         {
-            string full_path = $"{Environment.CurrentDirectory}/textures/{folder}";
+            string full_path = $"{Environment.CurrentDirectory}/assets/textures/{folder}";
 
             if (!Directory.Exists(full_path))
             {

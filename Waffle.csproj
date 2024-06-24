@@ -19,12 +19,16 @@
     <PackageReference Include="Raylib-cs" Version="6.0.0" />
   </ItemGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="if exist $(ProjectDir)assets\* xcopy $(ProjectDir)assets\* $(ProjectDir)$(OutDir) /s" />
-  </Target>
+    <ItemGroup>
+        <None Include="$(ProjectDir)assets\**" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    </ItemGroup>
 
-  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="if exist $(ProjectDir)$(OutDir) RD /S /Q &quot;$(ProjectDir)$(OutDir)&quot;" />
-  </Target>
+<!--  <Target Name="PostBuild" AfterTargets="PostBuildEvent">-->
+<!--    <Exec Command="if exist $(ProjectDir)assets\* xcopy $(ProjectDir)assets\* $(ProjectDir)$(OutDir) /s" />-->
+<!--  </Target>-->
+
+<!--  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">-->
+<!--    <Exec Command="if exist $(ProjectDir)$(OutDir) RD /S /Q &quot;$(ProjectDir)$(OutDir)&quot;" />-->
+<!--  </Target>-->
 	
 </Project>
