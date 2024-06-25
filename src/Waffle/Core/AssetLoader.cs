@@ -1,10 +1,5 @@
 ﻿using Raylib_cs;
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace WaffleEngine
 {
@@ -16,7 +11,7 @@ namespace WaffleEngine
         private static Dictionary<(string, string), Texture2D> _texture_dictionary = new();
 
 
-        private static int _async_loading = 0;
+        private static int _async_loading;
         private static ConcurrentQueue<(string, string, Image)> _waiting_for_load = new();
 
         public static bool IsAsyncFinished => _async_loading == 0 && _waiting_for_load.IsEmpty;
@@ -40,9 +35,6 @@ namespace WaffleEngine
 
                 foreach (var file in files)
                 {
-                    if (file == null)
-                        continue;
-
                     Image image = Raylib.LoadImage(file);
 
                     _waiting_for_load.Enqueue((folder, Path.GetFileNameWithoutExtension(file), image));
@@ -99,9 +91,6 @@ namespace WaffleEngine
 
             foreach (var file in files)
             {
-                if (file == null)
-                    continue;
-
                 Texture2D texture = Raylib.LoadTexture(file);
 
                 _texture_dictionary.Add((folder, Path.GetFileNameWithoutExtension(file)), texture);

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Numerics;
 
 namespace WaffleEngine
 {
@@ -64,30 +58,6 @@ namespace WaffleEngine
         }
         public static bool QuickInCircumcircle(Vector2 a, Vector2 b, Vector2 c, Vector2 d)
         {
-            Matrix4x4 mat1 = new Matrix4x4();
-
-            mat1.M11 = a.X;
-            mat1.M21 = b.X;
-            mat1.M31 = c.X;
-            mat1.M41 = d.X;
-
-            mat1.M12 = a.Y;
-            mat1.M22 = b.Y;
-            mat1.M32 = c.Y;
-            mat1.M42 = d.Y;
-
-            mat1.M13 = a.X * a.X + a.Y * a.Y;
-            mat1.M23 = b.X * b.X + b.Y * b.Y;
-            mat1.M33 = c.X * c.X + c.Y * c.Y;
-            mat1.M43 = d.X * d.X + d.Y * d.Y;
-
-            mat1.M14 = 1;
-            mat1.M24 = 1;
-            mat1.M34 = 1;
-            mat1.M44 = 1;
-
-            float determinate_mat1 = mat1.GetDeterminant();
-
             float[] mat2 = new float[3 * 3];
 
             mat2[0 + 0 * 3] = a.X - d.X;
@@ -146,7 +116,7 @@ namespace WaffleEngine
                     triangle.B == super_triangle.A || triangle.B == super_triangle.B || triangle.B == super_triangle.C ||
                     triangle.C == super_triangle.A || triangle.C == super_triangle.B || triangle.C == super_triangle.C);
             }).ToList();
-
+            
             vertices.RemoveRange(vertices.Count - 3, 3);
 
             return triangles;
