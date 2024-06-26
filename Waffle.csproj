@@ -16,6 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Flecs.NET.Release" Version="3.2.11" />
     <PackageReference Include="Raylib-cs" Version="6.0.0" />
   </ItemGroup>
 

@@ -3,7 +3,7 @@ using System.Numerics;
 
 namespace WaffleEngine
 {
-    public class Sprite
+    public struct Sprite
     {
         public int PixelsPerUnit = 16;
 
@@ -44,6 +44,23 @@ namespace WaffleEngine
                 new Rectangle(local_width * 0.5f, -local_height * 0.5f, -local_width, local_height),
                 Position,
                 Rotation,
+                Color.White
+            );
+        }
+
+        public void Draw(Transform transform)
+        {
+            Texture2D texture = AssetLoader.GetTexture(_folder, _file);
+            
+            float local_width = (float)texture.Width / PixelsPerUnit;
+            float local_height = (float)texture.Height / PixelsPerUnit;
+            
+            Raylib.DrawTexturePro(
+                texture,
+                new Rectangle(0, 0, -texture.Width, -texture.Height),
+                new Rectangle(local_width * 0.5f, -local_height * 0.5f, -local_width, local_height),
+                new Vector2(transform.Position.X, transform.Position.Y),
+                transform.Rotation.Z,
                 Color.White
             );
         }
