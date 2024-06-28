@@ -1,12 +1,10 @@
-﻿using System.Numerics;
+﻿using Flecs.NET.Core;
+using System.Numerics;
 
 namespace WaffleEngine
 {
     public class InitScene : Scene
     {
-        private Camera _camera = new Camera(0, 0, 0);
-        private Sprite _logo = new Sprite("init", "codeaphobic_logo_horizontal").WithPosition(new Vector2(0, 0));
-
         private DateTime _start;
 
         private Scene _next_scene;
@@ -16,7 +14,7 @@ namespace WaffleEngine
             _next_scene = next_scene;
         }
 
-        public override void Start()
+        public override void Init()
         {
             AssetLoader.LoadFolderAsync("core");
 
@@ -24,25 +22,48 @@ namespace WaffleEngine
 
             _start = DateTime.Now;
 
-            _logo.PixelsPerUnit = 64;
+            this.World.Set(new Camera(0, 0, 0));
+
+            Sprite sprite = new Sprite("init", "codeaphobic_logo_horizontal");
+            sprite.PixelsPerUnit = 64;
+
+            Sprite sprite_1 = new Sprite("init", "WaffleEngine64");
+
+            //this.World.Entity("Logo")
+            //    .Set(new Transform())
+            //    .Set(sprite);
+
+            this.World.Entity("Logo-2")
+                .Set(new Transform { Position = new Vector3(0,0,0) })
+                .Set(sprite_1);
+
+            this.World.Entity("Logo-3")
+                .Set(new Transform { Position = new Vector3(1, 1, 1) })
+                .Set(sprite_1);
+
+            this.World.Entity("Logo-4")
+                .Set(new Transform { Position = new Vector3(-1, -1, -1) })
+                .Set(sprite_1);
+
+            this.World.Routine("Check if loaded")
+                .Kind(Ecs.OnUpdate)
+                .Iter(Update);
+
+            SpriteRenderer.Render(ref this.World);
         }
 
-        public override void End()
-        {
-            AssetLoader.UnloadFile("init", "codeaphobic_logo_horizontal");
-        }
-
-        public override void Update()
+        public void Update(Iter iterator)
         {
             if (!AssetLoader.IsAsyncFinished || (DateTime.Now - _start).TotalSeconds < 3)
                 return;
 
-            SceneManager.ChangeScene(_next_scene);
+            //SceneManager.ChangeScene(_next_scene);
         }
 
-        public override void Render()
+        public override void Deinit()
         {
-            SpriteRenderer.Render(_logo, _camera);
+            AssetLoader.UnloadFile("init", "codeaphobic_logo_horizontal");
+            this.World.Dispose();
         }
     }
 }

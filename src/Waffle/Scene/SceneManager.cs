@@ -19,13 +19,13 @@ namespace WaffleEngine
                 return;
 
             if (_current_scene != null) 
-                _current_scene.End();
+                _current_scene.Deinit();
 
             Log.Info("Changing Scene To {0}", _requested_scene.GetType().Name);
 
             _current_scene = _requested_scene;
 
-            _current_scene.Start();
+            _current_scene.Init();
 
             _requested_scene = null;
         }

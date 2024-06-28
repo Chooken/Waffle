@@ -9,11 +9,11 @@ namespace Game.Core
     {
         int targetFPS = 60;
         Camera camera = new Camera(0, 0, 0);
-        Sprite player = new Sprite("core", "Character").WithPosition(new Vector2(0, 0));
+        Sprite player = new Sprite("core", "Character");
         Mesh mesh = new Mesh();
         Raylib_cs.Model model;
 
-        public override void Start()
+        public void Start()
         {
             List<Vector2> vertices = new List<Vector2>();
             vertices.Add(new Vector2(0f, 0f));
@@ -36,12 +36,12 @@ namespace Game.Core
             //model = Raylib_cs.Raylib.LoadModelFromMesh(mesh);
         }
 
-        public override void End()
+        public void End()
         {
             Raylib_cs.Raylib.UnloadModel(model);
         }
 
-        public override void Update()
+        public void Update()
         {
             //Log.Error("AHHAHAH");
             //Log.Info("Key W: {0}", Keyboard.IsDown(Keycode.W));
@@ -74,7 +74,7 @@ namespace Game.Core
             camera.Move(moveVec.X * Raylib_cs.Raylib.GetFrameTime(), moveVec.Y * Raylib_cs.Raylib.GetFrameTime());
         }
 
-        public override void Render()
+        public void Render()
         {
             //SpriteRenderer.Render(player, camera);
 
@@ -88,6 +88,11 @@ namespace Game.Core
             Raylib_cs.Raylib.EndMode3D();
 
             Raylib_cs.Raylib.DrawFPS(10,10);
+        }
+
+        public override void Init()
+        {
+            
         }
     }
 }

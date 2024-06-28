@@ -26,9 +26,9 @@ namespace WaffleEngine
 
             Log.Info("Closing Application.");
 
-            AssetLoader.UnloadAllTextures();
+            SceneManager.CurrentScene.Deinit();
 
-            SceneManager.CurrentScene.End();
+            AssetLoader.UnloadAllTextures();
         }
 
         public void Init()
@@ -52,15 +52,12 @@ namespace WaffleEngine
 
                 AssetLoader.UpdateQueue();
 
-                // Update Game Logic
-                SceneManager.CurrentScene.InternalUpdate();
-
                 Raylib.ClearBackground(Color.DarkGray);
 
                 Raylib.BeginDrawing();
 
-                // Render Stuff
-                SceneManager.CurrentScene.Render();
+                // Run Ecs
+                SceneManager.CurrentScene.World.Progress();
 
                 Raylib.EndDrawing();
             }
