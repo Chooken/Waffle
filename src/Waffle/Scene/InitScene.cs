@@ -45,19 +45,15 @@ namespace WaffleEngine
                 .Set(new Transform { Position = new Vector3(-1, -1, -1) })
                 .Set(sprite_1);
 
-            this.World.Routine("Check if loaded")
-                .Kind(Ecs.OnUpdate)
-                .Iter(Update);
-
             SpriteRenderer.Render(ref this.World);
         }
 
-        public void Update(Iter iterator)
+        public override void Update()
         {
             if (!AssetLoader.IsAsyncFinished || (DateTime.Now - _start).TotalSeconds < 3)
                 return;
 
-            //SceneManager.ChangeScene(_next_scene);
+            SceneManager.ChangeScene(_next_scene);
         }
 
         public override void Deinit()

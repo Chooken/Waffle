@@ -2,25 +2,18 @@
 
 namespace WaffleEngine
 {
-    public class Application
+    public static class Application
     {
-        private static Application _instance;
-
         public static void StartingScene(Scene scene)
         {
-            if (_instance != null)
-                return;
-
-            _instance = new Application();
-
-            _instance.Init();
+            Init();
 
             SceneManager.ChangeScene(new InitScene(scene));
 
-            _instance.Run();
+            Run();
         }
 
-        public void Exit()
+        public static void Exit()
         {
             // Run Exit code.
 
@@ -31,7 +24,7 @@ namespace WaffleEngine
             AssetLoader.UnloadAllTextures();
         }
 
-        public void Init()
+        public static void Init()
         {
             // Init Window and stuff
 
@@ -44,7 +37,7 @@ namespace WaffleEngine
             Window.Init();
         }
 
-        public void Run()
+        public static void Run()
         {
             while (!Window.ShouldClose())
             {
@@ -52,12 +45,16 @@ namespace WaffleEngine
 
                 AssetLoader.UpdateQueue();
 
+                SceneManager.CurrentScene.Update();
+
                 Raylib.ClearBackground(Color.DarkGray);
 
                 Raylib.BeginDrawing();
 
                 // Run Ecs
                 SceneManager.CurrentScene.World.Progress();
+
+                Raylib.DrawFPS(10, 10);
 
                 Raylib.EndDrawing();
             }
