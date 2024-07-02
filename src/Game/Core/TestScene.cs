@@ -1,5 +1,6 @@
 ﻿using Flecs.NET.Core;
 using System;
+using System.Dynamic;
 using System.IO;
 using System.Numerics;
 using WaffleEngine;
@@ -58,6 +59,12 @@ namespace Game.Core
         //    Raylib_cs.Raylib.DrawFPS(10,10);
         //}
 
+        public struct Character
+        {
+            public Vector3 Origin;
+            public float Multiplier;
+        }
+
         public override void Init()
         {
             this.World.Set(new Camera(0, 0, 0));
@@ -66,12 +73,27 @@ namespace Game.Core
 
             Random random = new Random();
 
-            for (int i = 0; i < 10000; i++)
+            for (int i = 0; i < 200; i++)
             {
                 this.World.Entity()
-                    .Set(new Transform { Position = new Vector3(random.NextSingle() * 14f - 7, random.NextSingle() * 8f - 4, random.NextSingle() * -1f) })
-                    .Set(sprite);
+                    .Set(new Transform())
+                    .Set(sprite)
+                    .Set(new Character
+                    {
+                        Origin = new Vector3(random.NextSingle() * 14f - 7, random.NextSingle() * 8f - 4, random.NextSingle() * -1f),
+                        Multiplier = random.NextSingle() * 2 - 1f
+                    });
             }
+
+            this.World.Routine<Transform, Character>()
+                .Each((ref Transform transform, ref Character character) =>
+                {
+                    transform.Position = new Vector3(
+                        character.Origin.X + (float)Math.Sin((DateTime.Now - DateTime.MinValue).TotalSeconds * character.Multiplier),
+                        character.Origin.Y + (float)Math.Cos((DateTime.Now - DateTime.MinValue).TotalSeconds * character.Multiplier),
+                        character.Origin.Z
+                    );
+                });
 
             SpriteRenderer.Render(ref this.World);
         }

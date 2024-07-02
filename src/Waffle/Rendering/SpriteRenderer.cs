@@ -15,14 +15,14 @@ namespace WaffleEngine
                 .Iter((Iter iterator, Column<Transform> transforms, Column<Sprite> sprites) =>
                 {
                     Raylib.BeginMode3D(iterator.World().Get<Camera>());
-
+                    
                     foreach (int i in iterator)
                     {
                         Texture2D texture = sprites[i].GetTexture();
-
+                        
                         float local_width = (float)texture.Width / sprites[i].PixelsPerUnit;
                         float local_height = (float)texture.Height / sprites[i].PixelsPerUnit;
-
+                        
                         Raylib.DrawTexturePro(
                             texture,
                             new Rectangle(0, 0, -texture.Width, -texture.Height),
@@ -42,7 +42,7 @@ namespace WaffleEngine
             Transform* transform1 = (Transform*)t1;
             Transform* transform2 = (Transform*)t2;
 
-            return Macros.Bool(transform1->Position.Z > transform2->Position.Z) - Macros.Bool(transform1->Position.Z < transform2->Position.Z);
+            return Macros.Bool(transform1->Position.Y < transform2->Position.Y) - Macros.Bool(transform1->Position.Y > transform2->Position.Y);
         }
     }
 }
