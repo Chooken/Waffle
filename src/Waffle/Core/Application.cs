@@ -45,14 +45,14 @@ namespace WaffleEngine
 
                 AssetLoader.UpdateQueue();
 
-                SceneManager.CurrentScene.Update();
+                //SceneManager.CurrentScene.Update();
 
                 Raylib.ClearBackground(Color.DarkGray);
 
                 Raylib.BeginDrawing();
 
                 // Run Ecs
-                SceneManager.CurrentScene.World.Progress();
+                SceneManager.CurrentScene.Update();
 
                 Raylib.DrawFPS(10, 10);
 

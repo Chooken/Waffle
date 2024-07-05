@@ -16,20 +16,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Flecs.NET.Release" Version="3.2.11" />
+    <PackageReference Include="Arch" Version="1.2.8.1-alpha" />
     <PackageReference Include="Raylib-cs" Version="6.0.0" />
   </ItemGroup>
 
-    <ItemGroup>
-        <None Include="$(ProjectDir)assets\**" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-    </ItemGroup>
-
-<!--  <Target Name="PostBuild" AfterTargets="PostBuildEvent">-->
-<!--    <Exec Command="if exist $(ProjectDir)assets\* xcopy $(ProjectDir)assets\* $(ProjectDir)$(OutDir) /s" />-->
-<!--  </Target>-->
-
-<!--  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">-->
-<!--    <Exec Command="if exist $(ProjectDir)$(OutDir) RD /S /Q &quot;$(ProjectDir)$(OutDir)&quot;" />-->
-<!--  </Target>-->
+	<ItemGroup>
+		<None Include="$(ProjectDir)assets\**" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+	</ItemGroup>
 	
 </Project>

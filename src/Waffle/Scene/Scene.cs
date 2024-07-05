@@ -1,4 +1,4 @@
-﻿using Flecs.NET.Core;
+﻿using Arch.Core;
 
 namespace WaffleEngine
 {
@@ -10,6 +10,9 @@ namespace WaffleEngine
 
         public virtual void Update() { }
 
-        public virtual void Deinit() { }
+        public virtual void Deinit() 
+        {
+            World.Destroy(World);
+        }
     }
 }

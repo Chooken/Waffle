@@ -5,9 +5,9 @@ namespace WaffleEngine
     {
         private IInteractableUI _selected;
 
-        Stack<UIElement> _stack;
+        Stack<UIElement> _stack = new();
 
-        public void UpdateUI()
+        public void RenderUI()
         {
             if (_stack.Count == 0) 
                 return;

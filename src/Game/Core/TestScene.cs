@@ -1,4 +1,4 @@
-﻿using Flecs.NET.Core;
+﻿using Arch.Core;
 using System;
 using System.Dynamic;
 using System.IO;
@@ -9,8 +9,10 @@ namespace Game.Core
 {
     public class TestScene : Scene
     {
-        int targetFPS = 60;
-        //Camera camera = new Camera(0, 0, 0);
+        private int _targetFPS = 60;
+        private Camera _camera = new Camera(0, 0, 0);
+        private UIManager _ui_manager = new UIManager();
+
         //Sprite player = new Sprite("core", "Character");
         //Mesh mesh = new Mesh();
         //Raylib_cs.Model model;
@@ -67,51 +69,51 @@ namespace Game.Core
 
         public override void Init()
         {
-            this.World.Set(new Camera(0, 0, 0));
+            _camera = new Camera(0,0,0);
 
             Sprite sprite = new Sprite("core", "Character");
 
             Random random = new Random();
 
-            for (int i = 0; i < 200; i++)
+            for (int i = 0; i < 500; i++)
             {
-                this.World.Entity()
-                    .Set(new Transform())
-                    .Set(sprite)
-                    .Set(new Character
+                this.World.Create(
+                    new Transform(), 
+                    sprite, 
+                    new Character
                     {
                         Origin = new Vector3(random.NextSingle() * 14f - 7, random.NextSingle() * 8f - 4, random.NextSingle() * -1f),
                         Multiplier = random.NextSingle() * 2 - 1f
-                    });
+                    }
+                );
             }
-
-            this.World.Routine<Transform, Character>()
-                .Each((ref Transform transform, ref Character character) =>
-                {
-                    transform.Position = new Vector3(
-                        character.Origin.X + (float)Math.Sin((DateTime.Now - DateTime.MinValue).TotalSeconds * character.Multiplier),
-                        character.Origin.Y + (float)Math.Cos((DateTime.Now - DateTime.MinValue).TotalSeconds * character.Multiplier),
-                        character.Origin.Z
-                    );
-                });
-
-            SpriteRenderer.Render(ref this.World);
         }
 
         public override void Update()
         {
             // Tests Uncapped Framerate.
             if (Keyboard.IsPressed(Keycode.F))
-                Window.SetTargetFPS(targetFPS ^= 60);
+                Window.SetTargetFPS(_targetFPS ^= 60);
 
             //// Tests Resizing.
             if (Keyboard.IsPressed(Keycode.R))
                 Window.Resize(1500, 540);
-        }
 
-        public override void Deinit()
-        {
-            this.World.Dispose();
+            var query = new QueryDescription()
+                .WithAll<Transform, Character>();
+
+            World.Query(query, (ref Transform transform, ref Character character) =>
+            {
+                transform.Position = new Vector3(
+                    character.Origin.X + MathF.Sin(Time.TimeSinceStart * character.Multiplier),
+                    character.Origin.Y + MathF.Cos(Time.TimeSinceStart * character.Multiplier),
+                    character.Origin.Z
+                );
+            });
+
+            SpriteRenderer.RenderYSorted(ref this.World, ref _camera);
+
+            _ui_manager.RenderUI();
         }
     }
 }
