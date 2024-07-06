@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using WaterTrans.GlyphLoader.Geometry;
 
 namespace WaffleEngine
 {

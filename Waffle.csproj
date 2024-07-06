@@ -18,6 +18,7 @@
   <ItemGroup>
     <PackageReference Include="Arch" Version="1.2.8.1-alpha" />
     <PackageReference Include="Raylib-cs" Version="6.0.0" />
+    <PackageReference Include="WaterTrans.GlyphLoader" Version="1.2.0" />
   </ItemGroup>
 
 	<ItemGroup>
