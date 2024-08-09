@@ -1,28 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-	<OutputType Condition=" '$(Configuration)' == 'Release' ">WinExe</OutputType>
-	<OutputType Condition=" '$(Configuration)' == 'Debug' ">Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
-	<PublishAot>true</PublishAot>
 	<RootNamespace>WaffleEngine</RootNamespace>
-	<ApplicationIcon>assets\icon.ico</ApplicationIcon>
+	<Nullable>enable</Nullable>
 	<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	<Configurations>Debug;Release;Dist</Configurations>
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="assets\icon.ico" />
+    <PackageReference Include="Arch" Version="1.2.8" />
+    <PackageReference Include="OpenTK" IsTrimmable="false" Version="5.0.0-pre.10" />
+    <PackageReference Include="StbImageSharp" Version="2.27.14" />
   </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Arch" Version="1.2.8.1-alpha" />
-    <PackageReference Include="Raylib-cs" Version="6.0.0" />
-    <PackageReference Include="WaterTrans.GlyphLoader" Version="1.2.0" />
-  </ItemGroup>
-
-	<ItemGroup>
-		<None Include="$(ProjectDir)assets\**" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-	</ItemGroup>
 	
 </Project>
