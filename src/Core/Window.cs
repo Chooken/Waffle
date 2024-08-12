@@ -16,7 +16,7 @@ namespace WaffleEngine
         public static int RenderWidth => _window.FramebufferSize.X;
         public static int RenderHeight => _window.FramebufferSize.Y;
 
-        public static double UpdateFrequency = 1.0 / 60.0;
+        public static double UpdateFrequency = 0;
 
         public static KeyboardState CurrentKeyboardState;
         public static MouseState CurrentMouseState;
@@ -50,7 +50,8 @@ namespace WaffleEngine
                 ClientSize = (width, height),
                 Title = title,
                 Flags = ContextFlags.Debug,
-                AutoLoadBindings = false
+                AutoLoadBindings = false,
+                Vsync = VSyncMode.On
             };
             
             _window = new NativeWindow(window_settings);

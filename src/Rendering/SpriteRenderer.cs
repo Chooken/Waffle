@@ -139,7 +139,7 @@ public static class SpriteRenderer
         {
             batch.Value.mesh.Bind();
             
-            batch.Key.Enable(ref camera);
+            batch.Key.Enable(camera);
             
             batch.Value.mesh.UpdateVertexData(batch.Value.buffer.Items);
             
@@ -177,7 +177,7 @@ public static class SpriteRenderer
         {
             batch.Value.mesh.Bind();
             
-            batch.Key.Enable(ref camera);
+            batch.Key.Enable(camera);
             
             batch.Value.mesh.UpdateVertexData(batch.Value.buffer.Items);
             

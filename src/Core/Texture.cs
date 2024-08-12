@@ -14,6 +14,7 @@ public class Texture
 
     public static Texture GetTexture(string folder, string file) => AssetLoader.GetTexture(folder, file);
 
+    public Texture() { }
     public Texture(ref ImageResult image) => GenerateTexture(ref image);
 
     public Texture(string path)

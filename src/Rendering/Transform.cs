@@ -23,6 +23,15 @@ public struct Transform
         return this;
     }
 
+    public Transform Translate2D(float x, float y)
+    {
+        Matrix.M14 += x;
+        Matrix.M24 += y;
+        Matrix.M34 = -Matrix.M24;
+
+        return this;
+    }
+
     public Transform SetPosition(float x, float y, float z)
     {
         Matrix.M14 = x;
@@ -36,7 +45,7 @@ public struct Transform
     {
         Matrix.M14 = x;
         Matrix.M24 = y;
-        Matrix.M34 = -y;
+        Matrix.M34 = -Matrix.M24;
 
         return this;
     }

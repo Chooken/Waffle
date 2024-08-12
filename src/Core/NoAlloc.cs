@@ -5,7 +5,7 @@ public static class NoAlloc
     private static string[] negative_ints;
     private static string[] positive_ints;
     
-    private const int MAX_PREGENNED_INTS = 1000;
+    private const int MAX_PREGENNED_INTS = 10000;
 
     public static void Init()
     {
