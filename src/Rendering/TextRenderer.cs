@@ -1,6 +1,5 @@
 ﻿using System.Numerics;
 using OpenTK.Graphics.OpenGL;
-using OpenTK.Mathematics;
 using Vector2 = System.Numerics.Vector2;
 
 namespace WaffleEngine;
@@ -38,9 +37,7 @@ public class TextRenderer
     {
         _text = text;
         _font = font;
-        _shader = new Shader(
-            $"{Environment.CurrentDirectory}/assets/shaders/text_shader.vert", 
-            $"{Environment.CurrentDirectory}/assets/shaders/text_shader.frag");
+        _shader = Shader.Get("core", "text");
 
         _material = new DefaultSpriteMaterial(_shader, null);
         

@@ -22,14 +22,12 @@ namespace WaffleEngine
 
             _camera = new Camera(0, 0, 0);
 
-            _sprite_shader = new Shader(
-                $"{Environment.CurrentDirectory}/assets/shaders/basic_sprite.vert", 
-                $"{Environment.CurrentDirectory}/assets/shaders/basic_sprite.frag");
+            _sprite_shader = Shader.Get("init", "splash");
 
             _default_sprite_material =
                 new DefaultSpriteMaterial(_sprite_shader, Texture.GetTexture("init", "WaffleEngine64"));
 
-            Sprite sprite_1 = new Sprite(_default_sprite_material);
+            Sprite sprite_1 = new Sprite(_default_sprite_material, Vector2.Zero);
 
             this.World.Create(
                 new Transform( ).SetPosition(0, 0, 0),
@@ -59,7 +57,7 @@ namespace WaffleEngine
 
         public override void Deinit()
         {
-            AssetLoader.UnloadFile("init", "codeaphobic_logo_horizontal");
+            AssetLoader.UnloadFolder("init");
             
             base.Deinit();
         }

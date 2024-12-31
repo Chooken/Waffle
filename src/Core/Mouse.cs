@@ -18,49 +18,47 @@ namespace WaffleEngine
         public static bool IsRight() => Window.CurrentMouseState.IsButtonDown((OpenTK.Windowing.GraphicsLibraryFramework.MouseButton)MouseButton.Right);
 
         public static bool IsPressed(int button) => Window.CurrentMouseState.IsButtonPressed((OpenTK.Windowing.GraphicsLibraryFramework.MouseButton)button);
-        public static bool IsPressed(MouseButton button) => Window.CurrentMouseState.IsButtonPressed((OpenTK.Windowing.GraphicsLibraryFramework.MouseButton)button);
 
         public static bool IsDown(int button) => Window.CurrentMouseState.IsButtonDown((OpenTK.Windowing.GraphicsLibraryFramework.MouseButton)button);
-        public static bool IsDown(MouseButton button) => Window.CurrentMouseState.IsButtonDown((OpenTK.Windowing.GraphicsLibraryFramework.MouseButton)button);
     }
 
-    public enum MouseButton
+    public static class MouseButton
     {
         // From Raylib
 
         /// <summary>
         /// Mouse button left
         /// </summary>
-        Left = 0,
+        public const int Left = 0;
 
         /// <summary>
         /// Mouse button right
         /// </summary>
-        Right = 1,
+        public const int Right = 1;
 
         /// <summary>
         /// Mouse button middle (pressed wheel)
         /// </summary>
-        Middle = 2,
+        public const int Middle = 2;
 
         /// <summary>
         /// Mouse button side (advanced mouse device)
         /// </summary>
-        Side = 3,
+        public const int Side = 3;
 
         /// <summary>
         /// Mouse button extra (advanced mouse device)
         /// </summary>
-        Extra = 4,
+        public const int Extra = 4;
 
         /// <summary>
         /// Mouse button forward (advanced mouse device)
         /// </summary>
-        Forward = 5,
+        public const int Forward = 5;
 
         /// <summary>
         /// Mouse button back (advanced mouse device)
         /// </summary>
-        Back = 6
+        public const int Back = 6;
     }
 }

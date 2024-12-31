@@ -10,6 +10,7 @@ public class Font
 
     public GlyphData MissingCharacterData;
 
+
     public Font(string file_path)
     {
         List<Vector2> bezier_points = new();

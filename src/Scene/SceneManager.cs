@@ -6,7 +6,7 @@ namespace WaffleEngine
         private static Scene _current_scene;
         public static Scene CurrentScene => _current_scene;
 
-        private static Scene? _requested_scene;
+        private static Scene _requested_scene;
 
         public static void ChangeScene(Scene scene)
         {

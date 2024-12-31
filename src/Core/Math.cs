@@ -9,6 +9,11 @@ public static class Math
         return (value % mod + mod) % mod;
     }
 
+    public static float Mod(float value, float mod)
+    {
+        return value - mod * MathF.Floor(value / mod);
+    }
+
     public static Vector2 ClosestPointOnLine(Vector2 line_start, Vector2 line_end, Vector2 point)
     {
         Vector2 line_localised = line_end - line_start;

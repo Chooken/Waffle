@@ -98,9 +98,12 @@ public class SpriteMesh : Mesh
     public void UpdateVertexData((Matrix4x4 transform, Vector2 offset, Vector2 size)[] buffer)
     {
         GL.BindBuffer(BufferTarget.ArrayBuffer, VertexDataVboId);
-                
+
         if (buffer.Length > _vertex_data_vbo_size)
+        {
             GL.BufferData(BufferTarget.ArrayBuffer, buffer, BufferUsage.StreamDraw);
+            _vertex_data_vbo_size = buffer.Length;
+        }
         else
             GL.BufferSubData(BufferTarget.ArrayBuffer, 0, buffer);
     }

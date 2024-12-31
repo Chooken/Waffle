@@ -11,6 +11,7 @@ namespace WaffleEngine
         public static DateTime AppStartTime = DateTime.Now;
         public static double TimeSinceStart = (DateTime.Now - AppStartTime).TotalSeconds;
         public static double DeltaTime = 0;
+        public static double UpdateTime = 0;
         public static double AverageFrametime => GetAverageFrametime();
         public static double FramesPerSecond => 1.0 / GetAverageFrametime();
 

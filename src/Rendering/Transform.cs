@@ -1,12 +1,13 @@
 using System.Numerics;
-using OpenTK.Mathematics;
-using Vector3 = System.Numerics.Vector3;
 
 namespace WaffleEngine;
 
 public struct Transform
 {
     public Vector3 Position => new Vector3(Matrix.M14, Matrix.M24, Matrix.M34);
+    public Vector2 Position2D => new Vector2(Matrix.M14, Matrix.M24);
+
+    public Vector3 Scale => new Vector3(Matrix.M11, Matrix.M22, Matrix.M33);
 
     public Matrix4x4 Matrix = Matrix4x4.Identity;
 
@@ -50,7 +51,7 @@ public struct Transform
         return this;
     }
 
-    public Transform Scale(float x, float y, float z)
+    public Transform ScaleRelative(float x, float y, float z)
     {
         Matrix4x4 scale_matrix4 = Matrix4x4.Identity;
         scale_matrix4.M11 = x;

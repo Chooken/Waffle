@@ -24,6 +24,8 @@ public class Texture
         ImageResult image = ImageResult.FromStream(File.OpenRead(path), ColorComponents.RedGreenBlueAlpha);
 
         GenerateTexture(ref image);
+
+        
     }
 
     private void GenerateTexture(ref ImageResult image)
@@ -71,6 +73,26 @@ public class Texture
         Unbind();
     }
 
+    public void SetNearest()
+    {
+        BindTo(0);
+
+        GL.TexParameteri(TextureTarget.Texture2d, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
+        GL.TexParameteri(TextureTarget.Texture2d, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
+
+        Unbind();
+    }
+
+    public void SetLinear()
+    {
+        BindTo(0);
+
+        GL.TexParameteri(TextureTarget.Texture2d, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
+        GL.TexParameteri(TextureTarget.Texture2d, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
+
+        Unbind();
+    }
+
     public void BindTo(TextureUnit texture_unit)
     {
         GL.ActiveTexture(texture_unit);
@@ -78,6 +100,17 @@ public class Texture
 
         _last_bound_unit = texture_unit;
     }
+
+    public void BindTo(int texture_unit)
+    {
+        TextureUnit unit = (TextureUnit)(33984 + texture_unit);
+
+        GL.ActiveTexture(unit);
+        GL.BindTexture(TextureTarget.Texture2d, Handle);
+
+        _last_bound_unit = unit;
+    }
+
 
     public void Unbind()
     {

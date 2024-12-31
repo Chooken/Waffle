@@ -6,6 +6,8 @@ namespace WaffleEngine
 {
     public static class Application
     {
+        public static bool PauseGameloopWhenUnfocused = false;
+
         private static Stopwatch _update_timer = new Stopwatch();
         
         public static void StartingScene(Scene scene)
@@ -26,7 +28,7 @@ namespace WaffleEngine
 
             SceneManager.CurrentScene.Deinit();
 
-            AssetLoader.UnloadAllTextures();
+            AssetLoader.UnloadAll();
         }
 
         public static void Init()
@@ -49,7 +51,7 @@ namespace WaffleEngine
             DateTime application_start_time = DateTime.Now;
 
             _update_timer.Start();
-            while (!Window.ShouldClose())
+            while (!Window.ShouldClose)
             {
                 double elapsed_time = _update_timer.Elapsed.TotalSeconds;
 
@@ -62,19 +64,24 @@ namespace WaffleEngine
                     _update_timer.Restart();
                     
                     Window.ProcessEvents();
-                    
+
                     SceneManager.Update();
 
-                    AssetLoader.UpdateQueue();
+                    AssetLoader.Update();
 
-                    Window.StartFrame();
+                    if (Window.IsFocused || !PauseGameloopWhenUnfocused) 
+                    {
+                        Window.StartFrame();
 
-                    // Run Update
-                    SceneManager.CurrentScene.Update();
+                        // Run Update
+                        SceneManager.CurrentScene.Update();
 
-                    Window.EndFrame();
+                        Time.UpdateTime = _update_timer.Elapsed.TotalMilliseconds;
+
+                        Window.EndFrame();
+                    }
                 }
-                
+
                 // The time we have left to the next update.
                 double timeToNextUpdate = Window.UpdateFrequency - _update_timer.Elapsed.TotalSeconds;
 

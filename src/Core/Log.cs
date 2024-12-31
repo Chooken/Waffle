@@ -4,7 +4,7 @@ namespace WaffleEngine
     public class Log
     {
         [System.Diagnostics.Conditional("DEBUG"), System.Diagnostics.Conditional("RELEASE")]
-        public static void Fatal(string format, params object?[] args)
+        public static void Fatal(string format, params object[] args)
         {
             Console.ForegroundColor = ConsoleColor.Red;
 
@@ -15,7 +15,7 @@ namespace WaffleEngine
         }
 
         [System.Diagnostics.Conditional("DEBUG"), System.Diagnostics.Conditional("RELEASE")]
-        public static void Error(string format, params object?[] args)
+        public static void Error(string format, params object[] args)
         {
             Console.ForegroundColor = ConsoleColor.Red;
 
@@ -26,7 +26,7 @@ namespace WaffleEngine
         }
 
         [System.Diagnostics.Conditional("DEBUG"), System.Diagnostics.Conditional("RELEASE")]
-        public static void Warning(string format, params object?[] args)
+        public static void Warning(string format, params object[] args)
         {
             Console.ForegroundColor = ConsoleColor.Yellow;
 
@@ -37,7 +37,7 @@ namespace WaffleEngine
         }
 
         [System.Diagnostics.Conditional("DEBUG"), System.Diagnostics.Conditional("RELEASE")]
-        public static void Info(string format, params object?[] args)
+        public static void Info(string format, params object[] args)
         {
             Console.ForegroundColor = ConsoleColor.Gray;
 
@@ -48,7 +48,7 @@ namespace WaffleEngine
         }
 
         [System.Diagnostics.Conditional("DEBUG"), System.Diagnostics.Conditional("RELEASE")]
-        public static void Trace(string format, params object?[] args)
+        public static void Trace(string format, params object[] args)
         {
             Console.ForegroundColor = ConsoleColor.DarkGray;
 

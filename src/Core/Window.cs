@@ -13,8 +13,40 @@ namespace WaffleEngine
         
         public static int Width => _window.ClientSize.X;
         public static int Height => _window.ClientSize.Y;
-        public static int RenderWidth => _window.FramebufferSize.X;
-        public static int RenderHeight => _window.FramebufferSize.Y;
+        public static int RenderWidth 
+        { 
+            get 
+            {
+                int[] viewport = new int[4];
+
+                unsafe
+                {
+                    fixed (int* p = viewport)
+                    {
+                        GL.GetIntegerv(GetPName.Viewport, p);
+                    }
+                }
+
+                return viewport[2]; 
+            } 
+        }
+        public static int RenderHeight
+        {
+            get
+            {
+                int[] viewport = new int[4];
+
+                unsafe
+                {
+                    fixed (int* p = viewport)
+                    {
+                        GL.GetIntegerv(GetPName.Viewport, p);
+                    }
+                }
+
+                return viewport[3];
+            }
+        }
 
         public static double UpdateFrequency = 0;
 
@@ -44,12 +76,11 @@ namespace WaffleEngine
             SetThreadAffinityMask(GetCurrentThread(), new IntPtr(1));
             
             timeBeginPeriod(8);
-            
+
             NativeWindowSettings window_settings = new NativeWindowSettings
             {
                 ClientSize = (width, height),
                 Title = title,
-                Flags = ContextFlags.Debug,
                 AutoLoadBindings = false,
                 Vsync = VSyncMode.On
             };
@@ -73,12 +104,14 @@ namespace WaffleEngine
                 GLFW.SetWindowAttrib(_window.WindowPtr, WindowAttribute.Resizable, false);
             }
 
-            GL.ClearColor(0, 0.5f, 1, 1);
+            GL.ClearColor(34f / 255, 147f / 255, 76f / 255, 1);
         }
 
-        public static bool IsMinimised() => _window.WindowState == WindowState.Minimized;
+        public static bool IsMinimised => _window.WindowState == WindowState.Minimized;
 
-        public static unsafe bool ShouldClose() => GLFW.WindowShouldClose(_window.WindowPtr);
+        public static bool IsFocused => _window.IsFocused;
+
+        public static unsafe bool ShouldClose => GLFW.WindowShouldClose(_window.WindowPtr);
 
         public static void Close() => _window.Close();
 

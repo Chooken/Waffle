@@ -53,6 +53,20 @@ public class QuadMesh : Mesh
         return mesh;
     }
 
+    public void SetTransform(Transform transform)
+    {
+        float[] quad_vertices = {
+            //Position          Texture coordinates
+            transform.Position.X + transform.Scale.X * 0.5f,  transform.Position.Y + transform.Scale.Y * 0.5f, 0.0f, 1.0f, 1.0f, // top right
+            transform.Position.X + transform.Scale.X * 0.5f,  transform.Position.Y - transform.Scale.Y * 0.5f, 0.0f, 1.0f, 0.0f, // bottom right
+            transform.Position.X - transform.Scale.X * 0.5f,  transform.Position.Y - transform.Scale.Y * 0.5f, 0.0f, 0.0f, 0.0f, // bottom left
+            transform.Position.X - transform.Scale.X * 0.5f,  transform.Position.Y + transform.Scale.Y * 0.5f, 0.0f, 0.0f, 1.0f  // top left
+        };
+
+        GL.BindBuffer(BufferTarget.ArrayBuffer, _vertex_buffer_object);
+        GL.BufferData(BufferTarget.ArrayBuffer, quad_vertices, BufferUsage.DynamicDraw);
+    }
+
     public override void Unload()
     {
         GL.DeleteBuffer(_element_buffer_object);

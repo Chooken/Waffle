@@ -45,6 +45,12 @@ public class RenderTexture : Texture
         {
             Log.Error("Framebuffer Error: {0}", error);
         }
+        else 
+        {
+            Log.Info("Loaded Texture ID: {0} [RenderTexture]", Handle);
+        }
+
+        GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
     }
 
     public void UpdateRenderTexture(int width, int height)

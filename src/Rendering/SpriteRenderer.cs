@@ -45,8 +45,7 @@ public static class SpriteRenderer
 
     private static void GetSpriteBatches(ref World world)
     {
-        var query_desc = new QueryDescription()
-            .WithAll<Transform, Sprite>();
+        var query_desc = Sprite.Query;
 
         foreach (var batch in _sprite_batches.Values)
         {
@@ -66,15 +65,17 @@ public static class SpriteRenderer
 
             sprite_mat.M11 *= (float)material.Texture.Width / sprite.PixelsPerUnit;
             sprite_mat.M22 *= (float)material.Texture.Height / sprite.PixelsPerUnit;
-            
+
+            sprite_mat.M14 += sprite.Offset.X / sprite.PixelsPerUnit;
+            sprite_mat.M24 += sprite.Offset.Y / sprite.PixelsPerUnit;
+
             _sprite_batches[material].buffer.Add((sprite_mat, Vector2.Zero, Vector2.One));
         });
     }
     
     private static void GetOpaqueSpriteBatches(ref World world)
     {
-        var query_desc = new QueryDescription()
-            .WithAll<Transform, SpriteOpaque>();
+        var query_desc = SpriteOpaque.Query;
 
         foreach (var batch in _opaque_sprite_batches.Values)
         {
@@ -92,8 +93,11 @@ public static class SpriteRenderer
 
             Matrix4x4 sprite_mat = transform.Matrix;
 
-            sprite_mat.M11 *= (float)material.Texture.Width / sprite.PixelsPerUnit;
-            sprite_mat.M22 *= (float)material.Texture.Height / sprite.PixelsPerUnit;
+            //sprite_mat.M11 *= (float)material.Texture.Width / sprite.PixelsPerUnit;
+            //sprite_mat.M22 *= (float)material.Texture.Height / sprite.PixelsPerUnit;
+
+            //sprite_mat.M14 += sprite.Offset.X / sprite.PixelsPerUnit;
+            //sprite_mat.M24 += sprite.Offset.Y / sprite.PixelsPerUnit;
 
             _opaque_sprite_batches[material].buffer.Add((sprite_mat, Vector2.Zero, Vector2.One));
         });
