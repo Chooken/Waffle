@@ -1,0 +1,11 @@
+using VYaml.Emitter;
+using VYaml.Parser;
+
+namespace WaffleEngine;
+
+public interface ISerializable
+{
+    public void Serialize(ref Utf8YamlEmitter emitter);
+
+    public bool TryDeserialize(ref YamlParser parser);
+}
