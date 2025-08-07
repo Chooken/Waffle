@@ -6,7 +6,7 @@ namespace WaffleEngine.Rendering;
 
 public struct ColorTargetSettings
 {
-    public RenderTexture RenderTexture;
+    public GpuTexture GpuTexture;
     public Color ClearColor;
     public LoadOperation LoadOperation;
     public StoreOperation StoreOperation;
@@ -61,14 +61,14 @@ public sealed class RenderPass(ColorTargetSettings colorTargetSettings, Material
 {
     public unsafe void Submit(IntPtr commandBuffer)
     {
-        if (colorTargetSettings.RenderTexture.Texture == IntPtr.Zero)
+        if (colorTargetSettings.GpuTexture.Handle == IntPtr.Zero)
         {
             WLog.Error("RenderPass was given a null texture");
             return;
         }
         
         SDL.GPUColorTargetInfo colorTargetInfo = new SDL.GPUColorTargetInfo();
-        colorTargetInfo.Texture = colorTargetSettings.RenderTexture.Texture;
+        colorTargetInfo.Texture = colorTargetSettings.GpuTexture.Handle;
         colorTargetInfo.ClearColor = new SDL.FColor
         {
             R = colorTargetSettings.ClearColor.r, 
@@ -96,7 +96,7 @@ public sealed class BlitPass : IPass
 {
     private readonly RenderPass? _renderPass;
     
-    public BlitPass(RenderTexture source, RenderTexture destination, bool clear)
+    public BlitPass(GpuTexture source, GpuTexture destination, bool clear)
     {
         if (!ShaderManager.TryGetShader("BuiltinShaders/blit", out Shader? shader))
         {
@@ -125,7 +125,7 @@ public sealed class BlitPass : IPass
         ColorTargetSettings colorTargetSettings = new ColorTargetSettings
         {
             ClearColor = new Color(0.0f, 0.0f, 0.0f, 0.0f),
-            RenderTexture = destination,
+            GpuTexture = destination,
             LoadOperation = clear ? LoadOperation.Clear : LoadOperation.Load,
             StoreOperation = StoreOperation.Store,
         };

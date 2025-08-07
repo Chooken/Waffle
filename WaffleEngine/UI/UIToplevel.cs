@@ -11,12 +11,12 @@ public class UIToplevel
     private Value<uint> _childCount;
 
     private Queue _queue;
-    private RenderTexture _uiTexture;
+    private GpuTexture _uiTexture;
 
     public UIToplevel(WindowSdl window)
     {
         Window = window;
-        _uiTexture = new RenderTexture(Window);
+        _uiTexture = new GpuTexture(Window);
         _childCount = new Value<uint>(0);
         _queue = new Queue();
         
@@ -47,7 +47,7 @@ public class UIToplevel
         ColorTargetSettings colorTargetSettings = new ColorTargetSettings
         {
             ClearColor = new Color(0f, 0f, 0f, 0f),
-            RenderTexture = _uiTexture,
+            GpuTexture = _uiTexture,
             LoadOperation = LoadOperation.Clear,
             StoreOperation = StoreOperation.Store,
         };
@@ -61,7 +61,7 @@ public class UIToplevel
         _queue.AddPass(renderPass);
     }
 
-    public RenderTexture Render()
+    public GpuTexture Render()
     {
         if (Root is null)
             return _uiTexture;

@@ -1,4 +1,3 @@
-using System.Text.Json.Serialization;
 using SDL3;
 
 namespace WaffleEngine.Rendering;
@@ -8,9 +7,9 @@ public interface IPreprocess
     public void Run(Queue queue);
 }
 
-public class GetSwapchain(WindowSdl window, RenderTexture texture) : IPreprocess
+public class GetSwapchain(WindowSdl window, ref GpuTexture texture) : IPreprocess
 {
-    private RenderTexture _texture = texture;
+    private GpuTexture _texture = texture;
 
     public void Run(Queue queue)
     {
@@ -64,25 +63,23 @@ public class Queue
         }
     }
     
-    internal bool TryGetSwapchainTexture(Window window, ref RenderTexture texture)
+    internal bool TryGetSwapchainTexture(Window window, ref GpuTexture texture)
     {
-        if (CommandBuffer == null)
+        if (CommandBuffer == IntPtr.Zero)
         {
             WLog.Error("Command buffer wasn't acquired", "Queue");
             return false;
         }
         
-        IntPtr texturePtr;
+        IntPtr handle;
 
-        if (!SDL.WaitAndAcquireGPUSwapchainTexture(CommandBuffer, ((WindowSdl)window).WindowPtr, out texturePtr, out uint width, out uint height))
+        if (!SDL.WaitAndAcquireGPUSwapchainTexture(CommandBuffer, ((WindowSdl)window).WindowPtr, out handle, out uint width, out uint height))
         {
             WLog.Error("Failed to acquire a swapchain texture", "SDL");
             return false;
         }
-        
-        texture.Texture = texturePtr;
-        texture.Width = width;
-        texture.Height = height;
+
+        texture.Set(width, height, handle);
         
         return true;
     }

@@ -11,15 +11,8 @@ public class Material
     {
         _shader = shader;
     }
-
-    public void AddTexture(Texture texture, uint slot)
-    {
-        _shader._samplerCount++;
-        
-        _binds.Add(new Bind(texture, slot));
-    }
     
-    public void AddTexture(RenderTexture texture, uint slot)
+    public void AddTexture(GpuTexture texture, uint slot)
     {
         _shader._samplerCount++;
         

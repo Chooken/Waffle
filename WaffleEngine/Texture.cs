@@ -1,21 +1,19 @@
 using System.Runtime.InteropServices;
+using GarbagelessSharp;
 using SDL3;
 using StbImageSharp;
 using WaffleEngine.Rendering;
 
 namespace WaffleEngine;
 
-public unsafe class Texture : IGpuUploadable, IGpuBindable
+public unsafe class Texture : IGpuUploadable
 {
-    private IntPtr _gpuHandle;
-    private IntPtr _sampler;
+    public int Width => _surface.Value.Width;
+    public int Height => _surface.Value.Height;
+    public Span<byte> Data => new Span<byte>((void *)_surface.Value.Pixels, Width * Height * 4);
     
-    private IntPtr _surface;
-    
-    public readonly uint Width;
-    public readonly uint Height;
-
-    private IntPtr _data;
+    private Unmanaged<SDL.Surface> _surface;
+    private GpuTexture _gpuTexture;
     
     public Texture(string path)
     {
@@ -29,59 +27,22 @@ public unsafe class Texture : IGpuUploadable, IGpuBindable
         _surface = SDL.ConvertSurface(startSurface, SDL.PixelFormat.ABGR8888);
         SDL.FlipSurface(_surface, SDL.FlipMode.Vertical);
         
-        var surface = SDL.PointerToStructure<SDL.Surface>(_surface) ?? default;
-        
-        Width = (uint)surface.Width;
-        Height = (uint)surface.Height;
-        
-        _data = surface.Pixels;
+        //var surface = SDL.PointerToStructure<SDL.Surface>(_surface) ?? default;
         
         SDL.DestroySurface(startSurface);
-        
-        var samplerCreateInfo = new SDL.GPUSamplerCreateInfo
-        {
-            MinFilter = SDL.GPUFilter.Linear,
-            MagFilter = SDL.GPUFilter.Linear,
-            MipmapMode = SDL.GPUSamplerMipmapMode.Linear,
-            AddressModeU = SDL.GPUSamplerAddressMode.Repeat,
-            AddressModeV = SDL.GPUSamplerAddressMode.Repeat,
-            AddressModeW = SDL.GPUSamplerAddressMode.Repeat,
-        };
 
-        _sampler = SDL.CreateGPUSampler(Device._gpuDevicePtr, samplerCreateInfo);
-        
-        var textureCreateInfo = new SDL.GPUTextureCreateInfo
-        {
-            Type = SDL.GPUTextureType.Texturetype2D,
-            Format = SDL.GPUTextureFormat.R8G8B8A8Unorm,
-            Width = Width,
-            Height = Height,
-            LayerCountOrDepth = 1,
-            NumLevels = 1,
-            Usage = SDL.GPUTextureUsageFlags.Sampler
-        };
-
-        _gpuHandle = SDL.CreateGPUTexture(Device._gpuDevicePtr, textureCreateInfo);
+        _gpuTexture = new GpuTexture((uint)Width, (uint)Height);
     }
 
     public void Bind(IntPtr renderPass, uint slot)
     {
-        SDL.GPUTextureSamplerBinding binding = new SDL.GPUTextureSamplerBinding
-        {
-            Texture = _gpuHandle,
-            Sampler = _sampler
-        };
-        
-        IntPtr ptr = (IntPtr)(&binding);
-        
-        SDL.BindGPUVertexSamplers(renderPass, slot, ptr, 1);
-        SDL.BindGPUFragmentSamplers(renderPass, slot, ptr, 1);
+        _gpuTexture.Bind(renderPass, slot);
     }
 
     public void UploadToGpu(IntPtr copyPass)
     {
         SDL.GPUTransferBufferCreateInfo transferCreateInfo = new SDL.GPUTransferBufferCreateInfo();
-        transferCreateInfo.Size = Width * Height * 4;
+        transferCreateInfo.Size = (uint)Width * (uint)Height * 4;
         transferCreateInfo.Usage = SDL.GPUTransferBufferUsage.Upload;
 
         IntPtr transferBuffer = SDL.CreateGPUTransferBuffer(Device._gpuDevicePtr, transferCreateInfo);
@@ -89,9 +50,8 @@ public unsafe class Texture : IGpuUploadable, IGpuBindable
         var dataPtr = SDL.MapGPUTransferBuffer(Device._gpuDevicePtr, transferBuffer, false);
 
         Span<byte> transferData = new(dataPtr.ToPointer(), (int)(Width * Height * 4));
-        Span<byte> data = new((void*)_data, (int)(Width * Height * 4));
         
-        data.CopyTo(transferData);
+        Data.CopyTo(transferData);
 
         SDL.UnmapGPUTransferBuffer(Device._gpuDevicePtr, transferBuffer);
 
@@ -100,13 +60,15 @@ public unsafe class Texture : IGpuUploadable, IGpuBindable
         info.Offset = 0;
 
         SDL.GPUTextureRegion region = new SDL.GPUTextureRegion();
-        region.Texture = _gpuHandle;
-        region.W = Width;
-        region.H = Height;
+        region.Texture = _gpuTexture.Handle;
+        region.W = (uint)Width;
+        region.H = (uint)Height;
         region.D = 1;
 
         SDL.UploadToGPUTexture(copyPass, info, region, true);
 
         SDL.ReleaseGPUTransferBuffer(Device._gpuDevicePtr, transferBuffer);
     }
+
+    public static implicit operator GpuTexture(Texture value) => value._gpuTexture;
 }

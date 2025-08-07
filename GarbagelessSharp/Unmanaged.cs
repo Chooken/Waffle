@@ -13,6 +13,11 @@ public unsafe struct Unmanaged<T> : IDisposable where T : unmanaged
         *_pointer = value;
     }
     
+    public Unmanaged(IntPtr value)
+    {
+        _pointer = (T*)value;
+    }
+    
     public void Free() => Dispose();
 
     public void Dispose()
@@ -40,4 +45,7 @@ public unsafe struct Unmanaged<T> : IDisposable where T : unmanaged
 
     public static implicit operator Unmanaged<T>(T value) => new Unmanaged<T>(value);
     public static implicit operator T*(Unmanaged<T> value) => value._pointer;
+    public static implicit operator IntPtr(Unmanaged<T> value) => (IntPtr)value._pointer;
+
+    public static implicit operator Unmanaged<T>(IntPtr value) => new Unmanaged<T>(value);
 }

@@ -10,13 +10,13 @@ public class Renderer
     
     private Shader _shader;
     private Queue _queue;
-    private RenderTexture _renderTexture = new();
+    private GpuTexture _renderTexture = new();
 
     private Buffer<Vertex> vertices;
     private Buffer<int> indices;
 
     private Texture texture;
-    private RenderTexture text;
+    private GpuTexture text;
 
     private Value<uint> instances = new Value<uint>(1);
 
@@ -61,7 +61,7 @@ public class Renderer
         
         //Create the render Queue
 
-        text = new RenderTexture(128, 128, window);
+        text = new GpuTexture(128, 128, window);
         
         Material material = new Material(_shader);
         material.AddBuffer(vertices, 0);
@@ -72,12 +72,12 @@ public class Renderer
         ColorTargetSettings colorTargetSettings = new ColorTargetSettings
         {
             ClearColor = new Color(0.6f, 0.6f, 0.6f, 1.0f),
-            RenderTexture = text,
+            GpuTexture = text,
             LoadOperation = LoadOperation.Clear,
             StoreOperation = StoreOperation.Store,
         };
         
-        _queue.AddPreprocess(new GetSwapchain(_window, _renderTexture));
+        _queue.AddPreprocess(new GetSwapchain(_window, ref _renderTexture));
         RenderPass renderPass = new RenderPass(colorTargetSettings, material);
         renderPass.AddCommand(new DrawIndexedPrimatives(6, instances, 0, 0, 0));
         _queue.AddPass(renderPass);
@@ -88,7 +88,7 @@ public class Renderer
         ui.Root = new UIElement()
             .SetColor(new Color(0, 1, 1, 1));
 
-        RenderTexture uiTexture = ui.Render();
+        GpuTexture uiTexture = ui.Render();
         BlitPass blitPass2 = new BlitPass(uiTexture, _renderTexture, false);
         _queue.AddPass(blitPass2);
     }
