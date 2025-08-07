@@ -18,6 +18,13 @@ public class Material
         
         _binds.Add(new Bind(texture, slot));
     }
+    
+    public void AddTexture(RenderTexture texture, uint slot)
+    {
+        _shader._samplerCount++;
+        
+        _binds.Add(new Bind(texture, slot));
+    }
 
     public void AddBuffer<T>(Buffer<T> buffer, uint slot) where T : unmanaged
     {
@@ -29,6 +36,11 @@ public class Material
         }
         
         _binds.Add(new Bind(buffer, slot));
+    }
+
+    public void Build()
+    {
+        _shader.Build();
     }
 
     public void Bind(IntPtr pass)

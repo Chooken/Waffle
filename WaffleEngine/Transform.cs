@@ -68,18 +68,18 @@ public struct Transform : ISerializable
         emitter.WriteString("position");
         emitter.BeginSequence(SequenceStyle.Flow);
         
-        emitter.WriteFloat(Position.X);
-        emitter.WriteFloat(Position.Y);
-        emitter.WriteFloat(Position.Z);
+        emitter.WriteFloat(Position.x);
+        emitter.WriteFloat(Position.y);
+        emitter.WriteFloat(Position.z);
         
         emitter.EndSequence();
         
         emitter.WriteString("scale");
         emitter.BeginSequence(SequenceStyle.Flow);
         
-        emitter.WriteFloat(Scale.X);
-        emitter.WriteFloat(Scale.Y);
-        emitter.WriteFloat(Scale.Z);
+        emitter.WriteFloat(Scale.x);
+        emitter.WriteFloat(Scale.y);
+        emitter.WriteFloat(Scale.z);
         
         emitter.EndSequence();
         

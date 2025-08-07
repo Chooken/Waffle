@@ -19,5 +19,9 @@
         <Content Include="BuiltinShaders\**" CopyToOutputDirectory="Always"  />
         <Content Include="runtimes/**" CopyToOutputDirectory="Always" />
     </ItemGroup>
+    
+    <ItemGroup>
+      <ProjectReference Include="..\GarbagelessSharp\GarbagelessSharp.csproj" />
+    </ItemGroup>
 
 </Project>

@@ -92,34 +92,50 @@ public sealed class RenderPass(ColorTargetSettings colorTargetSettings, Material
     }
 }
 
-public sealed class BlitPass(RenderTexture source, RenderTexture destination) : IPass
+public sealed class BlitPass : IPass
 {
-    public unsafe void Submit(IntPtr commandBuffer)
+    private readonly RenderPass? _renderPass;
+    
+    public BlitPass(RenderTexture source, RenderTexture destination, bool clear)
     {
-        var blitInfo = new SDL.GPUBlitInfo
+        if (!ShaderManager.TryGetShader("BuiltinShaders/blit", out Shader? shader))
         {
-            ClearColor = new SDL.FColor(0, 0, 0, 0),
-            Source = new SDL.GPUBlitRegion
-            {
-                W = source.Width,
-                H = source.Height,
-                X = 0,
-                Y = 0,
-                Texture = source.Texture,
-            },
-            Destination = new SDL.GPUBlitRegion
-            {
-                W = destination.Width,
-                H = destination.Height,
-                X = 0,
-                Y = 0,
-                Texture = destination.Texture,
-            },
-            Filter = SDL.GPUFilter.Nearest,
-            LoadOp = SDL.GPULoadOp.Clear,
-            Cycle = 1,
-        };
+            WLog.Error("Shader not found", "Renderer");
+            return;
+        }
         
-        SDL.BlitGPUTexture(commandBuffer, blitInfo);
+        shader.SetPipelineSettings(new PipelineSettings()
+        {
+            ColorBlendOp = BlendOp.Add,
+            AlphaBlendOp = BlendOp.Add,
+            SrcColorBlendFactor = BlendFactor.SrcAlpha,
+            DstColorBlendFactor = BlendFactor.OneMinusSrcAlpha,
+            SrcAlphaBlendFactor = BlendFactor.SrcAlpha,
+            DstAlphaBlendFactor = BlendFactor.OneMinusSrcAlpha,
+            ColorTargetFormat = TextureFormat.B8G8R8A8Unorm,
+            PrimitiveType = PrimitiveType.TriangleList,
+            FillMode = FillMode.Fill,
+            VertexInputRate = VertexInputRate.Vertex,
+        });
+        
+        Material material = new Material(shader);
+        material.AddTexture(source, 0);
+        material.Build();
+        
+        ColorTargetSettings colorTargetSettings = new ColorTargetSettings
+        {
+            ClearColor = new Color(0.0f, 0.0f, 0.0f, 0.0f),
+            RenderTexture = destination,
+            LoadOperation = clear ? LoadOperation.Clear : LoadOperation.Load,
+            StoreOperation = StoreOperation.Store,
+        };
+
+        _renderPass = new RenderPass(colorTargetSettings, material);
+        _renderPass.AddCommand(new DrawPrimatives(3, 1, 0, 0));
+    }
+    
+    public void Submit(IntPtr commandBuffer)
+    {
+        _renderPass?.Submit(commandBuffer);
     }
 }

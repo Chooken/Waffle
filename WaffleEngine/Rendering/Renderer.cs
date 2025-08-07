@@ -25,6 +25,7 @@ public class Renderer
     public Renderer(WindowSdl window)
     {
         _window = window;
+        _queue = new Queue();
         
         texture = new Texture("textures/texture.png");
         
@@ -49,8 +50,7 @@ public class Renderer
         indices.Add(2);
         indices.Add(3);
         
-        // Upload Buffer to GPU
-        _queue = new Queue();
+        //Upload Buffer to GPU
         var copyPass = new CopyPass();
         copyPass.AddCommand(new UploadBufferToGpu(vertices));
         copyPass.AddCommand(new UploadBufferToGpu(indices));
@@ -59,7 +59,7 @@ public class Renderer
         _queue.Submit();
         _queue.Clear();
         
-        // Create the render Queue
+        //Create the render Queue
 
         text = new RenderTexture(128, 128, window);
         
@@ -67,10 +67,7 @@ public class Renderer
         material.AddBuffer(vertices, 0);
         material.AddBuffer(indices, 0);
         material.AddTexture(texture, 0);
-        
-        _shader.Build();
-        
-        _shader.ReleaseGpuShaders();
+        material.Build();
         
         ColorTargetSettings colorTargetSettings = new ColorTargetSettings
         {
@@ -84,7 +81,7 @@ public class Renderer
         RenderPass renderPass = new RenderPass(colorTargetSettings, material);
         renderPass.AddCommand(new DrawIndexedPrimatives(6, instances, 0, 0, 0));
         _queue.AddPass(renderPass);
-        BlitPass blitPass = new BlitPass(text, _renderTexture);
+        BlitPass blitPass = new BlitPass(text, _renderTexture, true);
         _queue.AddPass(blitPass);
 
         ui = new UIToplevel(window);
@@ -92,14 +89,14 @@ public class Renderer
             .SetColor(new Color(0, 1, 1, 1));
 
         RenderTexture uiTexture = ui.Render();
-        BlitPass blitPass2 = new BlitPass(uiTexture, _renderTexture);
+        BlitPass blitPass2 = new BlitPass(uiTexture, _renderTexture, false);
         _queue.AddPass(blitPass2);
     }
     
     internal void Render()
     {
-        instances.SetValue(instances + 1);
-        ui.Render();
+        // instances.SetValue(instances + 1);
+        // ui.Render();
         _queue.Submit();
     }
 }

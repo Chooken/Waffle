@@ -31,8 +31,8 @@ public class UIToplevel
             ColorBlendOp = BlendOp.Add,
             AlphaBlendOp = BlendOp.Add,
             SrcColorBlendFactor = BlendFactor.SrcAlpha,
-            SrcAlphaBlendFactor = BlendFactor.SrcAlpha,
             DstColorBlendFactor = BlendFactor.OneMinusSrcAlpha,
+            SrcAlphaBlendFactor = BlendFactor.SrcAlpha,
             DstAlphaBlendFactor = BlendFactor.OneMinusSrcAlpha,
             ColorTargetFormat = TextureFormat.B8G8R8A8Unorm,
             PrimitiveType = PrimitiveType.TriangleList,
@@ -40,11 +40,13 @@ public class UIToplevel
             VertexInputRate = VertexInputRate.Vertex,
         });
         
-        shader.Build();
+        Material material = new Material(shader);
+        material.AddBuffer(UIElement.GpuData, 0);
+        material.Build();
         
         ColorTargetSettings colorTargetSettings = new ColorTargetSettings
         {
-            ClearColor = new Color(0.6f, 0.6f, 0.6f, 1.0f),
+            ClearColor = new Color(0f, 0f, 0f, 0f),
             RenderTexture = _uiTexture,
             LoadOperation = LoadOperation.Clear,
             StoreOperation = StoreOperation.Store,
@@ -54,14 +56,9 @@ public class UIToplevel
         copyPass.AddCommand(new UploadBufferToGpu(UIElement.GpuData));
         _queue.AddPass(copyPass);
 
-        Material material = new Material(shader);
-        material.AddBuffer(UIElement.GpuData, 0);
-
         RenderPass renderPass = new RenderPass(colorTargetSettings, material);
-        renderPass.AddCommand(new DrawPrimatives(6, _childCount, 0, 0));
+        renderPass.AddCommand(new DrawPrimatives(6, 1, 0, 0));
         _queue.AddPass(renderPass);
-        
-        Root?.AddToBuffer(Vector3.Zero);
     }
 
     public RenderTexture Render()
@@ -70,12 +67,13 @@ public class UIToplevel
             return _uiTexture;
         
         Root.Update();
-        
-        if (Root.Dirty)
-            Root.AddToBuffer(Vector3.Zero);
 
-        _childCount.SetValue((uint)UIElement.GpuData.Count);
-        
+        if (Root.Dirty)
+        {
+            Root.AddToBuffer(Vector3.Zero);
+            _childCount.SetValue((uint)UIElement.GpuData.Count);
+        }
+
         _queue.Submit();
 
         return _uiTexture;

@@ -1,4 +1,4 @@
-using System.Numerics;
+using System.Runtime.InteropServices;
 using WaffleEngine.Rendering;
 
 namespace WaffleEngine.UI;
@@ -35,11 +35,12 @@ public class UIElement
             Size = new Vector2(Width.Value, Height.Value),
             Color = Color,
         });
+        
         Dirty = false;
 
         foreach (var child in _uiElements)
         {
-            child.AddToBuffer(position with { Z = position.Z + 1 });
+            child.AddToBuffer(position with { z = position.z + 1 });
         }
     }
 
