@@ -31,17 +31,29 @@ public static class ShaderSerializer
         emitter.BeginMapping();
         
         emitter.WriteString("vertex-entry");
-        emitter.WriteString(shader._vertexEntry);
+        emitter.WriteString(shader.VertexEntry);
         
         emitter.WriteString("fragment-entry");
-        emitter.WriteString(shader._fragmentEntry);
+        emitter.WriteString(shader.FragmentEntry);
         
         emitter.WriteString("format");
-        emitter.WriteString(shader._format.ToString());
+        emitter.WriteString(shader.Format.ToString());
+        
+        emitter.WriteString("Samplers");
+        emitter.WriteInt32(shader.Samplers);
+        
+        emitter.WriteString("UniformBuffers");
+        emitter.WriteInt32(shader.UniformBuffers);
+        
+        emitter.WriteString("StorageBuffers");
+        emitter.WriteInt32(shader.StorageBuffers);
+        
+        emitter.WriteString("StorageTextures");
+        emitter.WriteInt32(shader.StorageTextures);
         
         emitter.EndMapping();
         
-        File.WriteAllBytes($"{path}.shaderdata", shader._bytecode);
+        File.WriteAllBytes($"{path}.shaderdata", shader.Bytecode);
         File.WriteAllBytes($"{path}.shaderinfo", buffer.WrittenSpan);
 
         return true;
@@ -110,8 +122,60 @@ public static class ShaderSerializer
             WLog.Error($"Failed to parse shader format from {path}.shaderinfo", "Shader Deserializer");
             return false;
         }
+        
+        if (!parser.TryReadScalarAsString(out string? samplersKey))
+        {
+            WLog.Error($"Expected Samplers found: {samplersKey}");
+            return false;
+        }
+        if (!parser.TryReadScalarAsUInt32(out uint samplers))
+        {
+            WLog.Error("Failed to read Samplers value from file");
+            return false;
+        }
+        
+        if (!parser.TryReadScalarAsString(out string? uniformBuffersKey))
+        {
+            WLog.Error($"Expected Uniform Buffers found: {uniformBuffersKey}");
+            return false;
+        }
+        if (!parser.TryReadScalarAsUInt32(out uint uniformBuffers))
+        {
+            WLog.Error("Failed to read Uniform Buffers value from file");
+            return false;
+        }
+        
+        if (!parser.TryReadScalarAsString(out string? storageBufferKey))
+        {
+            WLog.Error($"Expected Storage Buffers found: {storageBufferKey}");
+            return false;
+        }
+        if (!parser.TryReadScalarAsUInt32(out uint storageBuffers))
+        {
+            WLog.Error("Failed to read Storage Buffers value from file");
+            return false;
+        }
+        
+        if (!parser.TryReadScalarAsString(out string? storageTexturesKey))
+        {
+            WLog.Error($"Expected Storage Textures found: {storageTexturesKey}");
+            return false;
+        }
+        if (!parser.TryReadScalarAsUInt32(out uint storageTextures))
+        {
+            WLog.Error("Failed to read Storage Textures value from file");
+            return false;
+        }
 
-        shader = new Shader(shaderData, vertexEntry!, fragmentEntry!, format);
+        shader = new Shader(
+            shaderData, 
+            vertexEntry!, 
+            fragmentEntry!, 
+            format,
+            samplers,
+            uniformBuffers,
+            storageBuffers,
+            storageTextures);
         
         return true;
     }

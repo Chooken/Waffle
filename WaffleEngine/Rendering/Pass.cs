@@ -104,7 +104,7 @@ public sealed class BlitPass : IPass
             return;
         }
         
-        shader.SetPipelineSettings(new PipelineSettings()
+        shader.SetPipeline(new PipelineSettings()
         {
             ColorBlendOp = BlendOp.Add,
             AlphaBlendOp = BlendOp.Add,
@@ -120,7 +120,6 @@ public sealed class BlitPass : IPass
         
         Material material = new Material(shader);
         material.AddTexture(source, 0);
-        material.Build();
         
         ColorTargetSettings colorTargetSettings = new ColorTargetSettings
         {

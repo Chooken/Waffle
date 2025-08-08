@@ -4,118 +4,103 @@ using WaffleEngine.Rendering;
 
 namespace WaffleEngine;
 
-public sealed unsafe class Shader
+public sealed unsafe class Shader : IDisposable
 {
-    internal byte[] _bytecode;
-    internal string _vertexEntry;
-    private IntPtr _vertexEntryPtr;
-    internal string _fragmentEntry;
-    private IntPtr _fragmentEntryPtr;
-    internal ShaderFormat _format;
-    internal uint _samplerCount = 0;
-    internal uint _uniformBufferCount = 0;
-    internal uint _storageBufferCount = 0;
-    internal uint _storageTextureCount = 0;
-    
-    private IntPtr _gpuVertexShader;
-    private IntPtr _gpuFragmentShader;
+    public byte[] Bytecode { get; private set; }
+    public string VertexEntry { get; private set; }
+    public string FragmentEntry { get; private set; }
+    public ShaderFormat Format { get; private set; }
+    public int Samplers { get; private set; }
+    public int UniformBuffers { get; private set; }
+    public int StorageBuffers { get; private set; }
+    public int StorageTextures { get; private set; }
 
-    private PipelineSettings _pipelineSettings;
-    private Pipeline? _pipeline;
+    public IntPtr VertexHandle { get; private set; }
+    public IntPtr FragmentHandle { get; private set; }
     
-    public Shader(byte[] bytecode, string vertexEntry, string fragmentEntry, ShaderFormat format)
+    public Pipeline? Pipeline { get; private set; }
+
+    public Shader(
+        byte[] bytecode, 
+        string vertexEntry, 
+        string fragmentEntry, 
+        ShaderFormat format, 
+        uint samplers, 
+        uint uniformBuffers, 
+        uint storageBuffers, 
+        uint storageTextures)
     {
-        _bytecode = bytecode;
-        _vertexEntry = vertexEntry;
-        _vertexEntryPtr = Marshal.StringToHGlobalAnsi(vertexEntry);
-        _fragmentEntry = fragmentEntry;
-        _fragmentEntryPtr = Marshal.StringToHGlobalAnsi(fragmentEntry);
-        _format = format;
-        _pipelineSettings = PipelineSettings.Default;
-    }
-    
-    public Shader(byte[] bytecode, string vertexEntry, string fragmentEntry, ShaderFormat format, PipelineSettings pipelineSettings)
-    {
-        _bytecode = bytecode;
-        _vertexEntry = vertexEntry;
-        _vertexEntryPtr = Marshal.StringToHGlobalAnsi(vertexEntry);
-        _fragmentEntry = fragmentEntry;
-        _fragmentEntryPtr = Marshal.StringToHGlobalAnsi(fragmentEntry);
-        _format = format;
-        _pipelineSettings = pipelineSettings;
+        Bytecode = bytecode;
+        VertexEntry = vertexEntry;
+        FragmentEntry = fragmentEntry;
+        Format = format;
+        Samplers = (int) samplers;
+        UniformBuffers = (int) uniformBuffers;
+        StorageBuffers = (int) storageBuffers;
+        StorageTextures = (int) storageTextures;
+        
+        Build();
     }
 
-    public void SetPipelineSettings(PipelineSettings pipelineSettings) => _pipelineSettings = pipelineSettings;
-
-    public void Build()
+    private void Build()
     {
-        if (_gpuVertexShader != IntPtr.Zero || _gpuFragmentShader != IntPtr.Zero)
-            return;
+        var vertexEntryPtr = Marshal.StringToHGlobalAnsi(VertexEntry);
+        var fragmentEntryPtr = Marshal.StringToHGlobalAnsi(FragmentEntry);
         
-        var vertexInfo = BuildShaderInfo(_vertexEntryPtr, SDL.GPUShaderStage.Vertex);
-        var fragmentInfo = BuildShaderInfo(_fragmentEntryPtr, SDL.GPUShaderStage.Fragment);
+        SDL.GPUShaderCreateInfo shaderInfo;
         
-        _gpuVertexShader = SDL.CreateGPUShader(Device._gpuDevicePtr, vertexInfo);
-        _gpuFragmentShader = SDL.CreateGPUShader(Device._gpuDevicePtr, fragmentInfo);
+        fixed (byte* bytecodePtr = Bytecode)
+        {
+            shaderInfo = new SDL.GPUShaderCreateInfo()
+            {
+                Code = (IntPtr)bytecodePtr,
+                CodeSize = (uint)Bytecode.Length,
+                Entrypoint = vertexEntryPtr,
+                Stage = SDL.GPUShaderStage.Vertex,
+                Format = (SDL.GPUShaderFormat)Format,
+                NumSamplers = (uint)Samplers,
+                NumUniformBuffers = (uint)UniformBuffers,
+                NumStorageBuffers = (uint)StorageBuffers,
+                NumStorageTextures = (uint)StorageTextures
+            };
+        }
+        
+        VertexHandle = SDL.CreateGPUShader(Device._gpuDevicePtr, shaderInfo);
 
-        if (!Pipeline.TryBuild(_pipelineSettings, this, out _pipeline))
+        shaderInfo.Entrypoint = fragmentEntryPtr;
+        shaderInfo.Stage = SDL.GPUShaderStage.Fragment;
+        
+        FragmentHandle = SDL.CreateGPUShader(Device._gpuDevicePtr, shaderInfo);
+        
+        Marshal.FreeHGlobal(vertexEntryPtr);
+        Marshal.FreeHGlobal(fragmentEntryPtr);
+        
+        if (!Pipeline.TryBuild(PipelineSettings.Default, this, out Pipeline pipeline))
             WLog.Error("Failed to Build Pipeline", "Shader");
+
+        Pipeline = pipeline;
     }
 
-    private SDL.GPUShaderCreateInfo BuildShaderInfo(IntPtr entryPoint, SDL.GPUShaderStage stage)
+    public void SetPipeline(PipelineSettings settings)
     {
-        SDL.GPUShaderCreateInfo shaderInfo = new SDL.GPUShaderCreateInfo();
-        
-        fixed (byte* bytecodePtr = _bytecode)
-        {
-            shaderInfo.Code = (IntPtr)bytecodePtr;
-        }
-        
-        shaderInfo.CodeSize = (UIntPtr)_bytecode.Length;
-        
-        shaderInfo.Entrypoint = entryPoint;
-        shaderInfo.Stage = stage;
+        if (!Pipeline.TryBuild(PipelineSettings.Default, this, out Pipeline pipeline))
+            WLog.Error("Failed to Build Pipeline", "Shader");
 
-        shaderInfo.Format = (SDL.GPUShaderFormat)_format;
-        shaderInfo.NumSamplers = _samplerCount;
-        shaderInfo.NumUniformBuffers = _uniformBufferCount;
-        shaderInfo.NumStorageBuffers = _storageBufferCount;
-        shaderInfo.NumStorageTextures = _storageTextureCount;
-        return shaderInfo;
+        Pipeline = pipeline;
     }
-
-    public bool TryGetShaders(out IntPtr vertexShader, out IntPtr fragmentShader)
-    {
-        vertexShader = _gpuVertexShader;
-        fragmentShader = _gpuFragmentShader;
-        
-        if (vertexShader == IntPtr.Zero)
-        {
-            WLog.Error("Gpu Vertex Shader was not built", "Shader");
-            return false;
-        }
-        
-        if (fragmentShader == IntPtr.Zero)
-        {
-            WLog.Error("Gpu Fragment Shader was not built", "Shader");
-            return false;
-        }
-        
-        return true;
-    }
-
+    
     public void ReleaseGpuShaders()
     {
-        if (_gpuVertexShader != IntPtr.Zero)
+        if (VertexHandle != IntPtr.Zero)
         {
-            SDL.ReleaseGPUShader(Device._gpuDevicePtr, _gpuVertexShader);
-            _gpuVertexShader = IntPtr.Zero;
+            SDL.ReleaseGPUShader(Device._gpuDevicePtr, VertexHandle);
+            VertexHandle = IntPtr.Zero;
         }
         
-        if (_gpuFragmentShader != IntPtr.Zero)
+        if (FragmentHandle != IntPtr.Zero)
         {
-            SDL.ReleaseGPUShader(Device._gpuDevicePtr, _gpuFragmentShader);
-            _gpuFragmentShader = IntPtr.Zero;
+            SDL.ReleaseGPUShader(Device._gpuDevicePtr, FragmentHandle);
+            FragmentHandle = IntPtr.Zero;
         }
     }
 
@@ -124,14 +109,14 @@ public sealed unsafe class Shader
         ReleaseGpuShaders();
     }
 
-    public void Bind(IntPtr renderPass)
+    public void Bind(IntPtr pass)
     {
-        if (_pipeline is null)
+        if (Pipeline is null)
         {
-            WLog.Error("Pipeline is not created.", "Shader");
+            WLog.Error("Unable to Bind Shader as pipeline is not created.", "Shader");
             return;
         }
         
-        _pipeline.Bind(renderPass);
+        Pipeline.Bind(pass);
     }
 }

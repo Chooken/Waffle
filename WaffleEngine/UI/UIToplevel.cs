@@ -26,7 +26,7 @@ public class UIToplevel
             return;
         }
         
-        shader.SetPipelineSettings(new PipelineSettings()
+        shader.SetPipeline(new PipelineSettings()
         {
             ColorBlendOp = BlendOp.Add,
             AlphaBlendOp = BlendOp.Add,
@@ -42,7 +42,6 @@ public class UIToplevel
         
         Material material = new Material(shader);
         material.AddBuffer(UIElement.GpuData, 0);
-        material.Build();
         
         ColorTargetSettings colorTargetSettings = new ColorTargetSettings
         {

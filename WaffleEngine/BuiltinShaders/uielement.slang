@@ -10,7 +10,7 @@ struct VertexOutput {
     float4 Position : SV_Position;
 }
 
-RWStructuredBuffer<UIElement> uiElements;
+StructuredBuffer<UIElement> uiElements;
 
 static const uint triangleIndices[6] = {0, 1, 2, 3, 2, 1};
 static const float2 vertexPos[4] = {

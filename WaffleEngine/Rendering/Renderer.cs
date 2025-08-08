@@ -67,7 +67,6 @@ public class Renderer
         material.AddBuffer(vertices, 0);
         material.AddBuffer(indices, 0);
         material.AddTexture(texture, 0);
-        material.Build();
         
         ColorTargetSettings colorTargetSettings = new ColorTargetSettings
         {

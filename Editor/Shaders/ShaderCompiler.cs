@@ -79,6 +79,11 @@ public class ShaderCompiler
 
         string? vertexEntry = null;
         string? fragmentEntry = null;
+        
+        uint samplerCount = 0;
+        uint uniformBufferCount = 0;
+        uint storageBufferCount = 0;
+        uint storageTextureCount = 0;
 
         foreach (var entry in reflection.EntryPoints)
         {
@@ -92,6 +97,27 @@ public class ShaderCompiler
             {
                 fragmentEntry = entry.Name;
                 continue;
+            }
+        }
+
+        foreach (var parameter in reflection.Parameters)
+        {
+            switch (parameter.Type.Kind)
+            {
+                case SlangTypeKind.Resource:
+                    switch (parameter.Type.Resource.BaseShape)
+                    {
+                        case SlangResourceShape.StructuredBuffer:
+                            storageBufferCount++;
+                            break;
+                    }
+                    break;
+                case SlangTypeKind.ConstantBuffer:
+                    uniformBufferCount++;
+                    break;
+                case SlangTypeKind.SamplerState:
+                    samplerCount++;
+                    break;
             }
         }
 
@@ -118,7 +144,15 @@ public class ShaderCompiler
         // Save on disk
 
         if (!ShaderSerializer.TrySerialize($"{CompiledShaderDirectory}/{relPath}",
-                new Shader(bytecode, vertexEntry!, fragmentEntry!, _format)))
+                new Shader(
+                    bytecode, 
+                    vertexEntry!, 
+                    fragmentEntry!, 
+                    _format, 
+                    samplerCount,
+                    uniformBufferCount,
+                    storageBufferCount,
+                    storageTextureCount)))
         {
             Log.Error("Failed to serialize shader");
             return;

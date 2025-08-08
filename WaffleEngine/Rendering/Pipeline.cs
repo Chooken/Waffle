@@ -34,13 +34,9 @@ public unsafe class Pipeline : IDisposable
         };
         
         pipelineInfo.PrimitiveType = (SDL.GPUPrimitiveType) pipelineSettings.PrimitiveType;
-
-        if (!shader.TryGetShaders(out var vertShader, out var fragShader))
-        {
-            return false;
-        }
-        pipelineInfo.VertexShader = vertShader;
-        pipelineInfo.FragmentShader = fragShader;
+        
+        pipelineInfo.VertexShader = shader.VertexHandle;
+        pipelineInfo.FragmentShader = shader.FragmentHandle;
         pipelineInfo.RasterizerState.FillMode = (SDL.GPUFillMode) pipelineSettings.FillMode;
 
         pipeline = new();

@@ -98,6 +98,27 @@ public static class ShaderManager
                 continue;
             }
         }
+        
+        foreach (var parameter in reflection.Parameters)
+        {
+            switch (parameter.Type.Kind)
+            {
+                case SlangTypeKind.Resource:
+                    switch (parameter.Type.Resource.BaseShape)
+                    {
+                        case SlangResourceShape.StructuredBuffer:
+                            storageBufferCount++;
+                            break;
+                    }
+                    break;
+                case SlangTypeKind.ConstantBuffer:
+                    uniformBufferCount++;
+                    break;
+                case SlangTypeKind.SamplerState:
+                    samplerCount++;
+                    break;
+            }
+        }
 
         bool failed = false;
         
@@ -120,7 +141,15 @@ public static class ShaderManager
 
         lock (_shaders)
         {
-            _shaders.Add(relPath, new Shader(bytecode, vertexEntry!, fragmentEntry!, _format));
+            _shaders.Add(relPath, new Shader(
+                bytecode, 
+                vertexEntry!, 
+                fragmentEntry!, 
+                _format, 
+                samplerCount, 
+                uniformBufferCount, 
+                storageBufferCount, 
+                storageTextureCount));
         }
         
         WLog.Info($"Shader compiled: {relPath}", "ShaderManager");
