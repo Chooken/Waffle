@@ -26,7 +26,7 @@ public static unsafe class Device
         _gpuDevicePtr = SDL.CreateGPUDevice(
             SDL.GPUShaderFormat.SPIRV | 
             SDL.GPUShaderFormat.MSL |
-            SDL.GPUShaderFormat.DXIL, false, null);
+            SDL.GPUShaderFormat.DXIL, true, null);
 
         if (_gpuDevicePtr == IntPtr.Zero)
         {

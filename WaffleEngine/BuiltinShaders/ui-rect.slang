@@ -1,12 +1,18 @@
+cbuffer Uniforms 
+{
+    float2 ViewSize;
+}
+
 struct UIElement {
     float3 Position;
     float2 Size;
     float4 Color;
+    float4 BorderRadius;
 }
 
 struct VertexOutput {
     float2 UV : UV;
-    float4 Color : Color;
+    uint SpriteIndex;
     float4 Position : SV_Position;
 }
 
@@ -29,16 +35,23 @@ VertexOutput vsMain(uint vertexID : SV_VertexID) {
     
     VertexOutput output;
     
-    output.Position = float4(vertexPos[vert], 0, 1);
-    output.Color = element.Color;
+    float2 pos;
+    pos.x = vertexPos[vert].x * element.Size.x + element.Position.x;
+    pos.y = vertexPos[vert].y * element.Size.y + element.Position.y;
+    
+    float2 clipSpace = pos / ViewSize * 2 - 1;
+    
+    output.Position = float4(clipSpace, 0, 1);
+    output.SpriteIndex = spriteIndex;
     output.UV = vertexPos[vert];
     
     return output;
 }
 
 float roundedBoxSDF(float2 uv, float2 halfSize, float4 corners) {
+
     // Select radius based on quadrant (r.xy = right, r.zw = left)
-    corners.xy = (uv.x > 0.0) ? corners.xy : corners.zw;
+    corners.xy = (uv.x < 0.0) ? corners.xy : corners.zw;
     corners.x  = (uv.y > 0.0) ? corners.x  : corners.y;
     
     // Calculate SDF
@@ -47,11 +60,11 @@ float roundedBoxSDF(float2 uv, float2 halfSize, float4 corners) {
 }
 
 [shader("pixel")]
-float4 fsMain(float2 uv : UV, float4 color : Color) : SV_Target {
+float4 fsMain(VertexOutput input) : SV_Target {
 
-    float alpha = roundedBoxSDF(uv - 0.5f, float2(0.5, 0.5), float4(0.25f, 0.25f, 0.25f, 0.25f));
-    
-    alpha = smoothstep(0, -0.005, alpha);
+    UIElement element = uiElements[input.SpriteIndex];
 
-    return float4(color.rgb, alpha);
+    float alpha = roundedBoxSDF((input.UV - 0.5f) * element.Size, element.Size * 0.5f, element.BorderRadius);
+
+    return float4(element.Color.rgb, -alpha);
 }

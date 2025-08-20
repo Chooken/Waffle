@@ -19,5 +19,8 @@ public struct Color(float red, float green, float blue, float alpha = 1.0f)
     public float z { get => b; set => b = value;  }
     public float w { get => a; set => a = value;  }
 
-    public static implicit operator Vector4(Color color) => new Vector4(color.r, color.g, color.b, color.w);
+    public static implicit operator Vector4(Color color) => new Vector4(color.r, color.g, color.b, color.a);
+
+    public static Color RGBA255(uint r, uint g, uint b, uint a) =>
+        new Color((float)r / 255, (float)g / 255, (float)b / 255, (float)a / 255);
 }

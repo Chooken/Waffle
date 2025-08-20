@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using SDL3;
 using WaffleEngine.Rendering;
 
@@ -6,7 +7,6 @@ namespace WaffleEngine;
 public sealed class WindowSdl : Window
 {
     internal IntPtr WindowPtr;
-    internal Renderer? Renderer;
 
     public string? WindowHandle => WindowManager.TryGetWindowHandle(SDL.GetWindowID(WindowPtr));
     
@@ -54,8 +54,11 @@ public sealed class WindowSdl : Window
         windowSdl.Height = height;
         window = windowSdl;
 
-        
-        
+        unsafe
+        {
+            SDL.AddEventWatch(HandleWindowResize, (IntPtr)Unsafe.AsPointer(ref window));
+        }
+
         return true;
     }
 
@@ -79,5 +82,23 @@ public sealed class WindowSdl : Window
     {
         WLog.Info("Window Disposed", "SDL");
         SDL.DestroyWindow(WindowPtr);
+    }
+
+    private static unsafe bool HandleWindowResize(IntPtr userdata, ref SDL.Event sdlEvent)
+    {
+        switch ((SDL.EventType)sdlEvent.Type)
+        {
+            case SDL.EventType.WindowExposed:
+                SceneManager.RunActiveSceneQueries();
+                break;
+            
+            case SDL.EventType.WindowPixelSizeChanged:
+                ((WindowSdl*)userdata)->Width = sdlEvent.Window.Data1;
+                ((WindowSdl*)userdata)->Height = sdlEvent.Window.Data2;
+                
+                break;
+        }
+        
+        return true;
     }
 }

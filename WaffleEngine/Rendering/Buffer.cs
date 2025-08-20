@@ -25,7 +25,7 @@ public enum BufferUsage : uint
     ComputeStorageWrite = 32,
 }
 
-public unsafe class Buffer<T>: IGpuUploadable, IGpuBindable where T : unmanaged
+public sealed unsafe class Buffer<T>: IGpuUploadable, IGpuBindable where T : unmanaged
 {
     private T[] _data;
     private BufferUsage _usage;

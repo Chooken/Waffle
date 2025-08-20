@@ -4,9 +4,9 @@ public abstract class Window : IDisposable
 {
     public InputHandler WindowInput = new InputHandler();
     
-    public int Width { get; protected set; }
+    public int Width { get; internal set; }
     
-    public int Height { get; protected set; }
+    public int Height { get; internal set; }
 
     public abstract uint GetId();
         

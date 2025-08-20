@@ -4,7 +4,7 @@ using SDL3;
 
 namespace WaffleEngine.Rendering;
 
-public unsafe class Pipeline : IDisposable
+public sealed unsafe class Pipeline : IDisposable
 {
     internal IntPtr Handle;
 
@@ -50,9 +50,6 @@ public unsafe class Pipeline : IDisposable
         uint totalSize = 0;
         
         SDL.GPUVertexAttribute[] vertexAttributes = new SDL.GPUVertexAttribute[pipelineSettings.VertexAttributes.Count];
-
-        int vertexSize = sizeof(Vertex);
-        int floatSize = sizeof(float);
 
         for (uint i = 0; i < pipelineSettings.VertexAttributes.Count; i++)
         {

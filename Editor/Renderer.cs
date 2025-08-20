@@ -18,7 +18,7 @@ public class Renderer
     private Texture texture;
     private GpuTexture text;
 
-    private Value<uint> instances = new Value<uint>(1);
+    private ValueBox<uint> instances = new ValueBox<uint>(1);
 
     private UIToplevel ui;
     
@@ -31,7 +31,7 @@ public class Renderer
         
         if (!ShaderManager.TryGetShader("BuiltinShaders/triangle", out _shader))
         {
-            WLog.Error("Shader not found", "Renderer");
+            Log.Error("Shader not found", "Renderer");
             return;
         }
         
@@ -80,14 +80,21 @@ public class Renderer
         RenderPass renderPass = new RenderPass(colorTargetSettings, material);
         renderPass.AddCommand(new DrawIndexedPrimatives(6, instances, 0, 0, 0));
         _queue.AddPass(renderPass);
+        
         BlitPass blitPass = new BlitPass(text, _renderTexture, true);
         _queue.AddPass(blitPass);
 
         ui = new UIToplevel(window);
-        ui.Root = new UIElement()
-            .SetColor(new Color(0, 1, 1, 1));
+        ui.Root = new UIRect()
+            .SetColor(Color.RGBA255(34, 40, 49, 255))
+            .SetWidth(UISize.Pixels(300))
+            .SetHeight(UISize.Percentage(100))
+            .SetMarginX(UISize.Pixels(12))
+            .SetMarginY(UISize.Pixels(12))
+            .SetBorderRadius(new Vector4(25f, 25f, 25f, 25f), UISizeType.Pixels);
 
         GpuTexture uiTexture = ui.Render();
+        
         BlitPass blitPass2 = new BlitPass(uiTexture, _renderTexture, false);
         _queue.AddPass(blitPass2);
     }
@@ -95,7 +102,7 @@ public class Renderer
     internal void Render()
     {
         // instances.SetValue(instances + 1);
-        // ui.Render();
+        ui.Render();
         _queue.Submit();
     }
 }

@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text.Json.Serialization;
 using SDL3;
@@ -39,6 +40,52 @@ public abstract class PassCommands<T>
     public void AddCommand(T command)
     {
         commands.Add(command);
+    }
+}
+
+public sealed class SetUniforms<T>(ValueBox<T> data) : IPass
+{
+    public unsafe void Submit(IntPtr commandBuffer)
+    {
+        SDL.PushGPUFragmentUniformData(commandBuffer, 0, (IntPtr)Unsafe.AsPointer(ref data.Value), (uint) Unsafe.SizeOf<T>());
+    }
+}
+
+public sealed class RenderListPass(ColorTargetSettings colorTargetSettings, List<Material> materials) : PassCommands<IGpuRenderCommand>, IPass
+{
+    public unsafe void Submit(IntPtr commandBuffer)
+    {
+        if (colorTargetSettings.GpuTexture.Handle == IntPtr.Zero)
+        {
+            WLog.Error("RenderPass was given a null texture");
+            return;
+        }
+
+        SDL.GPUColorTargetInfo colorTargetInfo = new SDL.GPUColorTargetInfo();
+        colorTargetInfo.Texture = colorTargetSettings.GpuTexture.Handle;
+        colorTargetInfo.ClearColor = new SDL.FColor
+        {
+            R = colorTargetSettings.ClearColor.r,
+            G = colorTargetSettings.ClearColor.g,
+            B = colorTargetSettings.ClearColor.b,
+            A = colorTargetSettings.ClearColor.a
+        };
+        colorTargetInfo.LoadOp = (SDL.GPULoadOp)colorTargetSettings.LoadOperation;
+        colorTargetInfo.StoreOp = (SDL.GPUStoreOp)colorTargetSettings.StoreOperation;
+
+        IntPtr renderPass = SDL.BeginGPURenderPass(commandBuffer, (IntPtr)(&colorTargetInfo), 1, IntPtr.Zero);
+
+        foreach (var material in materials)
+        {
+            material.Bind(renderPass);
+
+            foreach (var command in commands)
+            {
+                command.Add(renderPass);
+            }
+        }
+
+        SDL.EndGPURenderPass(renderPass);
     }
 }
 

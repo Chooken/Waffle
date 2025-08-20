@@ -1,3 +1,5 @@
+using GarbagelessSharp;
+using SDL3;
 using WaffleEngine.Rendering;
 
 namespace WaffleEngine;
@@ -6,6 +8,8 @@ public class Material
 {
     private List<Bind> _binds = new List<Bind>();
     private Shader _shader;
+    
+    public UnmanagedVoid Uniforms;
 
     public Material(Shader shader)
     {
@@ -23,7 +27,7 @@ public class Material
         _binds.Add(new Bind(texture, slot));
     }
 
-    public void AddBuffer<T>(Buffer<T> buffer, uint slot) where T : unmanaged
+    public void AddBuffer<T1>(Buffer<T1> buffer, uint slot) where T1 : unmanaged
     {
         _binds.Add(new Bind(buffer, slot));
     }

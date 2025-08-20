@@ -18,6 +18,16 @@ public struct Vector2
     
     public static implicit operator System.Numerics.Vector2(Vector2 vector) =>
         new (vector.x, vector.y);
+    
+    public static bool operator ==(Vector2 lhs, Vector2 rhs)
+    {
+        return lhs.x == rhs.x && lhs.y == rhs.y;
+    }
+    
+    public static bool operator !=(Vector2 lhs, Vector2 rhs)
+    {
+        return lhs.x != rhs.x || lhs.y != rhs.y;
+    }
 }
 
 [StructLayout(LayoutKind.Explicit, Size = 16)]
@@ -44,6 +54,16 @@ public struct Vector3
     
     public static implicit operator System.Numerics.Vector3(Vector3 vector) =>
         new (vector.x, vector.y, vector.z);
+    
+    public static bool operator ==(Vector3 lhs, Vector3 rhs)
+    {
+        return lhs.x == rhs.x && lhs.y == rhs.y && lhs.z == rhs.z;
+    }
+    
+    public static bool operator !=(Vector3 lhs, Vector3 rhs)
+    {
+        return lhs.x != rhs.x || lhs.y != rhs.y || lhs.z != lhs.z;
+    }
 }
 
 [StructLayout(LayoutKind.Explicit, Size = 16)]
@@ -73,4 +93,14 @@ public struct Vector4
 
     public static implicit operator System.Numerics.Vector4(Vector4 vector) =>
         new (vector.x, vector.y, vector.z, vector.w);
+    
+    public static bool operator ==(Vector4 lhs, Vector4 rhs)
+    {
+        return lhs.x == rhs.x && lhs.y == rhs.y && lhs.z == rhs.z && lhs.w == rhs.w;
+    }
+    
+    public static bool operator !=(Vector4 lhs, Vector4 rhs)
+    {
+        return lhs.x != rhs.x || lhs.y != rhs.y || lhs.z != lhs.z || lhs.w != rhs.w;
+    }
 }

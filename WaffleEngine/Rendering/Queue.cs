@@ -7,7 +7,7 @@ public interface IPreprocess
     public void Run(Queue queue);
 }
 
-public class GetSwapchain(WindowSdl window, ref GpuTexture texture) : IPreprocess
+public sealed class GetSwapchain(WindowSdl window, ref GpuTexture texture) : IPreprocess
 {
     private GpuTexture _texture = texture;
 
@@ -21,7 +21,7 @@ public class GetSwapchain(WindowSdl window, ref GpuTexture texture) : IPreproces
     }
 }
 
-public class Queue
+public sealed class Queue
 {
     private List<IPreprocess> _preprocesses = new List<IPreprocess>();
     private List<IPass> _passes = new List<IPass>();

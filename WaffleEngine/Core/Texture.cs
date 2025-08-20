@@ -31,7 +31,7 @@ public unsafe class Texture : IGpuUploadable
         
         SDL.DestroySurface(startSurface);
 
-        _gpuTexture = new GpuTexture((uint)Width, (uint)Height);
+        _gpuTexture = new GpuTexture((uint)Width, (uint)Height, TextureFormat.R8G8B8A8Unorm);
     }
 
     public void Bind(IntPtr renderPass, uint slot)

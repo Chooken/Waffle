@@ -7,7 +7,7 @@ public interface IGpuRenderCommand
     public unsafe void Add(IntPtr renderPass);
 }
 
-public class DrawPrimatives(Value<uint> numberOfVertices, Value<uint> numberOfInstances, Value<uint> firstVertex, Value<uint> firstInstance) : IGpuRenderCommand
+public class DrawPrimatives(ValueBox<uint> numberOfVertices, ValueBox<uint> numberOfInstances, ValueBox<uint> firstVertex, ValueBox<uint> firstInstance) : IGpuRenderCommand
 {
     public unsafe void Add(IntPtr renderPass)
     {
@@ -15,7 +15,7 @@ public class DrawPrimatives(Value<uint> numberOfVertices, Value<uint> numberOfIn
     }
 }
 
-public class DrawIndexedPrimatives(Value<uint> numberOfIndices, Value<uint> numberOfInstances, Value<uint> firstIndex, Value<short> vertexOffset, Value<uint> firstInstance) : IGpuRenderCommand
+public class DrawIndexedPrimatives(ValueBox<uint> numberOfIndices, ValueBox<uint> numberOfInstances, ValueBox<uint> firstIndex, ValueBox<short> vertexOffset, ValueBox<uint> firstInstance) : IGpuRenderCommand
 {
     public unsafe void Add(IntPtr renderPass)
     {

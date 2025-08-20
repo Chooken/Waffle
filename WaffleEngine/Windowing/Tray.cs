@@ -3,7 +3,7 @@ using SDL3;
 
 namespace WaffleEngine;
 
-public static unsafe class Tray
+public static class Tray
 {
     private static IntPtr _tray;
     private static IntPtr _trayMenu;

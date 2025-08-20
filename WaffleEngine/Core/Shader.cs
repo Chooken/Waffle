@@ -83,8 +83,10 @@ public sealed unsafe class Shader : IDisposable
 
     public void SetPipeline(PipelineSettings settings)
     {
-        if (!Pipeline.TryBuild(PipelineSettings.Default, this, out Pipeline pipeline))
+        if (!Pipeline.TryBuild(settings, this, out Pipeline pipeline))
             WLog.Error("Failed to Build Pipeline", "Shader");
+        
+        Pipeline?.Dispose();
 
         Pipeline = pipeline;
     }
@@ -102,6 +104,8 @@ public sealed unsafe class Shader : IDisposable
             SDL.ReleaseGPUShader(Device._gpuDevicePtr, FragmentHandle);
             FragmentHandle = IntPtr.Zero;
         }
+        
+        Pipeline?.Dispose();
     }
 
     public void Dispose()

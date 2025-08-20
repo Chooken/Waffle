@@ -50,7 +50,7 @@ public static class WindowManager
         return false;
     }
 
-    public static bool TryGetWindowWithId(uint windowId, out Window? window)
+    public static bool TryGetWindowWithId(uint windowId, [NotNullWhen(true)] out Window? window)
     {
         if (!_windowIdToWindowHandleDict.TryGetValue(windowId, out string? windowName))
         {

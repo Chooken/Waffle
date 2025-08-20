@@ -8,14 +8,13 @@ internal sealed class WindowEventSystemSdl : IWindowEventSystem
     {
         while (SDL.PollEvent(out SDL.Event sdlEvent))
         {
-            switch (sdlEvent.Type)
+            switch ((SDL.EventType)sdlEvent.Type)
             {
-                case (uint)SDL.EventType.KeyDown or (uint)SDL.EventType.KeyUp:
+                case SDL.EventType.KeyDown or SDL.EventType.KeyUp:
                     ProcessKeyEvent(ref sdlEvent);
                     break;
                 
-                case (uint)SDL.EventType.WindowCloseRequested:
-                        
+                case SDL.EventType.WindowCloseRequested:
                     string? windowHandle = WindowManager.TryGetWindowHandle(sdlEvent.Window.WindowID);
 
                     if (windowHandle == null)
@@ -28,7 +27,7 @@ internal sealed class WindowEventSystemSdl : IWindowEventSystem
                     
                     break;
                 
-                case (uint)SDL.EventType.Quit:
+                case SDL.EventType.Quit:
                     Application.Exit();
                     break;
             }

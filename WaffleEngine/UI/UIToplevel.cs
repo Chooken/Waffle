@@ -1,4 +1,5 @@
 using System.Numerics;
+using GarbagelessSharp;
 using WaffleEngine.Rendering;
 
 namespace WaffleEngine.UI;
@@ -6,9 +7,10 @@ namespace WaffleEngine.UI;
 public class UIToplevel
 {
     public readonly WindowSdl Window;
-    public UIElement? Root;
+    public UIRect? Root;
 
-    private Value<uint> _childCount;
+    private ValueBox<uint> _childCount;
+    private ValueBox<Vector2> _uniformData;
 
     private Queue _queue;
     private GpuTexture _uiTexture;
@@ -17,10 +19,10 @@ public class UIToplevel
     {
         Window = window;
         _uiTexture = new GpuTexture(Window);
-        _childCount = new Value<uint>(0);
+        _childCount = new ValueBox<uint>(0);
         _queue = new Queue();
         
-        if (!ShaderManager.TryGetShader("BuiltinShaders/uielement", out Shader? shader))
+        if (!ShaderManager.TryGetShader("BuiltinShaders/ui-rect", out Shader? shader))
         {
             WLog.Error("Shader not found", "Renderer");
             return;
@@ -39,9 +41,11 @@ public class UIToplevel
             FillMode = FillMode.Fill,
             VertexInputRate = VertexInputRate.Vertex,
         });
+
+        _uniformData = new ValueBox<Vector2>(new Vector2(window.Width, window.Height));
         
         Material material = new Material(shader);
-        material.AddBuffer(UIElement.GpuData, 0);
+        material.AddBuffer(UIRect.GpuData, 0);
         
         ColorTargetSettings colorTargetSettings = new ColorTargetSettings
         {
@@ -52,11 +56,13 @@ public class UIToplevel
         };
 
         CopyPass copyPass = new CopyPass();
-        copyPass.AddCommand(new UploadBufferToGpu(UIElement.GpuData));
+        copyPass.AddCommand(new UploadBufferToGpu(UIRect.GpuData));
         _queue.AddPass(copyPass);
+        
+        _queue.AddPass(new SetUniforms<Vector2>(_uniformData));
 
         RenderPass renderPass = new RenderPass(colorTargetSettings, material);
-        renderPass.AddCommand(new DrawPrimatives(6, 1, 0, 0));
+        renderPass.AddCommand(new DrawPrimatives(6, _childCount, 0, 0));
         _queue.AddPass(renderPass);
     }
 
@@ -67,20 +73,30 @@ public class UIToplevel
         
         Root.Update();
 
-        if (Root.Dirty)
+        bool resized = _uniformData.Value != new Vector2(Window.Width, Window.Height);
+        
+        if (resized)
         {
-            Root.AddToBuffer(Vector3.Zero);
-            _childCount.SetValue((uint)UIElement.GpuData.Count);
+            _uiTexture.Resize((uint)Window.Width, (uint)Window.Height);
         }
+
+        if (Root.Dirty || resized)
+        {
+            UIRect.GpuData.Clear();
+            Root.AddToBuffer(new Vector3(0, 0, 0), new Vector2(_uiTexture.Width, _uiTexture.Height));
+            _childCount.Value = (uint)UIRect.GpuData.Count;
+        }
+
+        _uniformData.Value = new Vector2(Window.Width, Window.Height);
 
         _queue.Submit();
 
         return _uiTexture;
     }
 
-    public UIToplevel SetRoot(UIElement uiElement)
+    public UIToplevel SetRoot(UIRect uiRect)
     {
-        Root = uiElement;
+        Root = uiRect;
         return this;
     }
 }
