@@ -83,11 +83,11 @@ public class UIToplevel
         if (Root.Dirty || resized)
         {
             UIRect.GpuData.Clear();
-            Root.AddToBuffer(new Vector3(0, 0, 0), new Vector2(_uiTexture.Width, _uiTexture.Height));
+            Root.AddToBuffer(new Vector3(-1, -1, 0), new Vector2(_uiTexture.Width, _uiTexture.Height), new Vector2(_uiTexture.Width, _uiTexture.Height));
             _childCount.Value = (uint)UIRect.GpuData.Count;
         }
 
-        _uniformData.Value = new Vector2(Window.Width, Window.Height);
+        _uniformData.Value = new Vector2(_uiTexture.Width, _uiTexture.Height);
 
         _queue.Submit();
 

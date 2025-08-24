@@ -47,6 +47,7 @@ public sealed class SetUniforms<T>(ValueBox<T> data) : IPass
 {
     public unsafe void Submit(IntPtr commandBuffer)
     {
+        SDL.PushGPUVertexUniformData(commandBuffer, 0, (IntPtr)Unsafe.AsPointer(ref data.Value), (uint) Unsafe.SizeOf<T>());
         SDL.PushGPUFragmentUniformData(commandBuffer, 0, (IntPtr)Unsafe.AsPointer(ref data.Value), (uint) Unsafe.SizeOf<T>());
     }
 }

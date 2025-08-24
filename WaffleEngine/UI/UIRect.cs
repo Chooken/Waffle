@@ -9,6 +9,7 @@ public struct UIRectData
     public Vector2 Size;
     public Vector4 Color;
     public Vector4 BorderRadius;
+    public Vector2 ScreenSize;
 }
 
 public class UIRect
@@ -32,7 +33,7 @@ public class UIRect
     public Color Color;
     public bool Dirty;
 
-    public virtual void AddToBuffer(Vector3 position, Vector2 parentSize)
+    public virtual void AddToBuffer(Vector3 position, Vector2 parentSize, Vector2 renderSize)
     {
         var size = new Vector2(
             Width.AsPixels(parentSize.x) - MarginX.AsPixels(parentSize.x) * 2, 
@@ -48,7 +49,8 @@ public class UIRect
             Position = position,
             Size = size,
             Color = Color,
-            BorderRadius = new Vector4(BorderRadiusTL.Value, BorderRadiusBL.Value, BorderRadiusTR.Value, BorderRadiusBR.Value)
+            BorderRadius = new Vector4(BorderRadiusTL.Value, BorderRadiusBL.Value, BorderRadiusTR.Value, BorderRadiusBR.Value),
+            ScreenSize = renderSize
         });
         
         Dirty = false;
@@ -57,7 +59,7 @@ public class UIRect
         {
             child.AddToBuffer( 
                 new Vector3(position.x + PaddingX.AsPixels(parentSize.x), position.y + PaddingY.AsPixels(parentSize.y), position.z + 1), 
-                new Vector2(size.x - PaddingX.AsPixels(parentSize.x) * 2, size.y - PaddingY.AsPixels(parentSize.y) * 2));
+                new Vector2(size.x - PaddingX.AsPixels(parentSize.x) * 2, size.y - PaddingY.AsPixels(parentSize.y) * 2), renderSize);
         }
     }
 

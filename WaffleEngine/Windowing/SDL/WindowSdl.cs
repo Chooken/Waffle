@@ -15,6 +15,8 @@ public sealed class WindowSdl : Window
         window = null;
 
         WindowSdl windowSdl = new WindowSdl();
+
+        windowSdl.Resizeable = true;
         
         if (SDL.WasInit(SDL.InitFlags.Video) != SDL.InitFlags.Video)
         {
@@ -26,9 +28,13 @@ public sealed class WindowSdl : Window
             
             WLog.Info("Initialised Video Subsystem.", "SDL");
         }
+
+        SDL.WindowFlags flags = SDL.WindowFlags.HighPixelDensity;
+
+        if (windowSdl.Resizeable) flags |= SDL.WindowFlags.Resizable;
         
         windowSdl.WindowPtr = SDL.CreateWindow(title, width, height,
-            SDL.WindowFlags.Resizable | SDL.WindowFlags.HighPixelDensity);
+            flags);
 
         if (windowSdl.WindowPtr == IntPtr.Zero)
             return false;
@@ -89,12 +95,19 @@ public sealed class WindowSdl : Window
         switch ((SDL.EventType)sdlEvent.Type)
         {
             case SDL.EventType.WindowExposed:
-                SceneManager.RunActiveSceneQueries();
+                if (((WindowSdl*)userdata)->Resizeable)
+                {
+                    SceneManager.RunActiveSceneQueries();
+                }
+
                 break;
             
             case SDL.EventType.WindowPixelSizeChanged:
                 ((WindowSdl*)userdata)->Width = sdlEvent.Window.Data1;
                 ((WindowSdl*)userdata)->Height = sdlEvent.Window.Data2;
+                
+                // I'm pretty sure I shouldn't be doing this but idk how to fix it otherwise.
+                SceneManager.RunActiveSceneQueries();
                 
                 break;
         }

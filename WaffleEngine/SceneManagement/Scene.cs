@@ -11,7 +11,8 @@ public sealed class Scene : IDisposable
     internal readonly World _world = World.Create();
     
     internal List<IQuery> _queries = new List<IQuery>();
-    internal List<Type> _disposableComponents = new List<Type>();
+    internal HashSet<Type> _updateableComponents = new HashSet<Type>();
+    internal HashSet<Type> _disposableComponents = new HashSet<Type>();
 
     private bool _commandBufferUsed = false;
     private CommandBuffer _commandBuffer = new CommandBuffer();
@@ -40,6 +41,9 @@ public sealed class Scene : IDisposable
         if (component is ISceneInit init)
             init.OnInit();
         
+        if (component is ISceneUpdate)
+            _updateableComponents.Add(typeof(T));
+        
         _commandBuffer.Add(entity.ArchEntity, component);
         _commandBufferUsed = true;
     }
@@ -57,6 +61,35 @@ public sealed class Scene : IDisposable
         }
         
         RunArchCommandBuffer();
+        
+        RunUpdateQueries();
+        
+        RunArchCommandBuffer();
+    }
+
+    private void RunUpdateQueries()
+    {
+        foreach (var type in _disposableComponents)
+        {
+            var signature = new Signature(type);
+            
+            var queryDescription = new QueryDescription(
+                all: signature
+            );
+            var query = _world.Query(in queryDescription);
+        
+            foreach(ref var chunk in query.GetChunkIterator())
+            {
+                var t = (ISceneUpdate)chunk.GetArray(type).GetValue(0)!;
+                
+                foreach(var entity in chunk)                          
+                {
+                    ref var t1 = ref Unsafe.Add(ref t, entity);
+                
+                    t1.Update();
+                }
+            }
+        }
     }
 
     private void RunArchCommandBuffer()

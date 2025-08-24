@@ -1,13 +1,9 @@
-cbuffer Uniforms 
-{
-    float2 ViewSize;
-}
-
 struct UIElement {
     float3 Position;
     float2 Size;
     float4 Color;
     float4 BorderRadius;
+    float2 RenderSize;
 }
 
 struct VertexOutput {
@@ -39,7 +35,7 @@ VertexOutput vsMain(uint vertexID : SV_VertexID) {
     pos.x = vertexPos[vert].x * element.Size.x + element.Position.x;
     pos.y = vertexPos[vert].y * element.Size.y + element.Position.y;
     
-    float2 clipSpace = pos / ViewSize * 2 - 1;
+    float2 clipSpace = pos / element.RenderSize * 2 - 1;
     
     output.Position = float4(clipSpace, 0, 1);
     output.SpriteIndex = spriteIndex;

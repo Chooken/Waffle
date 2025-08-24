@@ -7,6 +7,8 @@ public abstract class Window : IDisposable
     public int Width { get; internal set; }
     
     public int Height { get; internal set; }
+    
+    public bool Resizeable { get; protected set; }
 
     public abstract uint GetId();
         
