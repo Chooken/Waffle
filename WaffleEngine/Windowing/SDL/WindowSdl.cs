@@ -22,11 +22,11 @@ public sealed class WindowSdl : Window
         {
             if (!SDL.InitSubSystem(SDL.InitFlags.Video))
             {
-                WLog.Error($"Failed to initialise video sub system -> {SDL.GetError()}", "SDL");
+                WLog.Error($"Failed to initialise video sub system -> {SDL.GetError()}");
                 return false;
             }
             
-            WLog.Info("Initialised Video Subsystem.", "SDL");
+            WLog.Info("Initialised Video Subsystem.");
         }
 
         SDL.WindowFlags flags = SDL.WindowFlags.HighPixelDensity;
@@ -41,19 +41,19 @@ public sealed class WindowSdl : Window
         
         Device.Attach(windowSdl);
         
-        if (SDL.WindowSupportsGPUPresentMode(Device._gpuDevicePtr, windowSdl.WindowPtr, SDL.GPUPresentMode.VSync)) WLog.Info("Window supports VSync", "WindowSDL");
-        if (SDL.WindowSupportsGPUPresentMode(Device._gpuDevicePtr, windowSdl.WindowPtr, SDL.GPUPresentMode.Mailbox)) WLog.Info("Window supports Mailbox", "WindowSDL");
-        if (SDL.WindowSupportsGPUPresentMode(Device._gpuDevicePtr, windowSdl.WindowPtr, SDL.GPUPresentMode.Immediate)) WLog.Info("Window supports Immediate", "WindowSDL");
+        if (SDL.WindowSupportsGPUPresentMode(Device.Handle, windowSdl.WindowPtr, SDL.GPUPresentMode.VSync)) WLog.Info("Window supports VSync");
+        if (SDL.WindowSupportsGPUPresentMode(Device.Handle, windowSdl.WindowPtr, SDL.GPUPresentMode.Mailbox)) WLog.Info("Window supports Mailbox");
+        if (SDL.WindowSupportsGPUPresentMode(Device.Handle, windowSdl.WindowPtr, SDL.GPUPresentMode.Immediate)) WLog.Info("Window supports Immediate");
         
         SDL.SetGPUSwapchainParameters(
-            Device._gpuDevicePtr, 
+            Device.Handle, 
             windowSdl.WindowPtr, 
             SDL.GPUSwapchainComposition.SDR, 
             SDL.GPUPresentMode.VSync);
         
         if (!SDL.GetWindowSizeInPixels(windowSdl.WindowPtr, out width, out height))
         {
-            WLog.Info($"Failed to get window size", "SDL");
+            WLog.Info($"Failed to get window size");
         }
         
         windowSdl.Width = width;
@@ -86,25 +86,27 @@ public sealed class WindowSdl : Window
 
     public override void Dispose()
     {
-        WLog.Info("Window Disposed", "SDL");
+        WLog.Info("Window Disposed");
         SDL.DestroyWindow(WindowPtr);
     }
 
     private static unsafe bool HandleWindowResize(IntPtr userdata, ref SDL.Event sdlEvent)
     {
+        WindowSdl* window = (WindowSdl*)userdata; 
+        
         switch ((SDL.EventType)sdlEvent.Type)
         {
-            case SDL.EventType.WindowExposed:
-                if (((WindowSdl*)userdata)->Resizeable)
-                {
-                    SceneManager.RunActiveSceneQueries();
-                }
-
-                break;
+            // case SDL.EventType.WindowExposed:
+            //     if (window->Resizeable)
+            //     {
+            //         SceneManager.RunActiveSceneQueries();
+            //     }
+            //
+            //     break;
             
             case SDL.EventType.WindowPixelSizeChanged:
-                ((WindowSdl*)userdata)->Width = sdlEvent.Window.Data1;
-                ((WindowSdl*)userdata)->Height = sdlEvent.Window.Data2;
+                window->Width = sdlEvent.Window.Data1;
+                window->Height = sdlEvent.Window.Data2;
                 
                 // I'm pretty sure I shouldn't be doing this but idk how to fix it otherwise.
                 SceneManager.RunActiveSceneQueries();

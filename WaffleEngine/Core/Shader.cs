@@ -1,6 +1,7 @@
 using System.Runtime.InteropServices;
 using SDL3;
 using WaffleEngine.Rendering;
+using WaffleEngine.Rendering.Immediate;
 
 namespace WaffleEngine;
 
@@ -65,26 +66,26 @@ public sealed unsafe class Shader : IDisposable
             };
         }
         
-        VertexHandle = SDL.CreateGPUShader(Device._gpuDevicePtr, shaderInfo);
+        VertexHandle = SDL.CreateGPUShader(Device.Handle, shaderInfo);
 
         shaderInfo.Entrypoint = fragmentEntryPtr;
         shaderInfo.Stage = SDL.GPUShaderStage.Fragment;
         
-        FragmentHandle = SDL.CreateGPUShader(Device._gpuDevicePtr, shaderInfo);
+        FragmentHandle = SDL.CreateGPUShader(Device.Handle, shaderInfo);
         
         Marshal.FreeHGlobal(vertexEntryPtr);
         Marshal.FreeHGlobal(fragmentEntryPtr);
         
-        if (!Pipeline.TryBuild(PipelineSettings.Default, this, out Pipeline pipeline))
-            WLog.Error("Failed to Build Pipeline", "Shader");
+        if (!Pipeline.TryBuild(PipelineSettings.Default, this, out Pipeline? pipeline))
+            WLog.Error("Failed to Build Pipeline");
 
         Pipeline = pipeline;
     }
 
     public void SetPipeline(PipelineSettings settings)
     {
-        if (!Pipeline.TryBuild(settings, this, out Pipeline pipeline))
-            WLog.Error("Failed to Build Pipeline", "Shader");
+        if (!Pipeline.TryBuild(settings, this, out Pipeline? pipeline))
+            WLog.Error("Failed to Build Pipeline");
         
         Pipeline?.Dispose();
 
@@ -95,13 +96,13 @@ public sealed unsafe class Shader : IDisposable
     {
         if (VertexHandle != IntPtr.Zero)
         {
-            SDL.ReleaseGPUShader(Device._gpuDevicePtr, VertexHandle);
+            SDL.ReleaseGPUShader(Device.Handle, VertexHandle);
             VertexHandle = IntPtr.Zero;
         }
         
         if (FragmentHandle != IntPtr.Zero)
         {
-            SDL.ReleaseGPUShader(Device._gpuDevicePtr, FragmentHandle);
+            SDL.ReleaseGPUShader(Device.Handle, FragmentHandle);
             FragmentHandle = IntPtr.Zero;
         }
         
@@ -113,11 +114,11 @@ public sealed unsafe class Shader : IDisposable
         ReleaseGpuShaders();
     }
 
-    public void Bind(IntPtr pass)
+    public void Bind(ImRenderPass pass)
     {
         if (Pipeline is null)
         {
-            WLog.Error("Unable to Bind Shader as pipeline is not created.", "Shader");
+            WLog.Error("Unable to Bind Shader as pipeline is not created.");
             return;
         }
         

@@ -1,13 +1,18 @@
+using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using GarbagelessSharp;
 using SDL3;
 using WaffleEngine.Rendering;
+using WaffleEngine.Rendering.Immediate;
 
 namespace WaffleEngine;
 
-public class Material
+public class Material : IGpuBindable
 {
-    private List<Bind> _binds = new List<Bind>();
+    private List<(IGpuBindable, uint)> _binds = new List<(IGpuBindable, uint)>();
+    
     private Shader _shader;
+    public uint Instances = 1;
     
     public UnmanagedVoid Uniforms;
 
@@ -15,30 +20,29 @@ public class Material
     {
         _shader = shader;
     }
-    
-    public Material(Shader shader, List<Bind> binds)
+
+    public void Clear()
     {
-        _shader = shader;
-        _binds = binds;
+        _binds.Clear();
     }
     
     public void AddTexture(GpuTexture texture, uint slot)
     {
-        _binds.Add(new Bind(texture, slot));
+        _binds.Add((texture, slot));
     }
 
     public void AddBuffer<T1>(Buffer<T1> buffer, uint slot) where T1 : unmanaged
     {
-        _binds.Add(new Bind(buffer, slot));
+        _binds.Add((buffer, slot));
     }
 
-    public void Bind(IntPtr pass)
+    public void Bind(ImRenderPass pass, uint _ = 0)
     {
         _shader.Bind(pass);
         
         foreach (var bind in _binds)
         {
-            bind.Add(pass);
+            bind.Item1.Bind(pass, bind.Item2);
         }
     }
 }

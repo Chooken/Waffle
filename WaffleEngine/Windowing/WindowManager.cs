@@ -66,7 +66,7 @@ public static class WindowManager
     {
         if (!_windowIdToWindowHandleDict.TryGetValue(windowId, out string? windowName))
         {
-            WLog.Error($"Tried to get [Window ID: {windowId}] but it doesn't exist.", "Window Manager");
+            WLog.Error($"Tried to get [Window ID: {windowId}] but it doesn't exist.");
             return null;
         }
 
@@ -77,7 +77,7 @@ public static class WindowManager
     {
         if (!_windows.TryGetValue(windowName, out Window? window))
         {
-            WLog.Error($"Tried to close {windowName} but it doesn't exist.", "Window Manager");
+            WLog.Error($"Tried to close {windowName} but it doesn't exist.");
             return;
         }
 

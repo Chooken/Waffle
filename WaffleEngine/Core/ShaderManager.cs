@@ -39,7 +39,7 @@ public static class ShaderManager
         }
         else
         {
-            WLog.Error("Failed to find a suiteable shader format", "ShaderManager");
+            WLog.Error("Failed to find a suiteable shader format");
         }
     }
     
@@ -49,7 +49,7 @@ public static class ShaderManager
         
         if (_formatString == "")
         {
-            WLog.Error("Shader format not initialised", "ShaderManager");
+            WLog.Error("Shader format not initialised");
             return;
         }
         
@@ -65,7 +65,7 @@ public static class ShaderManager
     {
         if (_formatString == "")
         {
-            WLog.Error("Shader format not initialised", "ShaderManager");
+            WLog.Error("Shader format not initialised");
             return;
         }
 
@@ -124,13 +124,13 @@ public static class ShaderManager
         
         if (vertexEntry == null)
         {
-            WLog.Error("Failed to compile shader, missing a vertex entry point", "ShaderManager");
+            WLog.Error("Failed to compile shader, missing a vertex entry point");
             failed = true;
         }
 
         if (fragmentEntry == null)
         {
-            WLog.Error("Failed to compile shader, missing a fragment entry point", "ShaderManager");
+            WLog.Error("Failed to compile shader, missing a fragment entry point");
             failed = true;
         }
 
@@ -152,7 +152,7 @@ public static class ShaderManager
                 storageTextureCount));
         }
         
-        WLog.Info($"Shader compiled: {relPath}", "ShaderManager");
+        WLog.Info($"Shader compiled: {relPath}");
     }
     
     
@@ -167,6 +167,6 @@ public static class ShaderManager
         {
             shader.Dispose();
         }
-        WLog.Info("All Shaders Disposed", "ShaderManager");
+        WLog.Info("All Shaders Disposed");
     }
 }

@@ -6,18 +6,22 @@ namespace Editor;
 [SerializeDefault]
 public struct InitAndDisposeTest : ISceneInit, ISceneUpdate, IDisposable
 {
+    private int i;
+    
     public void OnInit()
     {
-        Log.Info("Init Called", "InitAndDisposeTest");
+        i = 10;
+        Log.Info("Init Called");
     }
 
     public void Update()
     {
-        Log.Info("Update Called", "InitAndDisposeTest");
+        i++;
+        Log.Info($"Update Called {i}");
     }
 
     public void Dispose()
     {
-        Log.Info("Dispose Called", "InitAndDisposeTest");
+        Log.Info("Dispose Called");
     }
 }

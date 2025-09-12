@@ -14,6 +14,9 @@ struct VertexOutput {
 
 ConstantBuffer<UIElement> uiElement;
 
+uniform Texture2D texture;
+uniform SamplerState sampler;
+
 static const uint triangleIndices[6] = {0, 1, 2, 3, 2, 1};
 static const float2 vertexPos[4] = {
     {0.0f, 0.0f},
@@ -58,5 +61,9 @@ float4 fsMain(VertexOutput input) : SV_Target {
 
     float alpha = roundedBoxSDF((input.UV - 0.5f) * uiElement.Size, uiElement.Size * 0.5f, uiElement.BorderRadius);
 
-    return float4(uiElement.Color.rgb, -alpha);
+    float2 uv = float2(input.UV.x, 1 - input.UV.y);
+
+    float4 color = texture.Sample(sampler, uv);
+
+    return float4(color.rgb, min(color.a, -alpha));
 }

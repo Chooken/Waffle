@@ -1,17 +1,23 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using SDL3;
+using WaffleEngine.Rendering.Immediate;
 
 namespace WaffleEngine.Rendering;
 
 public unsafe interface IGpuUploadable
 {
-    internal void UploadToGpu(IntPtr copyPass);
+    internal void UploadToGpu(ImCopyPass copyPass);
 }
 
 public unsafe interface IGpuBindable
 {
-    internal void Bind(IntPtr renderPass, uint slot);
+    internal void Bind(ImRenderPass renderPass, uint slot);
+}
+
+public interface IBuffer : IGpuUploadable, IGpuBindable
+{
+    
 }
 
 [Flags]
@@ -25,7 +31,7 @@ public enum BufferUsage : uint
     ComputeStorageWrite = 32,
 }
 
-public sealed unsafe class Buffer<T>: IGpuUploadable, IGpuBindable where T : unmanaged
+public sealed unsafe class Buffer<T>: IBuffer where T : unmanaged
 {
     private T[] _data;
     private BufferUsage _usage;
@@ -49,7 +55,7 @@ public sealed unsafe class Buffer<T>: IGpuUploadable, IGpuBindable where T : unm
         bufferCreateInfo.Size = (uint)(sizeof(T) * startSize);
         
         _gpuBufferSize = startSize;
-        _gpuBuffer = SDL.CreateGPUBuffer(Device._gpuDevicePtr, bufferCreateInfo);
+        _gpuBuffer = SDL.CreateGPUBuffer(Device.Handle, bufferCreateInfo);
             
         _count = 0;
     }
@@ -85,36 +91,36 @@ public sealed unsafe class Buffer<T>: IGpuUploadable, IGpuBindable where T : unm
         _count = 0;
     }
 
-    public void UploadToGpu(IntPtr copyPass)
+    public void UploadToGpu(ImCopyPass copyPass)
     {
         if (!_updated)
             return;
 
         if (_data.Length > _gpuBufferSize)
         {
-            SDL.ReleaseGPUBuffer(Device._gpuDevicePtr, _gpuBuffer);
+            SDL.ReleaseGPUBuffer(Device.Handle, _gpuBuffer);
             
             SDL.GPUBufferCreateInfo bufferCreateInfo = new SDL.GPUBufferCreateInfo();
             bufferCreateInfo.Usage = (SDL.GPUBufferUsageFlags)_usage;
             bufferCreateInfo.Size = (uint)(sizeof(T) * _data.Length);
         
             _gpuBufferSize = _data.Length;
-            _gpuBuffer = SDL.CreateGPUBuffer(Device._gpuDevicePtr, bufferCreateInfo);
+            _gpuBuffer = SDL.CreateGPUBuffer(Device.Handle, bufferCreateInfo);
         }
         
         SDL.GPUTransferBufferCreateInfo transferCreateInfo = new SDL.GPUTransferBufferCreateInfo();
         transferCreateInfo.Size = (uint)(sizeof(T) * _data.Length);
         transferCreateInfo.Usage = SDL.GPUTransferBufferUsage.Upload;
         
-        IntPtr transferBuffer = SDL.CreateGPUTransferBuffer(Device._gpuDevicePtr, transferCreateInfo);
+        IntPtr transferBuffer = SDL.CreateGPUTransferBuffer(Device.Handle, transferCreateInfo);
 
-        var dataPtr = SDL.MapGPUTransferBuffer(Device._gpuDevicePtr, transferBuffer, false);
+        var dataPtr = SDL.MapGPUTransferBuffer(Device.Handle, transferBuffer, false);
 
         Span<T> data = new (dataPtr.ToPointer(), sizeof(T) * _data.Length);
         
         _data.CopyTo(data);
         
-        SDL.UnmapGPUTransferBuffer(Device._gpuDevicePtr, transferBuffer);
+        SDL.UnmapGPUTransferBuffer(Device.Handle, transferBuffer);
         
         SDL.GPUTransferBufferLocation location = new SDL.GPUTransferBufferLocation();
         location.TransferBuffer = transferBuffer;
@@ -125,14 +131,14 @@ public sealed unsafe class Buffer<T>: IGpuUploadable, IGpuBindable where T : unm
         region.Size = (uint)(sizeof(T) * _data.Length);
         region.Offset = 0;
         
-        SDL.UploadToGPUBuffer(copyPass, location, region, true);
+        SDL.UploadToGPUBuffer(copyPass.Handle, location, region, true);
         
-        SDL.ReleaseGPUTransferBuffer(Device._gpuDevicePtr, transferBuffer);
+        SDL.ReleaseGPUTransferBuffer(Device.Handle, transferBuffer);
 
         _updated = false;
     }
 
-    public void Bind(IntPtr renderPass, uint slot)
+    public void Bind(ImRenderPass renderPass, uint slot)
     {
         if (_usage == BufferUsage.Vertex)
         {
@@ -152,10 +158,10 @@ public sealed unsafe class Buffer<T>: IGpuUploadable, IGpuBindable where T : unm
             return;
         }
         
-        WLog.Error($"Can't bind a buffer with the usage: {_usage}", "Buffer");
+        WLog.Error($"Can't bind a buffer with the usage: {_usage}");
     }
 
-    private void BindAsVertexBuffer(IntPtr renderPass, uint slot)
+    private void BindAsVertexBuffer(ImRenderPass renderPass, uint slot)
     {
         SDL.GPUBufferBinding bufferBinding = new SDL.GPUBufferBinding
         {
@@ -165,10 +171,10 @@ public sealed unsafe class Buffer<T>: IGpuUploadable, IGpuBindable where T : unm
 
         SDL.GPUBufferBinding* ptr = &bufferBinding;
         
-        SDL.BindGPUVertexBuffers(renderPass, slot, (IntPtr)ptr, 1);
+        SDL.BindGPUVertexBuffers(renderPass.Handle, slot, (IntPtr)ptr, 1);
     }
 
-    private void BindAsIndexBuffer(IntPtr renderPass)
+    private void BindAsIndexBuffer(ImRenderPass renderPass)
     {
         SDL.GPUBufferBinding bufferBinding = new SDL.GPUBufferBinding
         {
@@ -176,10 +182,10 @@ public sealed unsafe class Buffer<T>: IGpuUploadable, IGpuBindable where T : unm
             Offset = 0
         };
 
-        SDL.BindGPUIndexBuffer(renderPass, bufferBinding, SDL.GPUIndexElementSize.IndexElementSize32Bit);
+        SDL.BindGPUIndexBuffer(renderPass.Handle, bufferBinding, SDL.GPUIndexElementSize.IndexElementSize32Bit);
     }
     
-    private void BindAsStorageBuffer(IntPtr renderPass, uint slot)
+    private void BindAsStorageBuffer(ImRenderPass renderPass, uint slot)
     {
         // IntPtr[] ptrs = [_gpuBuffer];
         //
@@ -187,8 +193,8 @@ public sealed unsafe class Buffer<T>: IGpuUploadable, IGpuBindable where T : unm
         
         IntPtr ptr = _gpuBuffer;
         
-        SDLExtra.BindGPUVertexStorageBuffers(renderPass, slot, (IntPtr)(&ptr), 1);
-        SDL.BindGPUFragmentStorageBuffers(renderPass, slot, (IntPtr)(&ptr), 1);
+        SDLExtra.BindGPUVertexStorageBuffers(renderPass.Handle, slot, (IntPtr)(&ptr), 1);
+        SDL.BindGPUFragmentStorageBuffers(renderPass.Handle, slot, (IntPtr)(&ptr), 1);
         // WLog.Info(SDL.GetError());
     }
 }

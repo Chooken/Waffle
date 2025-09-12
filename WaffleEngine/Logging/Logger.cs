@@ -2,54 +2,51 @@ namespace WaffleEngine;
 
 public class Logger(string logger_name)
 {
-    public void Fatal(string message, params string[] tags)
+    public void Fatal(string message, string tag = "")
     {
         Console.ForegroundColor = ConsoleColor.Red;
 
         Console.Write($"[{DateTime.Now:HH:mm:ss}] [FATAL] ");
-        LogMessage(message, tags);
+        LogMessage(message, tag);
     }
 
-    public void Error(string message, params string[] tags)
+    public void Error(string message, string tag = "")
     {
         Console.ForegroundColor = ConsoleColor.Red;
 
         Console.Write($"[{DateTime.Now:HH:mm:ss}] [ERROR] ");
-        LogMessage(message, tags);
+        LogMessage(message, tag);
     }
 
-    public void Warning(string message, string[] tags)
+    public void Warning(string message, string tag = "")
     {
         Console.ForegroundColor = ConsoleColor.Yellow;
 
         Console.Write($"[{DateTime.Now:HH:mm:ss}] [WARNING] ");
-        LogMessage(message, tags);
+        LogMessage(message, tag);
     }
 
-    public void Info(string message, params string[] tags)
+    public void Info(string message, string tag = "")
     {
         Console.ForegroundColor = ConsoleColor.Gray;
 
         Console.Write($"[{DateTime.Now:HH:mm:ss}] [INFO] ");
-        LogMessage(message, tags);
+        LogMessage(message, tag);
     }
 
-    public void Trace(string message, params string[] tags)
+    public void Trace(string message, string tag = "")
     {
         Console.ForegroundColor = ConsoleColor.DarkGray;
 
         Console.Write($"[{DateTime.Now:HH:mm:ss}] [TRACE] ");
-        LogMessage(message, tags);
+        LogMessage(message, tag);
     }
     
-    private void LogMessage(string message, params string[] tags)
+    private void LogMessage(string message, string tag = "")
     {
         Console.ResetColor();
         if (logger_name.Length != 0) Console.Write($"[{logger_name}] ");
-        foreach (var tag in tags)
-        {
-            Console.Write($"[{tag}] ");
-        }
+        if (tag != "") Console.Write($"[{tag}] ");
         Console.WriteLine(message);
     }
 }

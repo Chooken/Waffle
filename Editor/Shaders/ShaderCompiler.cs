@@ -40,7 +40,7 @@ public class ShaderCompiler
         }
         else
         {
-            Log.Error("Failed to find a suiteable shader format", "ShaderManager");
+            Log.Error("Failed to find a suiteable shader format");
         }
     }
     
@@ -50,7 +50,7 @@ public class ShaderCompiler
         
         if (_formatString == "")
         {
-            Log.Error("Shader format not initialised", "ShaderManager");
+            Log.Error("Shader format not initialised");
             return;
         }
         
@@ -66,7 +66,7 @@ public class ShaderCompiler
     {
         if (_formatString == "")
         {
-            Log.Error("Shader format not initialised", "ShaderManager");
+            Log.Error("Shader format not initialised");
             return;
         }
 
@@ -125,13 +125,13 @@ public class ShaderCompiler
         
         if (vertexEntry == null)
         {
-            Log.Error("Failed to compile shader, missing a vertex entry point", "ShaderManager");
+            Log.Error("Failed to compile shader, missing a vertex entry point");
             failed = true;
         }
 
         if (fragmentEntry == null)
         {
-            Log.Error("Failed to compile shader, missing a fragment entry point", "ShaderManager");
+            Log.Error("Failed to compile shader, missing a fragment entry point");
             failed = true;
         }
 
@@ -157,6 +157,6 @@ public class ShaderCompiler
             Log.Error("Failed to serialize shader");
             return;
         }
-        Log.Info($"Shader compiled: {relPath}", "ShaderManager");
+        Log.Info($"Shader compiled: {relPath}");
     }
 }

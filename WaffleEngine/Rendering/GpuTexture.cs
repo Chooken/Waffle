@@ -1,4 +1,5 @@
 using SDL3;
+using WaffleEngine.Rendering.Immediate;
 
 namespace WaffleEngine.Rendering;
 
@@ -15,10 +16,10 @@ public sealed class GpuTexture : IGpuBindable
     public GpuTexture() => Handle = IntPtr.Zero;
     
     public GpuTexture(WindowSdl window) => 
-        Init((uint)window.Width, (uint)window.Height, (TextureFormat)SDL.GetGPUSwapchainTextureFormat(Device._gpuDevicePtr, window.WindowPtr));
+        Init((uint)window.Width, (uint)window.Height, (TextureFormat)SDL.GetGPUSwapchainTextureFormat(Device.Handle, window.WindowPtr));
 
     public GpuTexture(uint width, uint height, WindowSdl window) => 
-        Init(width, height, (TextureFormat)SDL.GetGPUSwapchainTextureFormat(Device._gpuDevicePtr, window.WindowPtr));
+        Init(width, height, (TextureFormat)SDL.GetGPUSwapchainTextureFormat(Device.Handle, window.WindowPtr));
 
     public GpuTexture(uint width, uint height) => Init(width, height, TextureFormat.B8G8R8A8Unorm);
 
@@ -42,7 +43,7 @@ public sealed class GpuTexture : IGpuBindable
         Height = (int)height;
         Format = format;
 
-        Handle = SDL.CreateGPUTexture(Device._gpuDevicePtr, createInfo);
+        Handle = SDL.CreateGPUTexture(Device.Handle, createInfo);
         
         var samplerCreateInfo = new SDL.GPUSamplerCreateInfo
         {
@@ -54,7 +55,7 @@ public sealed class GpuTexture : IGpuBindable
             AddressModeW = SDL.GPUSamplerAddressMode.Repeat,
         };
 
-        _sampler = SDL.CreateGPUSampler(Device._gpuDevicePtr, samplerCreateInfo);
+        _sampler = SDL.CreateGPUSampler(Device.Handle, samplerCreateInfo);
     }
 
     public void Resize(uint width, uint height)
@@ -70,7 +71,7 @@ public sealed class GpuTexture : IGpuBindable
         Handle = handle;
     }
     
-    public unsafe void Bind(IntPtr renderPass, uint slot)
+    public unsafe void Bind(ImRenderPass renderPass, uint slot)
     {
         if (Handle == IntPtr.Zero)
         {
@@ -86,15 +87,15 @@ public sealed class GpuTexture : IGpuBindable
         
         IntPtr ptr = (IntPtr)(&binding);
         
-        SDL.BindGPUVertexSamplers(renderPass, slot, ptr, 1);
-        SDL.BindGPUFragmentSamplers(renderPass, slot, ptr, 1);
+        SDL.BindGPUVertexSamplers(renderPass.Handle, slot, ptr, 1);
+        SDL.BindGPUFragmentSamplers(renderPass.Handle, slot, ptr, 1);
     }
 
     public void Dispose()
     {
         if (_sampler != 0x0)
-            SDL.ReleaseGPUSampler(Device._gpuDevicePtr, _sampler);
+            SDL.ReleaseGPUSampler(Device.Handle, _sampler);
         if (Handle != 0x0)
-            SDL.ReleaseGPUTexture(Device._gpuDevicePtr, Handle);
+            SDL.ReleaseGPUTexture(Device.Handle, Handle);
     }
 }

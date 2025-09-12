@@ -16,7 +16,7 @@ public static class ShaderSerializer
 
         if (dir is null)
         {
-            WLog.Error($"Failed to get the directory of: {path}", "Shader Serializer");
+            WLog.Error($"Failed to get the directory of: {path}");
             return false;
         }
         
@@ -65,13 +65,13 @@ public static class ShaderSerializer
 
         if (!File.Exists($"{path}.shaderinfo"))
         {
-            WLog.Error($"Shader file {path}.shaderinfo not found.", "Shader Deserializer");
+            WLog.Error($"Shader file {path}.shaderinfo not found.");
             return false;
         }
         
         if (!File.Exists($"{path}.shaderdata"))
         {
-            WLog.Error($"Shader file {path}.shaderdata not found.", "Shader Deserializer");
+            WLog.Error($"Shader file {path}.shaderdata not found.");
             return false;
         }
 
@@ -119,7 +119,7 @@ public static class ShaderSerializer
 
         if (!Enum.TryParse(formatString, out ShaderFormat format))
         {
-            WLog.Error($"Failed to parse shader format from {path}.shaderinfo", "Shader Deserializer");
+            WLog.Error($"Failed to parse shader format from {path}.shaderinfo");
             return false;
         }
         

@@ -4,7 +4,7 @@ namespace WaffleEngine.Rendering;
 
 public static unsafe class Device
 {
-    internal static IntPtr _gpuDevicePtr;
+    internal static IntPtr Handle;
     private static bool _initialized = false;
 
     public static bool Init()
@@ -16,25 +16,25 @@ public static unsafe class Device
         {
             if (!SDL.InitSubSystem(SDL.InitFlags.Video))
             {
-                WLog.Error($"Failed to initialise video sub system -> {SDL.GetError()}", "SDL");
+                WLog.Error($"Failed to initialise video sub system -> {SDL.GetError()}");
                 return false;
             }
             
-            WLog.Info("Initialised Video Subsystem.", "SDL");
+            WLog.Info("Initialised Video Subsystem.");
         }
         
-        _gpuDevicePtr = SDL.CreateGPUDevice(
+        Handle = SDL.CreateGPUDevice(
             SDL.GPUShaderFormat.SPIRV | 
             SDL.GPUShaderFormat.MSL |
             SDL.GPUShaderFormat.DXIL, true, null);
 
-        if (_gpuDevicePtr == IntPtr.Zero)
+        if (Handle == IntPtr.Zero)
         {
-            WLog.Error("Failed to create GPU Device", "SDL");
+            WLog.Error("Failed to create GPU Device");
             return false;
         }
         
-        WLog.Info($"Created GPU Device with backend {GetDriver()}.", "SDL");
+        WLog.Info($"Created GPU Device with backend {GetDriver()}.");
         _initialized = true;
         
         return true;
@@ -50,9 +50,9 @@ public static unsafe class Device
 
     private static bool TryClaimWindow(WindowSdl window)
     {
-        if (!SDL.ClaimWindowForGPUDevice(_gpuDevicePtr, window.WindowPtr))
+        if (!SDL.ClaimWindowForGPUDevice(Handle, window.WindowPtr))
         {
-            WLog.Error("Failed to claim window for GPU Device", "SDL");
+            WLog.Error("Failed to claim window for GPU Device");
             return false;
         }
         
@@ -61,12 +61,12 @@ public static unsafe class Device
 
     public static string GetDriver()
     {
-        return SDL.GetGPUDeviceDriver(_gpuDevicePtr) ?? "No GPU Driver Found";
+        return SDL.GetGPUDeviceDriver(Handle) ?? "No GPU Driver Found";
     }
 
     public static ShaderFormat GetShaderFormat()
     {
-        return (ShaderFormat)SDL.GetGPUShaderFormats(_gpuDevicePtr);
+        return (ShaderFormat)SDL.GetGPUShaderFormats(Handle);
     }
 }
 

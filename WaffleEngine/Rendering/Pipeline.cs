@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using SDL3;
+using WaffleEngine.Rendering.Immediate;
 
 namespace WaffleEngine.Rendering;
 
@@ -43,7 +44,7 @@ public sealed unsafe class Pipeline : IDisposable
 
         if (pipelineSettings.VertexAttributes is null || pipelineSettings.VertexAttributes.Count == 0)
         {
-            pipeline.Handle = SDL.CreateGPUGraphicsPipeline(Device._gpuDevicePtr, pipelineInfo);
+            pipeline.Handle = SDL.CreateGPUGraphicsPipeline(Device.Handle, pipelineInfo);
             return true;
         }
 
@@ -77,19 +78,19 @@ public sealed unsafe class Pipeline : IDisposable
         pipelineInfo.VertexInputState.NumVertexBuffers = 1;
         pipelineInfo.VertexInputState.VertexBufferDescriptions = (IntPtr)(&vertexBufferDescription);
         
-        pipeline.Handle = SDL.CreateGPUGraphicsPipeline(Device._gpuDevicePtr, pipelineInfo);
+        pipeline.Handle = SDL.CreateGPUGraphicsPipeline(Device.Handle, pipelineInfo);
 
         return true;
     }
     
-    public void Bind(IntPtr renderPass)
+    public void Bind(ImRenderPass renderPass)
     {
-        SDL.BindGPUGraphicsPipeline(renderPass, Handle);
+        SDL.BindGPUGraphicsPipeline(renderPass.Handle, Handle);
     }
 
     public void Dispose()
     {
-        SDL.ReleaseGPUGraphicsPipeline(Device._gpuDevicePtr, Handle);
+        SDL.ReleaseGPUGraphicsPipeline(Device.Handle, Handle);
     }
 }
 

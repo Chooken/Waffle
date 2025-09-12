@@ -5,29 +5,29 @@ namespace WaffleEngine
     {
         private static readonly Logger Logger = new ("");
         
-        public static void Fatal(string message, params string[] tags)
+        public static void Fatal(string message)
         {
-            Logger.Fatal(message, tags);
+            Logger.Fatal(message);
         }
 
-        public static void Error(string message, params string[] tags)
+        public static void Error(string message)
         {
-            Logger.Error(message, tags);
+            Logger.Error(message);
         }
 
-        public static void Warning(string message, params string[] tags)
+        public static void Warning(string message)
         {
-            Logger.Warning(message, tags);
+            Logger.Warning(message);
         }
 
-        public static void Info(string message, params string[] tags)
+        public static void Info(string message)
         {
-            Logger.Info(message, tags);
+            Logger.Info(message);
         }
 
-        public static void Trace(string message, params string[] tags)
+        public static void Trace(string message)
         {
-            Logger.Trace(message, tags);
+            Logger.Trace(message);
         }
     }
 }

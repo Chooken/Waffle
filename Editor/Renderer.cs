@@ -31,16 +31,16 @@ public class Renderer
         
         if (!ShaderManager.TryGetShader("BuiltinShaders/triangle", out _shader))
         {
-            Log.Error("Shader not found", "Renderer");
+            Log.Error("Shader not found");
             return;
         }
         
         vertices = new Buffer<Vertex>(BufferUsage.Vertex, 4);
         
-        vertices.Add( new Vertex { Position = new Vector3(0.5f, 0.5f, 0f), Uv = new Vector2(1f, 1f)});
-        vertices.Add( new Vertex { Position = new Vector3(0.5f, -0.5f, 0f), Uv = new Vector2(1f, 0f)});
-        vertices.Add( new Vertex { Position = new Vector3(-0.5f, -0.5f, 0f), Uv = new Vector2(0f, 0f)});
-        vertices.Add( new Vertex { Position = new Vector3(-0.5f, 0.5f, 0f), Uv = new Vector2(0f, 1f)});
+        vertices.Add( new Vertex { Position = new Vector3(0.5f, 0.5f, 0f), Uv = new Vector2(1f, 0f)});
+        vertices.Add( new Vertex { Position = new Vector3(0.5f, -0.5f, 0f), Uv = new Vector2(1f, 1f)});
+        vertices.Add( new Vertex { Position = new Vector3(-0.5f, -0.5f, 0f), Uv = new Vector2(0f, 1f)});
+        vertices.Add( new Vertex { Position = new Vector3(-0.5f, 0.5f, 0f), Uv = new Vector2(0f, 0f)});
         
         indices = new Buffer<int>(BufferUsage.Index, 6);
         indices.Add(0);
@@ -61,7 +61,7 @@ public class Renderer
         
         //Create the render Queue
 
-        text = new GpuTexture(128, 128, window);
+        text = new GpuTexture(window);
         
         Material material = new Material(_shader);
         material.AddBuffer(vertices, 0);
@@ -70,39 +70,48 @@ public class Renderer
         
         ColorTargetSettings colorTargetSettings = new ColorTargetSettings
         {
-            ClearColor = new Color(0.6f, 0.6f, 0.6f, 1.0f),
+            ClearColor = Color.RGBA255(34, 40, 49, 255),
             GpuTexture = text,
             LoadOperation = LoadOperation.Clear,
             StoreOperation = StoreOperation.Store,
         };
         
         _queue.AddPreprocess(new GetSwapchain(_window, ref _renderTexture));
-        RenderPass renderPass = new RenderPass(colorTargetSettings, material);
+        RenderPass renderPass = new RenderPass(colorTargetSettings);
+        renderPass.AddCommand(new Bind(material));
         renderPass.AddCommand(new DrawIndexedPrimatives(6, instances, 0, 0, 0));
         _queue.AddPass(renderPass);
-        
-        BlitPass blitPass = new BlitPass(text, _renderTexture, true);
-        _queue.AddPass(blitPass);
 
         ui = new UIToplevel(window);
+        ui.BackgroundColor = Color.RGBA255(49, 54, 63, 255);
         ui.Root = new UIRect()
-            .SetColor(Color.RGBA255(34, 40, 49, 255))
-            .SetWidth(UISize.Pixels(300))
+            .SetWidth(UISize.Percentage(100))
             .SetHeight(UISize.Percentage(100))
-            .SetMarginX(UISize.Pixels(12))
-            .SetMarginY(UISize.Pixels(12))
-            .SetBorderRadius(new Vector4(25f, 25f, 25f, 25f), UISizeType.Pixels);
-
-        GpuTexture uiTexture = ui.Render();
+            .AddUIElement(new UIRect()
+                .SetColor(Color.RGBA255(34, 40, 49, 255))
+                .SetWidth(UISize.Percentage(50))
+                .SetHeight(UISize.Percentage(100))
+                .SetMarginX(UISize.Pixels(12))
+                .SetMarginY(UISize.Pixels(12))
+                .SetBorderRadius(new Vector4(25f, 25f, 25f, 25f), UISizeType.Pixels))
+            .AddUIElement(new UIRect()
+                .SetColor(Color.RGBA255(34, 40, 49, 255))
+                .SetWidth(UISize.Percentage(50))
+                .SetHeight(UISize.Percentage(100))
+                .SetMarginX(UISize.Pixels(12))
+                .SetMarginY(UISize.Pixels(12))
+                .SetBorderRadius(new Vector4(25f, 25f, 25f, 25f), UISizeType.Pixels)
+                .SetTexture(text));
         
-        BlitPass blitPass2 = new BlitPass(uiTexture, _renderTexture, false);
+        _queue.AddPass(new UIPass(ui));
+        
+        BlitPass blitPass2 = new BlitPass(ui.UiTexture, _renderTexture, true);
         _queue.AddPass(blitPass2);
     }
     
     internal void Render()
     {
         // instances.SetValue(instances + 1);
-        ui.Render();
         _queue.Submit();
     }
 }

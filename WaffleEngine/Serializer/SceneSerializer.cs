@@ -15,7 +15,7 @@ public static class SceneSerializer
 
         if (dir is null)
         {
-            WLog.Error($"Failed to get the directory of: {path}", "Scene Serializer");
+            WLog.Error($"Failed to get the directory of: {path}");
             return false;
         }
         
@@ -50,8 +50,7 @@ public static class SceneSerializer
                 {
                     if (!Attribute.IsDefined(component.GetType(), typeof(SerializeDefaultAttribute)))
                     {
-                        WLog.Warning($"Component {component.GetType().FullName} isn't Serializable will be default",
-                            "Scene Serializer");
+                        WLog.Warning($"Component {component.GetType().FullName} isn't Serializable will be default");
                     }
 
                     emitter.EndMapping();
@@ -95,7 +94,7 @@ public static class SceneSerializer
         
         if (!File.Exists($"{path}.scene"))
         {
-            WLog.Error($"Shader file {path}.scene not found.", "Scene Deserializer");
+            WLog.Error($"Shader file {path}.scene not found.");
             return false;
         }
         
