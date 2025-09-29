@@ -84,6 +84,11 @@ public sealed class WindowSdl : Window
         SDL.RaiseWindow(WindowPtr);
     }
 
+    public override void SetTitle(string title)
+    {
+        SDL.SetWindowTitle(WindowPtr, title);
+    }
+
     public override void Dispose()
     {
         WLog.Info("Window Disposed");

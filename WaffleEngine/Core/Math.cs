@@ -28,9 +28,51 @@ public struct Vector2
     {
         return lhs.x != rhs.x || lhs.y != rhs.y;
     }
+
+    public static Vector2 operator *(Vector2 lhs, int rhs)
+    {
+        return new Vector2(lhs.x * rhs, lhs.y * rhs);
+    }
+    
+    public static Vector2 operator *(Vector2 lhs, float rhs)
+    {
+        return new Vector2(lhs.x * rhs, lhs.y * rhs);
+    }
+    
+    public static Vector2 operator /(Vector2 lhs, int rhs)
+    {
+        return new Vector2(lhs.x / rhs, lhs.y / rhs);
+    }
+    
+    public static Vector2 operator /(Vector2 lhs, float rhs)
+    {
+        return new Vector2(lhs.x / rhs, lhs.y / rhs);
+    }
+
+    public static Vector2 operator -(Vector2 lhs, int rhs)
+    {
+        return new Vector2(lhs.x - rhs, lhs.y - rhs);
+    }
+    
+    public static Vector2 operator -(Vector2 lhs, float rhs)
+    {
+        return new Vector2(lhs.x - rhs, lhs.y - rhs);
+    }
+    
+    public static Vector2 operator +(Vector2 lhs, int rhs)
+    {
+        return new Vector2(lhs.x - rhs, lhs.y + rhs);
+    }
+    
+    public static Vector2 operator +(Vector2 lhs, float rhs)
+    {
+        return new Vector2(lhs.x - rhs, lhs.y + rhs);
+    }
+
+    public static Vector2 operator -(Vector2 vector) => new (-vector.x, -vector.y);
 }
 
-[StructLayout(LayoutKind.Explicit, Size = 16)]
+[StructLayout(LayoutKind.Explicit, Size = 12)]
 public struct Vector3
 {
     [FieldOffset(0)]
@@ -39,9 +81,6 @@ public struct Vector3
     public float y;
     [FieldOffset(8)]
     public float z; 
-
-    //[FieldOffset(0)]
-    //private Vector128<float> data;
     
     public Vector3(float x, float y, float z)
     {
@@ -64,6 +103,70 @@ public struct Vector3
     {
         return lhs.x != rhs.x || lhs.y != rhs.y || lhs.z != lhs.z;
     }
+    
+    public static Vector3 operator *(Vector3 lhs, int rhs)
+    {
+        return new Vector3(lhs.x * rhs, lhs.y * rhs, lhs.z * rhs);
+    }
+    
+    public static Vector3 operator *(Vector3 lhs, float rhs)
+    {
+        return new Vector3(lhs.x * rhs, lhs.y * rhs, lhs.z * rhs);
+    }
+    
+    public static Vector3 operator /(Vector3 lhs, int rhs)
+    {
+        return new Vector3(lhs.x / rhs, lhs.y / rhs, lhs.z / rhs);
+    }
+    
+    public static Vector3 operator /(Vector3 lhs, float rhs)
+    {
+        return new Vector3(lhs.x / rhs, lhs.y / rhs, lhs.z / rhs);
+    }
+
+    public static Vector3 operator -(Vector3 lhs, int rhs)
+    {
+        return new Vector3(lhs.x - rhs, lhs.y - rhs, lhs.z - rhs);
+    }
+    
+    public static Vector3 operator -(Vector3 lhs, float rhs)
+    {
+        return new Vector3(lhs.x - rhs, lhs.y - rhs, lhs.z - rhs);
+    }
+    
+    public static Vector3 operator +(Vector3 lhs, int rhs)
+    {
+        return new Vector3(lhs.x - rhs, lhs.y + rhs, lhs.z + rhs);
+    }
+
+    public static Vector3 operator +(Vector3 lhs, float rhs)
+    {
+        return new Vector3(lhs.x - rhs, lhs.y + rhs, lhs.z + rhs);
+    }
+    
+    public static Vector3 operator -(Vector3 vector) => new (-vector.x, -vector.y, -vector.z);
+}
+
+[StructLayout(LayoutKind.Explicit, Size = 16)]
+public struct AlignedVector3
+{
+    [FieldOffset(0)]
+    public float x;
+    [FieldOffset(4)]
+    public float y;
+    [FieldOffset(8)]
+    public float z;
+
+    public AlignedVector3(Vector3 vector)
+    {
+        x = vector.x;
+        y = vector.y;
+        z = vector.z;
+    }
+
+    public static implicit operator AlignedVector3(Vector3 vector) => new AlignedVector3(vector);
+    
+    public static implicit operator Vector3(AlignedVector3 vector) => new Vector3(vector.x, vector.y, vector.z);
 }
 
 [StructLayout(LayoutKind.Explicit, Size = 16)]
@@ -103,4 +206,48 @@ public struct Vector4
     {
         return lhs.x != rhs.x || lhs.y != rhs.y || lhs.z != lhs.z || lhs.w != rhs.w;
     }
+    
+    
+    
+    public static Vector4 operator *(Vector4 lhs, int rhs)
+    {
+        return new Vector4(lhs.x * rhs, lhs.y * rhs, lhs.z * rhs, lhs.w * rhs);
+    }
+    
+    public static Vector4 operator *(Vector4 lhs, float rhs)
+    {
+        return new Vector4(lhs.x * rhs, lhs.y * rhs, lhs.z * rhs, lhs.w * rhs);
+    }
+    
+    public static Vector4 operator /(Vector4 lhs, int rhs)
+    {
+        return new Vector4(lhs.x / rhs, lhs.y / rhs, lhs.z / rhs, lhs.w / rhs);
+    }
+    
+    public static Vector4 operator /(Vector4 lhs, float rhs)
+    {
+        return new Vector4(lhs.x / rhs, lhs.y / rhs, lhs.z / rhs, lhs.w / rhs);
+    }
+
+    public static Vector4 operator -(Vector4 lhs, int rhs)
+    {
+        return new Vector4(lhs.x - rhs, lhs.y - rhs, lhs.z - rhs, lhs.w - rhs);
+    }
+    
+    public static Vector4 operator -(Vector4 lhs, float rhs)
+    {
+        return new Vector4(lhs.x - rhs, lhs.y - rhs, lhs.z - rhs, lhs.w - rhs);
+    }
+    
+    public static Vector4 operator +(Vector4 lhs, int rhs)
+    {
+        return new Vector4(lhs.x - rhs, lhs.y + rhs, lhs.z + rhs, lhs.w + rhs);
+    }
+
+    public static Vector4 operator +(Vector4 lhs, float rhs)
+    {
+        return new Vector4(lhs.x - rhs, lhs.y + rhs, lhs.z + rhs, lhs.w + rhs);
+    }
+    
+    public static Vector4 operator -(Vector4 vector) => new (-vector.x, -vector.y, -vector.z, -vector.w);
 }

@@ -54,7 +54,7 @@ public sealed class GpuTexture : IGpuBindable
             AddressModeV = SDL.GPUSamplerAddressMode.Repeat,
             AddressModeW = SDL.GPUSamplerAddressMode.Repeat,
         };
-
+        
         _sampler = SDL.CreateGPUSampler(Device.Handle, samplerCreateInfo);
     }
 
@@ -97,5 +97,8 @@ public sealed class GpuTexture : IGpuBindable
             SDL.ReleaseGPUSampler(Device.Handle, _sampler);
         if (Handle != 0x0)
             SDL.ReleaseGPUTexture(Device.Handle, Handle);
+
+        Handle = 0x0;
+        _sampler = 0x0;
     }
 }

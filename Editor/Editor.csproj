@@ -13,6 +13,7 @@
 
     <ItemGroup>
         <Content Include="textures\**" CopyToOutputDirectory="Always"  />
+        <Content Include="Fonts\**" CopyToOutputDirectory="Always"  />
     </ItemGroup>
 
 </Project>

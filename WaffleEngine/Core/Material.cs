@@ -1,7 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using GarbagelessSharp;
 using SDL3;
+using WaffleEngine.Native;
 using WaffleEngine.Rendering;
 using WaffleEngine.Rendering.Immediate;
 
@@ -12,9 +12,6 @@ public class Material : IGpuBindable
     private List<(IGpuBindable, uint)> _binds = new List<(IGpuBindable, uint)>();
     
     private Shader _shader;
-    public uint Instances = 1;
-    
-    public UnmanagedVoid Uniforms;
 
     public Material(Shader shader)
     {

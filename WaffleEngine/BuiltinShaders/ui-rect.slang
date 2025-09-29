@@ -1,6 +1,7 @@
 struct UIElement {
     float3 Position;
     float2 Size;
+    float2 VertexOffset;
     float4 Color;
     float4 BorderRadius;
     float2 RenderSize;
@@ -29,9 +30,9 @@ VertexOutput vsMain(uint vertexID : SV_VertexID) {
     
     VertexOutput output;
     
-    float2 pos;
-    pos.x = vertexPos[vert].x * uiElement.Size.x + uiElement.Position.x;
-    pos.y = vertexPos[vert].y * uiElement.Size.y + uiElement.Position.y;
+    int2 pos;
+    pos.x = (vertexPos[vert].x) * uiElement.Size.x + uiElement.Position.x;
+    pos.y = uiElement.RenderSize.y - (vertexPos[vert].y) * uiElement.Size.y - uiElement.Position.y;
     
     float2 clipSpace = pos / uiElement.RenderSize * 2 - 1;
     
@@ -48,9 +49,11 @@ float roundedBoxSDF(float2 uv, float2 halfSize, float4 corners) {
     corners.xy = (uv.x < 0.0) ? corners.xy : corners.zw;
     corners.x  = (uv.y > 0.0) ? corners.x  : corners.y;
     
+    float radius = min(corners.x, min(halfSize.x, halfSize.y));
+    
     // Calculate SDF
-    float2 position = abs(uv) - halfSize + corners.x;
-    return length(max(position, 0.0)) + min(max(position.x, position.y), 0.0) - corners.x;
+    float2 position = abs(uv) - halfSize + radius;
+    return length(max(position, 0.0)) + min(max(position.x, position.y), 0.0) - radius;
 }
 
 [shader("pixel")]

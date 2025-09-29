@@ -1,5 +1,4 @@
 using System.Runtime.InteropServices;
-using GarbagelessSharp;
 using SDL3;
 
 namespace WaffleEngine.SDLExtra;

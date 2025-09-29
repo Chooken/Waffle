@@ -53,7 +53,7 @@ public static class ShaderManager
             return;
         }
         
-        //Parallel.ForEach(shaderFiles, CompileShader);
+        // Parallel.ForEach(shaderFiles, CompileShader);
 
         foreach (var shader in shaderFiles)
         {

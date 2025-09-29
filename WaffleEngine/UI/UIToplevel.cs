@@ -1,5 +1,4 @@
 using System.Numerics;
-using GarbagelessSharp;
 using WaffleEngine.Rendering;
 using WaffleEngine.Rendering.Immediate;
 
@@ -36,7 +35,7 @@ public class UIToplevel
             UiTexture.Resize((uint)Window.Width, (uint)Window.Height);
         }
 
-        if (Root.Dirty || resized || true)
+        if (Root.Dirty || resized)
         {
             ColorTargetSettings bgColorTargetSettings = new ColorTargetSettings
             {
@@ -47,22 +46,16 @@ public class UIToplevel
             };
 
             var renderPass = queue.AddRenderPass(bgColorTargetSettings);
-            renderPass.End();
             
-            ColorTargetSettings colorTargetSettings = new ColorTargetSettings
-            {
-                ClearColor = new Color(0f, 0f, 0f, 0f),
-                GpuTexture = UiTexture,
-                LoadOperation = LoadOperation.Load,
-                StoreOperation = StoreOperation.Store,
-            };
-            
-            Root.AddToBuffer(
+            Root.Render(
                 queue,
-                colorTargetSettings,
-                new Vector3(-1, -1, 0), 
+                renderPass,
+                new Vector3(0, 0, 0), 
+                UIAnchor.TopLeft,
                 new Vector2(UiTexture.Width, UiTexture.Height), 
                 new Vector2(UiTexture.Width, UiTexture.Height));
+            
+            renderPass.End();
         }
 
         _screenSize = new Vector2(UiTexture.Width, UiTexture.Height);

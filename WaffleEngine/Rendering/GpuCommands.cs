@@ -37,7 +37,7 @@ public class Bind(IGpuBindable value, uint slot = 0) : IGpuRenderCommand
     }
 }
 
-public class UploadBufferToGpu(IGpuUploadable value): IGpuCopyCommand
+public class UploadToGpu(IGpuUploadable value): IGpuCopyCommand
 {
     public unsafe void Add(ImCopyPass copyPass)
     {

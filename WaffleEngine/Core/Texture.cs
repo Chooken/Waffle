@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
-using GarbagelessSharp;
 using SDL3;
 using StbImageSharp;
+using WaffleEngine.Native;
 using WaffleEngine.Rendering;
 using WaffleEngine.Rendering.Immediate;
 
@@ -13,7 +13,7 @@ public unsafe class Texture : IGpuUploadable
     public int Height => _surface.Value.Height;
     public Span<byte> Data => new Span<byte>((void *)_surface.Value.Pixels, Width * Height * 4);
     
-    private Unmanaged<SDL.Surface> _surface;
+    private NativePtr<SDL.Surface> _surface;
     private GpuTexture _gpuTexture;
     
     public Texture(string path)
@@ -26,13 +26,30 @@ public unsafe class Texture : IGpuUploadable
         }
 
         _surface = SDL.ConvertSurface(startSurface, SDL.PixelFormat.ABGR8888);
-        //SDL.FlipSurface(_surface, SDL.FlipMode.Vertical);
-        
-        //var surface = SDL.PointerToStructure<SDL.Surface>(_surface) ?? default;
         
         SDL.DestroySurface(startSurface);
 
         _gpuTexture = new GpuTexture((uint)Width, (uint)Height, TextureFormat.R8G8B8A8Unorm);
+    }
+
+    public Texture(IntPtr surface)
+    {
+        _surface= SDL.ConvertSurface(surface, SDL.PixelFormat.ABGR8888);
+        
+        SDL.DestroySurface(surface);
+        
+        _gpuTexture = new GpuTexture((uint)Width, (uint)Height, TextureFormat.R8G8B8A8Unorm);
+    }
+
+    public void SetSurface(IntPtr surface)
+    {
+        SDL.DestroySurface(_surface);
+        
+        _surface= SDL.ConvertSurface(surface, SDL.PixelFormat.ABGR8888);
+        
+        SDL.DestroySurface(surface);
+        
+        _gpuTexture.Resize((uint)Width, (uint)Height);
     }
 
     public void Bind(ImRenderPass renderPass, uint slot)

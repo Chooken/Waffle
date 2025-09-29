@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using SDL3;
 using WaffleEngine.Rendering;
+using WaffleEngine.Text;
 
 namespace WaffleEngine;
 
@@ -28,14 +29,7 @@ public static class Application
             return false;
         
         ShaderManager.Init();
-        
-        // if (WindowManager.OpenWindow("Waffle Engine - Second", "waffle_engine_second", 800, 600) == null)
-        //     return false;
-        
-        // Tray.Create("Waffle Engine");
-        // Tray.AddButton("Open Window 2", (ptr, entry) => WindowManager.OpenWindow("Waffle Engine - Second", "waffle_engine_second", 800, 600));
-        // Tray.AddButton("Open Window 3", (ptr, entry) => WindowManager.OpenWindow("Waffle Engine - Third", "waffle_engine_third", 800, 600));
-        //
+        FontLoader.Init();
         
         WLog.Info("Application Initialised");
         
@@ -50,6 +44,8 @@ public static class Application
         
         _isRunning = true;
         
+        Stopwatch timer = Stopwatch.StartNew();
+        
         while (_isRunning)
         {
             AppEventSystem.Process();
@@ -60,6 +56,8 @@ public static class Application
             SceneManager.RunActiveSceneQueries();
             
             Input.GlobalInputHandler.Update();
+            
+            timer.Restart();
         }
     }
 
@@ -75,6 +73,8 @@ public static class Application
     {
         if (!_isRunning)
             return;
+        
+        FontLoader.Dispose();
         
         _isRunning = false;
         WLog.Info("Application Exit Requested.");

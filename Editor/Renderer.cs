@@ -34,27 +34,13 @@ public class Renderer
             Log.Error("Shader not found");
             return;
         }
-        
-        vertices = new Buffer<Vertex>(BufferUsage.Vertex, 4);
-        
-        vertices.Add( new Vertex { Position = new Vector3(0.5f, 0.5f, 0f), Uv = new Vector2(1f, 0f)});
-        vertices.Add( new Vertex { Position = new Vector3(0.5f, -0.5f, 0f), Uv = new Vector2(1f, 1f)});
-        vertices.Add( new Vertex { Position = new Vector3(-0.5f, -0.5f, 0f), Uv = new Vector2(0f, 1f)});
-        vertices.Add( new Vertex { Position = new Vector3(-0.5f, 0.5f, 0f), Uv = new Vector2(0f, 0f)});
-        
-        indices = new Buffer<int>(BufferUsage.Index, 6);
-        indices.Add(0);
-        indices.Add(1);
-        indices.Add(2);
-        indices.Add(0);
-        indices.Add(2);
-        indices.Add(3);
+
+        Mesh mesh = Mesh.Quad(new Vector3(-0.5f, -0.5f, 0), new Vector3(0.5f, 0.5f, 0));
         
         //Upload Buffer to GPU
         var copyPass = new CopyPass();
-        copyPass.AddCommand(new UploadBufferToGpu(vertices));
-        copyPass.AddCommand(new UploadBufferToGpu(indices));
-        copyPass.AddCommand(new UploadBufferToGpu(texture));
+        copyPass.AddCommand(new UploadToGpu(mesh));
+        copyPass.AddCommand(new UploadToGpu(texture));
         _queue.AddPass(copyPass);
         _queue.Submit();
         _queue.Clear();
@@ -64,13 +50,11 @@ public class Renderer
         text = new GpuTexture(window);
         
         Material material = new Material(_shader);
-        material.AddBuffer(vertices, 0);
-        material.AddBuffer(indices, 0);
         material.AddTexture(texture, 0);
         
         ColorTargetSettings colorTargetSettings = new ColorTargetSettings
         {
-            ClearColor = Color.RGBA255(34, 40, 49, 255),
+            ClearColor = Color.RGBA255(49, 54, 63, 255),
             GpuTexture = text,
             LoadOperation = LoadOperation.Clear,
             StoreOperation = StoreOperation.Store,
@@ -79,29 +63,77 @@ public class Renderer
         _queue.AddPreprocess(new GetSwapchain(_window, ref _renderTexture));
         RenderPass renderPass = new RenderPass(colorTargetSettings);
         renderPass.AddCommand(new Bind(material));
+        renderPass.AddCommand(new Bind(mesh));
         renderPass.AddCommand(new DrawIndexedPrimatives(6, instances, 0, 0, 0));
         _queue.AddPass(renderPass);
 
         ui = new UIToplevel(window);
-        ui.BackgroundColor = Color.RGBA255(49, 54, 63, 255);
+        ui.BackgroundColor = Color.RGBA255(34, 40, 49, 255);
         ui.Root = new UIRect()
             .SetWidth(UISize.Percentage(100))
             .SetHeight(UISize.Percentage(100))
+            .SetChildDirection(UIDirection.None)
             .AddUIElement(new UIRect()
-                .SetColor(Color.RGBA255(34, 40, 49, 255))
-                .SetWidth(UISize.Percentage(50))
+                .SetWidth(UISize.Percentage(100))
                 .SetHeight(UISize.Percentage(100))
-                .SetMarginX(UISize.Pixels(12))
-                .SetMarginY(UISize.Pixels(12))
-                .SetBorderRadius(new Vector4(25f, 25f, 25f, 25f), UISizeType.Pixels))
+                .SetPaddingX(UISize.Pixels(12))
+                .SetPaddingY(UISize.Pixels(12))
+                .AddUIElement(new UIRect()
+                    .SetWidth(UISize.Percentage(20))
+                    .SetHeight(UISize.Percentage(100))
+                    .SetChildDirection(UIDirection.Down)
+                    .SetChildAnchor(UIAnchor.Center)
+                    .AddUIElement(new UIRect()
+                        .SetWidth(UISize.Percentage(100))
+                        .SetHeight(UISize.Percentage(50))
+                        .AddUIElement(new UIRect()
+                            .SetColor(Color.RGBA255(255, 40, 49, 255))
+                            .SetWidth(UISize.Percentage(50))
+                            .SetHeight(UISize.Percentage(100))
+                            .SetMarginX(UISize.Pixels(12))
+                            .SetMarginY(UISize.Pixels(12))
+                            .SetBorderRadius(new Vector4(25f, 25f, 25f, 25f), UISizeType.Pixels)
+                        )
+                        .AddUIElement(new UIRect()
+                            .SetColor(Color.RGBA255(255, 120, 49, 255))
+                            .SetWidth(UISize.Percentage(50))
+                            .SetHeight(UISize.Percentage(100))
+                            .SetMarginX(UISize.Pixels(12))
+                            .SetMarginY(UISize.Pixels(12))
+                            .SetBorderRadius(new Vector4(25f, 25f, 25f, 25f), UISizeType.Pixels)
+                            // .SetPaddingX(UISize.Pixels(12))
+                            // .SetPaddingY(UISize.Pixels(12))
+                            .AddUIElement(new UIText()
+                                .SetText("Hello World.")
+                                .SetTextColor(Color.RGBA255(255,255,255,255))
+                                .SetMarginX(UISize.Pixels(12))
+                                .SetMarginY(UISize.Pixels(12))
+                            )
+                        )
+                    )
+                    .AddUIElement(new UIRect()
+                        .SetColor(Color.RGBA255(34, 255, 49, 255))
+                        .SetWidth(UISize.Percentage(100))
+                        .SetHeight(UISize.Percentage(50))
+                        .SetMarginX(UISize.Pixels(12))
+                        .SetMarginY(UISize.Pixels(12))
+                        .SetBorderRadius(new Vector4(25f, 25f, 25f, 25f), UISizeType.Pixels)
+                    )
+                )
+                .AddUIElement(new UIRect()
+                    .SetWidth(UISize.Percentage(80))
+                    .SetHeight(UISize.Percentage(100))
+                    .SetMarginX(UISize.Pixels(12))
+                    .SetMarginY(UISize.Pixels(12))
+                    .SetBorderRadius(new Vector4(25f, 25f, 25f, 25f), UISizeType.Pixels)
+                    .SetTexture(text)
+                )
+            )
             .AddUIElement(new UIRect()
-                .SetColor(Color.RGBA255(34, 40, 49, 255))
-                .SetWidth(UISize.Percentage(50))
+                .SetWidth(UISize.Percentage(100))
                 .SetHeight(UISize.Percentage(100))
-                .SetMarginX(UISize.Pixels(12))
-                .SetMarginY(UISize.Pixels(12))
-                .SetBorderRadius(new Vector4(25f, 25f, 25f, 25f), UISizeType.Pixels)
-                .SetTexture(text));
+                .SetChildAnchor(UIAnchor.Center)
+            );
         
         _queue.AddPass(new UIPass(ui));
         

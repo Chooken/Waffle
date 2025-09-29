@@ -15,11 +15,6 @@ public unsafe interface IGpuBindable
     internal void Bind(ImRenderPass renderPass, uint slot);
 }
 
-public interface IBuffer : IGpuUploadable, IGpuBindable
-{
-    
-}
-
 [Flags]
 public enum BufferUsage : uint
 {
@@ -31,32 +26,22 @@ public enum BufferUsage : uint
     ComputeStorageWrite = 32,
 }
 
-public sealed unsafe class Buffer<T>: IBuffer where T : unmanaged
+public sealed class Buffer<T>: IGpuBindable, IGpuUploadable where T : unmanaged
 {
     private T[] _data;
-    private BufferUsage _usage;
+    private GpuBuffer<T> _gpuBuffer;
     
-    private IntPtr _gpuBuffer;
-    private int _gpuBufferSize;
     private bool _updated = false;
     private int _count;
 
-    public BufferUsage Usage => _usage;
+    public BufferUsage Usage => _gpuBuffer.Usage;
     public int Count => _count;
     public bool IsReadOnly => false;
 
     public Buffer(BufferUsage usage, int startSize = 16)
     {
         _data = new T[startSize];
-        _usage = usage;
-        
-        SDL.GPUBufferCreateInfo bufferCreateInfo = new SDL.GPUBufferCreateInfo();
-        bufferCreateInfo.Usage = (SDL.GPUBufferUsageFlags)_usage;
-        bufferCreateInfo.Size = (uint)(sizeof(T) * startSize);
-        
-        _gpuBufferSize = startSize;
-        _gpuBuffer = SDL.CreateGPUBuffer(Device.Handle, bufferCreateInfo);
-            
+        _gpuBuffer = new GpuBuffer<T>(usage);
         _count = 0;
     }
     
@@ -96,107 +81,11 @@ public sealed unsafe class Buffer<T>: IBuffer where T : unmanaged
         if (!_updated)
             return;
 
-        if (_data.Length > _gpuBufferSize)
-        {
-            SDL.ReleaseGPUBuffer(Device.Handle, _gpuBuffer);
-            
-            SDL.GPUBufferCreateInfo bufferCreateInfo = new SDL.GPUBufferCreateInfo();
-            bufferCreateInfo.Usage = (SDL.GPUBufferUsageFlags)_usage;
-            bufferCreateInfo.Size = (uint)(sizeof(T) * _data.Length);
-        
-            _gpuBufferSize = _data.Length;
-            _gpuBuffer = SDL.CreateGPUBuffer(Device.Handle, bufferCreateInfo);
-        }
-        
-        SDL.GPUTransferBufferCreateInfo transferCreateInfo = new SDL.GPUTransferBufferCreateInfo();
-        transferCreateInfo.Size = (uint)(sizeof(T) * _data.Length);
-        transferCreateInfo.Usage = SDL.GPUTransferBufferUsage.Upload;
-        
-        IntPtr transferBuffer = SDL.CreateGPUTransferBuffer(Device.Handle, transferCreateInfo);
-
-        var dataPtr = SDL.MapGPUTransferBuffer(Device.Handle, transferBuffer, false);
-
-        Span<T> data = new (dataPtr.ToPointer(), sizeof(T) * _data.Length);
-        
-        _data.CopyTo(data);
-        
-        SDL.UnmapGPUTransferBuffer(Device.Handle, transferBuffer);
-        
-        SDL.GPUTransferBufferLocation location = new SDL.GPUTransferBufferLocation();
-        location.TransferBuffer = transferBuffer;
-        location.Offset = 0;
-        
-        SDL.GPUBufferRegion region = new SDL.GPUBufferRegion();
-        region.Buffer = _gpuBuffer;
-        region.Size = (uint)(sizeof(T) * _data.Length);
-        region.Offset = 0;
-        
-        SDL.UploadToGPUBuffer(copyPass.Handle, location, region, true);
-        
-        SDL.ReleaseGPUTransferBuffer(Device.Handle, transferBuffer);
-
+        _gpuBuffer.UploadData(_data, copyPass);
         _updated = false;
     }
 
-    public void Bind(ImRenderPass renderPass, uint slot)
-    {
-        if (_usage == BufferUsage.Vertex)
-        {
-            BindAsVertexBuffer(renderPass, slot);
-            return;
-        }
-        
-        if (_usage == BufferUsage.Index)
-        {
-            BindAsIndexBuffer(renderPass);
-            return;
-        }
-
-        if (_usage == BufferUsage.GraphicsStorageRead)
-        {
-            BindAsStorageBuffer(renderPass, slot);
-            return;
-        }
-        
-        WLog.Error($"Can't bind a buffer with the usage: {_usage}");
-    }
-
-    private void BindAsVertexBuffer(ImRenderPass renderPass, uint slot)
-    {
-        SDL.GPUBufferBinding bufferBinding = new SDL.GPUBufferBinding
-        {
-            Buffer = _gpuBuffer,
-            Offset = 0
-        };
-
-        SDL.GPUBufferBinding* ptr = &bufferBinding;
-        
-        SDL.BindGPUVertexBuffers(renderPass.Handle, slot, (IntPtr)ptr, 1);
-    }
-
-    private void BindAsIndexBuffer(ImRenderPass renderPass)
-    {
-        SDL.GPUBufferBinding bufferBinding = new SDL.GPUBufferBinding
-        {
-            Buffer = _gpuBuffer,
-            Offset = 0
-        };
-
-        SDL.BindGPUIndexBuffer(renderPass.Handle, bufferBinding, SDL.GPUIndexElementSize.IndexElementSize32Bit);
-    }
-    
-    private void BindAsStorageBuffer(ImRenderPass renderPass, uint slot)
-    {
-        // IntPtr[] ptrs = [_gpuBuffer];
-        //
-        // SDL.BindGPUVertexStorageBuffers(renderPass, slot, ptrs, 1);
-        
-        IntPtr ptr = _gpuBuffer;
-        
-        SDLExtra.BindGPUVertexStorageBuffers(renderPass.Handle, slot, (IntPtr)(&ptr), 1);
-        SDL.BindGPUFragmentStorageBuffers(renderPass.Handle, slot, (IntPtr)(&ptr), 1);
-        // WLog.Info(SDL.GetError());
-    }
+    public void Bind(ImRenderPass renderPass, uint slot) => _gpuBuffer.Bind(renderPass, slot);
 }
 
 public static partial class SDLExtra

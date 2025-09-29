@@ -15,6 +15,8 @@ public abstract class Window : IDisposable
     public abstract void SetSize(int width, int height);
 
     public abstract void Focus();
+
+    public abstract void SetTitle(string title);
     
     public abstract void Dispose();
 }

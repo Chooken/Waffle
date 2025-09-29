@@ -5,5 +5,6 @@ public enum UIDirection
     Up,
     Down,
     Left,
-    Right
+    Right,
+    None,
 }

@@ -6,8 +6,9 @@ namespace WaffleEngine.UI;
 
 public struct UIRectData
 {
-    public Vector3 Position;
+    public AlignedVector3 Position;
     public Vector2 Size;
+    public Vector2 VertexOffset;
     public Vector4 Color;
     public Vector4 BorderRadius;
     public Vector2 ScreenSize;
@@ -15,12 +16,8 @@ public struct UIRectData
 
 public class UIRect
 {
-    private UIRect? _parent;
+    public UIRect? Parent { get; private set; }
     private List<UIRect> _uiElements = new List<UIRect>();
-
-    public static Buffer<UIRectData> GpuData = new Buffer<UIRectData>(BufferUsage.GraphicsStorageRead);
-
-    private UIRectData _data;
     
     public UISize Width;
     public UISize Height;
@@ -32,32 +29,91 @@ public class UIRect
     public UISize BorderRadiusBL;
     public UISize BorderRadiusTR;
     public UISize BorderRadiusBR;
-    public UIDirection ChildDirection;
-    public Color Color;
+    public UIDirection ChildDirection = UIDirection.Right;
+    public UIAnchor ChildAnchor;
+    public Color Color = new Color(0, 0, 0, 0);
     public GpuTexture? Texture;
-    public bool Dirty;
+    public bool Dirty = true;
 
-    private Material? _material;
-    private Material? _materialText;
+    protected static Material? BaseRectMaterial;
+    protected static Material? BaseTexturedRectMaterial;
 
-    public virtual Vector2 AddToBuffer(ImQueue queue, ColorTargetSettings colorTargetSettings, Vector3 position, Vector2 parentSize, Vector2 renderSize)
+    public virtual Vector2 GetBoundingSize(Vector2 parentSize)
     {
-        var size = new Vector2(
+        return new Vector2(
+            Width.AsPixels(parentSize.x), 
+            Height.AsPixels(parentSize.y));
+    }
+    
+    public virtual Vector2 GetSize(Vector2 parentSize)
+    {
+        return new Vector2(
             Width.AsPixels(parentSize.x) - MarginX.AsPixels(parentSize.x) * 2, 
             Height.AsPixels(parentSize.y) - MarginY.AsPixels(parentSize.y) * 2);
+    }
+
+    public virtual Vector2 Render(ImQueue queue, ImRenderPass renderPass, Vector3 position, UIAnchor anchor, Vector2 parentSize, Vector2 renderSize)
+    {
+        var size = GetSize(parentSize);
+        
+        Vector2 contentSize = Vector2.Zero;
+
+        foreach (var uiElement in _uiElements)
+        {
+            Vector2 childSize = uiElement.GetBoundingSize(
+                new Vector2(
+                    size.x - PaddingX.AsPixels(parentSize.x) * 2, 
+                    size.y - PaddingY.AsPixels(parentSize.y) * 2));
+
+            switch (ChildDirection)
+            {
+                case UIDirection.Right:
+                    contentSize = new Vector2(
+                        contentSize.x + childSize.x, 
+                        MathF.Max(contentSize.y, childSize.y));
+                    break;
+                case UIDirection.Left:
+                    contentSize = new Vector2(
+                        contentSize.x + childSize.x, 
+                        MathF.Max(contentSize.y, childSize.y));
+                    break;
+                case UIDirection.Up:
+                    contentSize = new Vector2(
+                        MathF.Max(contentSize.x, childSize.x),
+                        contentSize.y + childSize.y);
+                    break;
+                case UIDirection.Down:
+                    contentSize = new Vector2(
+                        MathF.Max(contentSize.x, childSize.x),
+                        contentSize.y + childSize.y);
+                    break;
+                default:
+                    contentSize = new Vector2(
+                        MathF.Max(contentSize.x, childSize.x),
+                        MathF.Max(contentSize.y, childSize.y));
+                    break;
+            }
+        }
+        
+        contentSize = new Vector2(
+            contentSize.x + PaddingX.AsPixels(parentSize.x) * 2, 
+            contentSize.y + PaddingY.AsPixels(parentSize.y) * 2);
+
+        Vector2 realSize = new Vector2(MathF.Max(contentSize.x, size.x), MathF.Max(contentSize.y, size.y));
 
         position = new Vector3(
             position.x + MarginX.AsPixels(parentSize.x),
             position.y + MarginY.AsPixels(parentSize.y),
             position.z + 1);
         
-        if (_material is null || _materialText is null)
+        if (BaseRectMaterial is null || BaseTexturedRectMaterial is null)
             SetupMaterials();
 
-        _data = new UIRectData()
+        UIRectData data = new UIRectData()
         {
             Position = position,
-            Size = size,
+            Size = realSize,
+            VertexOffset = anchor.Position,
             Color = Color,
             BorderRadius = new Vector4(BorderRadiusTL.Value, BorderRadiusBL.Value, BorderRadiusTR.Value,
                 BorderRadiusBR.Value),
@@ -65,30 +121,69 @@ public class UIRect
         };
         
         Dirty = false;
+
+        if (Color.a != 0 || Texture is not null)
+        {
+            queue.SetUniforms(data);
+
+            if (Texture is null)
+            {
+                renderPass.Bind(BaseRectMaterial);
+            }
+            else
+            {
+                renderPass.Bind(BaseTexturedRectMaterial);
+                renderPass.Bind(Texture);
+            }
+
+            renderPass.DrawPrimatives(6, 1, 0, 0);
+        }
+
+        Vector2 adjustedSize = new Vector2(
+            size.x - PaddingX.AsPixels(parentSize.x) * 2,
+            size.y - PaddingY.AsPixels(parentSize.y) * 2);
         
-        queue.SetUniforms(_data);
+        Vector2 adjustedRealSize = new Vector2(
+            realSize.x - PaddingX.AsPixels(parentSize.x) * 2,
+            realSize.y - PaddingY.AsPixels(parentSize.y) * 2);
 
-        ImRenderPass renderPass = queue.AddRenderPass(colorTargetSettings);
+        Vector3 adjustedPos = new Vector3(position.x + PaddingX.AsPixels(parentSize.x) * ChildAnchor.AsOneToMinusOne.x + adjustedRealSize.x * ChildAnchor.Position.x,
+            position.y + PaddingY.AsPixels(parentSize.y) * ChildAnchor.AsOneToMinusOne.y + adjustedRealSize.y * ChildAnchor.Position.y, position.z + 1);
 
-        renderPass.Bind(Texture is null ? _material : _materialText);
-
-        renderPass.DrawPrimatives(6, 1, 0, 0);
-        renderPass.End();
-
-        Vector3 adjustedPos = new Vector3(position.x + PaddingX.AsPixels(parentSize.x),
-            position.y + PaddingY.AsPixels(parentSize.y), position.z + 1);
+        adjustedPos.x -= contentSize.x * ChildAnchor.Position.x;
+        adjustedPos.y -= contentSize.y * ChildAnchor.Position.y;
         
         foreach (var child in _uiElements)
         {
-            Vector2 childSize = child.AddToBuffer( 
+            Vector2 childSize = child.Render( 
                 queue,
-                colorTargetSettings,
+                renderPass,
                 adjustedPos, 
-                new Vector2(size.x - PaddingX.AsPixels(parentSize.x) * 2, size.y - PaddingY.AsPixels(parentSize.y) * 2), renderSize);
-            adjustedPos.x += childSize.x;
-        }
+                ChildAnchor,
+                adjustedSize, 
+                renderSize);
 
-        return new Vector2(Width.AsPixels(parentSize.x), Height.AsPixels(parentSize.y));
+            switch (ChildDirection)
+            {
+                case UIDirection.Right:
+                    adjustedPos.x += childSize.x;
+                    break;
+                case UIDirection.Left:
+                    adjustedPos.x -= childSize.x;
+                    break;
+                case UIDirection.Up:
+                    adjustedPos.y -= childSize.y;
+                    break;
+                case UIDirection.Down:
+                    adjustedPos.y += childSize.y;
+                    break;
+                default:
+                    break;
+            }
+        }
+        
+        return new Vector2(MathF.Max(contentSize.x, Width.AsPixels(parentSize.x)),
+            MathF.Max(contentSize.y, Height.AsPixels(parentSize.y)));
     }
 
     private void SetupMaterials()
@@ -112,7 +207,7 @@ public class UIRect
             SrcColorBlendFactor = BlendFactor.SrcAlpha,
             DstColorBlendFactor = BlendFactor.OneMinusSrcAlpha,
             SrcAlphaBlendFactor = BlendFactor.SrcAlpha,
-            DstAlphaBlendFactor = BlendFactor.OneMinusSrcAlpha,
+            DstAlphaBlendFactor = BlendFactor.One,
             ColorTargetFormat = TextureFormat.B8G8R8A8Unorm,
             PrimitiveType = PrimitiveType.TriangleList,
             FillMode = FillMode.Fill,
@@ -126,22 +221,28 @@ public class UIRect
             SrcColorBlendFactor = BlendFactor.SrcAlpha,
             DstColorBlendFactor = BlendFactor.OneMinusSrcAlpha,
             SrcAlphaBlendFactor = BlendFactor.SrcAlpha,
-            DstAlphaBlendFactor = BlendFactor.OneMinusSrcAlpha,
+            DstAlphaBlendFactor = BlendFactor.One,
             ColorTargetFormat = TextureFormat.B8G8R8A8Unorm,
             PrimitiveType = PrimitiveType.TriangleList,
             FillMode = FillMode.Fill,
             VertexInputRate = VertexInputRate.Vertex,
         });
 
-        _material = new Material(_shader);
-        _materialText = new Material(_shaderTex);
-        _materialText.AddTexture(Texture, 0);
+        BaseRectMaterial = new Material(_shader);
+        BaseTexturedRectMaterial = new Material(_shaderTex);
     }
 
-    public virtual void Update() {}
+    public virtual void Update()
+    {
+        foreach (var uiElement in _uiElements)
+        {
+            uiElement.Update();
+        }
+    }
 
     public UIRect AddUIElement(UIRect uiRect)
     {
+        uiRect.Parent = this;
         _uiElements.Add(uiRect);
         SetDirty();
         return this;
@@ -210,6 +311,13 @@ public class UIRect
         return this;
     }
 
+    public UIRect SetChildAnchor(UIAnchor anchor)
+    {
+        ChildAnchor = anchor;
+        SetDirty();
+        return this;
+    }
+
     public UIRect SetColor(Color color)
     {
         Color = color;
@@ -227,6 +335,6 @@ public class UIRect
     public virtual void SetDirty()
     {
         Dirty = true;
-        _parent?.SetDirty();
+        Parent?.SetDirty();
     }
 }
