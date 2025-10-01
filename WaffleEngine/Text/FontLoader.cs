@@ -31,6 +31,18 @@ public static class FontLoader
         _font.Add(name, font);
     }
 
+    public static Font GetFont(string name, int pointSize)
+    {
+        if (_font.TryGetValue(name, out var font))
+            return font;
+        
+        font = new Font(TTF.OpenFontIO(SDL.IOFromFile(name, "r"), true, pointSize));
+        font.SetFontHinting(HintingFlags.LightSubpixel);
+        _font.Add(name, font);
+
+        return font;
+    }
+
     public static unsafe bool TryRenderText(string text, string fontName, Color foregoundColor, Color backgroundColor, int widthInPixels, [NotNullWhen(true)] out Texture? texture)
     {
         texture = null;

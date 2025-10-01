@@ -9,6 +9,8 @@ public enum UISizeType
 
 public struct UISize
 {
+    public static float Scale { get; private set; } = 1f;
+
     public UISizeType Type;
     public float Value;
 
@@ -21,10 +23,10 @@ public struct UISize
         switch (Type)
         {
             case UISizeType.Pixels:
-                return Value;
+                return Value * Scale;
             
             case UISizeType.Points:
-                return Value;
+                return Value * 1.33f * Scale;
             
             case UISizeType.Percentage:
                 return Value / 100.0f * parentSize;
@@ -33,4 +35,6 @@ public struct UISize
                 return Value;
         }
     }
+
+    public static void SetScale(float scale) => Scale = scale;
 }

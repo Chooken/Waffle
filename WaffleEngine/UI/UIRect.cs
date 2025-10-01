@@ -29,6 +29,7 @@ public class UIRect
     public UISize BorderRadiusBL;
     public UISize BorderRadiusTR;
     public UISize BorderRadiusBR;
+    public UISize Gap;
     public UIDirection ChildDirection = UIDirection.Right;
     public UIAnchor ChildAnchor;
     public Color Color = new Color(0, 0, 0, 0);
@@ -40,9 +41,72 @@ public class UIRect
 
     public virtual Vector2 GetBoundingSize(Vector2 parentSize)
     {
-        return new Vector2(
-            Width.AsPixels(parentSize.x), 
-            Height.AsPixels(parentSize.y));
+        var size = GetSize(parentSize);
+        
+        Vector2 contentSize = Vector2.Zero;
+
+        foreach (var uiElement in _uiElements)
+        {
+            Vector2 childSize = uiElement.GetBoundingSize(
+                new Vector2(
+                    size.x - PaddingX.AsPixels(parentSize.x) * 2, 
+                    size.y - PaddingY.AsPixels(parentSize.y) * 2));
+
+            switch (ChildDirection)
+            {
+                case UIDirection.Right:
+                    contentSize = new Vector2(
+                        contentSize.x + childSize.x, 
+                        MathF.Max(contentSize.y, childSize.y));
+                    break;
+                case UIDirection.Left:
+                    contentSize = new Vector2(
+                        contentSize.x + childSize.x, 
+                        MathF.Max(contentSize.y, childSize.y));
+                    break;
+                case UIDirection.Up:
+                    contentSize = new Vector2(
+                        MathF.Max(contentSize.x, childSize.x),
+                        contentSize.y + childSize.y);
+                    break;
+                case UIDirection.Down:
+                    contentSize = new Vector2(
+                        MathF.Max(contentSize.x, childSize.x),
+                        contentSize.y + childSize.y);
+                    break;
+                default:
+                    contentSize = new Vector2(
+                        MathF.Max(contentSize.x, childSize.x),
+                        MathF.Max(contentSize.y, childSize.y));
+                    break;
+            }
+        }
+        
+        switch (ChildDirection)
+        {
+            case UIDirection.Right:
+                contentSize.x += MathF.Max(_uiElements.Count - 1, 0) * Gap.AsPixels(parentSize.x);
+                break;
+            case UIDirection.Left:
+                contentSize.x += MathF.Max(_uiElements.Count - 1, 0) * Gap.AsPixels(parentSize.x);
+                break;
+            case UIDirection.Up:
+                contentSize.y += MathF.Max(_uiElements.Count - 1, 0) * Gap.AsPixels(parentSize.y);
+                break;
+            case UIDirection.Down:
+                contentSize.y += MathF.Max(_uiElements.Count - 1, 0) * Gap.AsPixels(parentSize.y);
+                break;
+            default:
+                break;
+        }
+
+        contentSize = new Vector2(
+            contentSize.x + PaddingX.AsPixels(parentSize.x) * 2, 
+            contentSize.y + PaddingY.AsPixels(parentSize.y) * 2);
+
+        Vector2 realSize = new Vector2(MathF.Max(contentSize.x, size.x), MathF.Max(contentSize.y, size.y));
+
+        return realSize;
     }
     
     public virtual Vector2 GetSize(Vector2 parentSize)
@@ -93,6 +157,24 @@ public class UIRect
                         MathF.Max(contentSize.y, childSize.y));
                     break;
             }
+        }
+        
+        switch (ChildDirection)
+        {
+            case UIDirection.Right:
+                contentSize.x += MathF.Max(_uiElements.Count - 1, 0) * Gap.AsPixels(parentSize.x);
+                break;
+            case UIDirection.Left:
+                contentSize.x += MathF.Max(_uiElements.Count - 1, 0) * Gap.AsPixels(parentSize.x);
+                break;
+            case UIDirection.Up:
+                contentSize.y += MathF.Max(_uiElements.Count - 1, 0) * Gap.AsPixels(parentSize.y);
+                break;
+            case UIDirection.Down:
+                contentSize.y += MathF.Max(_uiElements.Count - 1, 0) * Gap.AsPixels(parentSize.y);
+                break;
+            default:
+                break;
         }
         
         contentSize = new Vector2(
@@ -147,8 +229,10 @@ public class UIRect
             realSize.x - PaddingX.AsPixels(parentSize.x) * 2,
             realSize.y - PaddingY.AsPixels(parentSize.y) * 2);
 
-        Vector3 adjustedPos = new Vector3(position.x + PaddingX.AsPixels(parentSize.x) * ChildAnchor.AsOneToMinusOne.x + adjustedRealSize.x * ChildAnchor.Position.x,
-            position.y + PaddingY.AsPixels(parentSize.y) * ChildAnchor.AsOneToMinusOne.y + adjustedRealSize.y * ChildAnchor.Position.y, position.z + 1);
+        Vector3 adjustedPos = new Vector3(
+            position.x + PaddingX.AsPixels(parentSize.x) + realSize.x * ChildAnchor.Position.x,
+            position.y + PaddingY.AsPixels(parentSize.y) + realSize.y * ChildAnchor.Position.y, 
+            position.z + 1);
 
         adjustedPos.x -= contentSize.x * ChildAnchor.Position.x;
         adjustedPos.y -= contentSize.y * ChildAnchor.Position.y;
@@ -166,24 +250,23 @@ public class UIRect
             switch (ChildDirection)
             {
                 case UIDirection.Right:
-                    adjustedPos.x += childSize.x;
+                    adjustedPos.x += childSize.x + Gap.AsPixels(parentSize.x);
                     break;
                 case UIDirection.Left:
-                    adjustedPos.x -= childSize.x;
+                    adjustedPos.x -= childSize.x + Gap.AsPixels(parentSize.x);
                     break;
                 case UIDirection.Up:
-                    adjustedPos.y -= childSize.y;
+                    adjustedPos.y -= childSize.y + Gap.AsPixels(parentSize.y);
                     break;
                 case UIDirection.Down:
-                    adjustedPos.y += childSize.y;
+                    adjustedPos.y += childSize.y + Gap.AsPixels(parentSize.y);
                     break;
                 default:
                     break;
             }
         }
         
-        return new Vector2(MathF.Max(contentSize.x, Width.AsPixels(parentSize.x)),
-            MathF.Max(contentSize.y, Height.AsPixels(parentSize.y)));
+        return realSize;
     }
 
     private void SetupMaterials()
@@ -328,6 +411,13 @@ public class UIRect
     public UIRect SetTexture(GpuTexture? texture)
     {
         Texture = texture;
+        SetDirty();
+        return this;
+    }
+
+    public UIRect SetGap(UISize size)
+    {
+        Gap = size;
         SetDirty();
         return this;
     }

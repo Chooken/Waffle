@@ -6,54 +6,49 @@ namespace WaffleEngine.UI;
 
 public class UIText : UIRect
 {
-    public Color TextColor;
-    private string? _text;
-    private Texture _texture;
+    private AtlasedText _text;
 
     public UIText()
     {
-        FontLoader.LoadFont("Fonts/Nunito-Regular.ttf", 28);
+        Font font = FontLoader.GetFont("Fonts/Nunito-Regular.ttf", 24);
+
+        _text = new AtlasedText("", font, Color.RGBA255(0,0,0,255));
+    }
+
+    public override void Update()
+    {
+        _text.Update();
+        base.Update();
     }
 
     public override Vector2 Render(ImQueue queue, ImRenderPass renderPass, Vector3 position, UIAnchor anchor, Vector2 parentSize,
         Vector2 renderSize)
     {
-        if (_text is not null)
-            RenderText(parentSize);
+        position = new Vector3(
+            position.x + MarginX.AsPixels(parentSize.x),
+            position.y + MarginY.AsPixels(parentSize.y),
+            position.z + 1);
         
-        return base.Render(queue, renderPass, position, anchor, parentSize, renderSize);
-    }
+        _text.Render(renderPass, position, renderSize);
 
-    private void RenderText(Vector2 parentSize)
-    {
-        Color = Parent?.Color ?? Color.RGBA255(0, 0, 0, 255);
+        int width = (int)GetSize(parentSize).x;
         
-        if (!FontLoader.TryRenderTextToTexture(_text!, "Fonts/Nunito-Regular.ttf", TextColor,
-                Color, (int)parentSize.x - (int)MarginX.AsPixels(parentSize.x) * 2, ref _texture))
-            return;
+        if (width > 0)
+            _text.SetWrapWidth((int)GetSize(parentSize).x);
         
-        ImQueue queue = new ImQueue();
-        var copyPass = queue.AddCopyPass();
-        copyPass.Upload(_texture);
-        copyPass.End();
-        queue.Submit();
-
-        Texture = _texture;
-        
-        Width = UISize.Pixels(_texture.Width + (int)MarginX.AsPixels(parentSize.x) * 2);
-        Height = UISize.Pixels(_texture.Height + (int)MarginY.AsPixels(parentSize.x) * 2);
+        return new Vector2(MathF.Max(28 + MarginX.AsPixels(parentSize.x) * 2, parentSize.x), parentSize.y);
     }
 
     public UIText SetText(string text)
     {
-        _text = text;
+        _text.SetText(text);
         SetDirty();
         return this;
     }
 
     public UIText SetTextColor(Color color)
     {
-        TextColor = color;
+        _text.SetColor(color);
         SetDirty();
         return this;
     }

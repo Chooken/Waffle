@@ -6,6 +6,7 @@ public class Font
 {
     public IntPtr Handle;
 
+    public float Size => TTF.GetFontSize(Handle);
     public int Height => TTF.GetFontHeight(Handle);
 
     public Font(IntPtr handle)

@@ -70,6 +70,9 @@ public struct Vector2
     }
 
     public static Vector2 operator -(Vector2 vector) => new (-vector.x, -vector.y);
+
+    public static implicit operator Vector3(Vector2 vector) => new Vector3(vector.x, vector.y, 0);
+    public static implicit operator Vector4(Vector2 vector) => new Vector4(vector.x, vector.y, 0, 0);
 }
 
 [StructLayout(LayoutKind.Explicit, Size = 12)]

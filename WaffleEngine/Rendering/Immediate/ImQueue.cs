@@ -6,34 +6,34 @@ namespace WaffleEngine.Rendering.Immediate;
 public struct ImQueue()
 {
     private static Material? _blitMaterial;
-    
-    private IntPtr _commandBuffer = SDL.AcquireGPUCommandBuffer(Device.Handle);
 
-    public bool Active => _commandBuffer != IntPtr.Zero;
+    public IntPtr Handle { get; private set; } = SDL.AcquireGPUCommandBuffer(Device.Handle);
+
+    public bool Active => Handle != IntPtr.Zero;
 
     public ImRenderPass AddRenderPass(ColorTargetSettings colorTargetSettings)
     {
-        if (_commandBuffer == IntPtr.Zero)
+        if (Handle == IntPtr.Zero)
         {
             WLog.Error("Command Queue wasn't created before calling AddRenderPass");
         }
         
-        return new ImRenderPass(_commandBuffer, colorTargetSettings);
+        return new ImRenderPass(this, colorTargetSettings);
     }
 
     public ImCopyPass AddCopyPass()
     {
-        if (_commandBuffer == IntPtr.Zero)
+        if (Handle == IntPtr.Zero)
         {
             WLog.Error("Command Queue wasn't created before calling AddCopyPass");
         }
         
-        return new ImCopyPass(_commandBuffer);
+        return new ImCopyPass(this);
     }
 
     public void AddBlitPass(GpuTexture source, GpuTexture destination, bool clear)
     {
-        if (_commandBuffer == IntPtr.Zero)
+        if (Handle == IntPtr.Zero)
         {
             WLog.Error("Command Queue wasn't created before calling AddCopyPass");
             return;
@@ -86,19 +86,19 @@ public struct ImQueue()
 
     public unsafe void SetUniforms<T>(T value)
     {
-        if (_commandBuffer == IntPtr.Zero)
+        if (Handle == IntPtr.Zero)
         {
             WLog.Error("Command Queue wasn't created before calling AddCopyPass");
             return;
         }
         
-        SDL.PushGPUVertexUniformData(_commandBuffer, 0, (IntPtr)Unsafe.AsPointer(ref value), (uint) Unsafe.SizeOf<T>());
-        SDL.PushGPUFragmentUniformData(_commandBuffer, 0, (IntPtr)Unsafe.AsPointer(ref value), (uint) Unsafe.SizeOf<T>());
+        SDL.PushGPUVertexUniformData(Handle, 0, (IntPtr)Unsafe.AsPointer(ref value), (uint) Unsafe.SizeOf<T>());
+        SDL.PushGPUFragmentUniformData(Handle, 0, (IntPtr)Unsafe.AsPointer(ref value), (uint) Unsafe.SizeOf<T>());
     }
     
     public bool TryGetSwapchainTexture(Window window, ref GpuTexture texture)
     {
-        if (_commandBuffer == IntPtr.Zero)
+        if (Handle == IntPtr.Zero)
         {
             WLog.Error("Command buffer wasn't acquired");
             return false;
@@ -106,7 +106,7 @@ public struct ImQueue()
         
         IntPtr handle;
 
-        if (!SDL.WaitAndAcquireGPUSwapchainTexture(_commandBuffer, ((WindowSdl)window).WindowPtr, out handle, out uint width, out uint height))
+        if (!SDL.WaitAndAcquireGPUSwapchainTexture(Handle, ((WindowSdl)window).WindowPtr, out handle, out uint width, out uint height))
         {
             WLog.Error("Failed to acquire a swapchain texture");
             return false;
@@ -119,28 +119,29 @@ public struct ImQueue()
 
     public void Submit()
     {
-        if (!SDL.SubmitGPUCommandBuffer(_commandBuffer))
+        if (!SDL.SubmitGPUCommandBuffer(Handle))
         {
             WLog.Info("Failed submitting GPU CommandBuffer");
         }
         
-        _commandBuffer = IntPtr.Zero;
+        Handle = IntPtr.Zero;
     }
 }
 
 public struct ImRenderPass
 {
-    public IntPtr Handle => _renderPass;
-    
-    private IntPtr _renderPass;
+    public IntPtr Handle { get; private set; }
+    public ImQueue Queue { get; }
 
-    public unsafe ImRenderPass(IntPtr commandBuffer, ColorTargetSettings colorTargetSettings)
+    public unsafe ImRenderPass(ImQueue queue, ColorTargetSettings colorTargetSettings)
     {
         if (colorTargetSettings.GpuTexture.Handle == IntPtr.Zero)
         {
             WLog.Error("ImRenderPass was given a null texture");
             return;
         }
+
+        Queue = queue;
         
         SDL.GPUColorTargetInfo colorTargetInfo = new SDL.GPUColorTargetInfo();
         colorTargetInfo.Texture = colorTargetSettings.GpuTexture.Handle;
@@ -154,7 +155,7 @@ public struct ImRenderPass
         colorTargetInfo.LoadOp = (SDL.GPULoadOp) colorTargetSettings.LoadOperation;
         colorTargetInfo.StoreOp = (SDL.GPUStoreOp) colorTargetSettings.StoreOperation;
         
-        _renderPass = SDL.BeginGPURenderPass(commandBuffer, (IntPtr)(&colorTargetInfo), 1, IntPtr.Zero);
+        Handle = SDL.BeginGPURenderPass(queue.Handle, (IntPtr)(&colorTargetInfo), 1, IntPtr.Zero);
     }
 
     public void DrawPrimatives(
@@ -163,13 +164,13 @@ public struct ImRenderPass
         uint firstVertex, 
         uint firstInstance)
     {
-        if (_renderPass == IntPtr.Zero)
+        if (Handle == IntPtr.Zero)
         {
             WLog.Error("The render pass is not active it either finished or hadn't started");
             return;
         }
         
-        SDL.DrawGPUPrimitives(_renderPass, numberOfVertices, numberOfInstances, firstVertex, firstInstance);
+        SDL.DrawGPUPrimitives(Handle, numberOfVertices, numberOfInstances, firstVertex, firstInstance);
     }
 
     public void DrawIndexedPrimatives(
@@ -179,13 +180,13 @@ public struct ImRenderPass
         short vertexOffset,
         uint firstInstance)
     {
-        if (_renderPass == IntPtr.Zero)
+        if (Handle == IntPtr.Zero)
         {
             WLog.Error("The render pass is not active it either finished or hadn't started");
             return;
         }
         
-        SDL.DrawGPUIndexedPrimitives(_renderPass, numberOfIndices, numberOfInstances, firstIndex, vertexOffset, firstInstance);
+        SDL.DrawGPUIndexedPrimitives(Handle, numberOfIndices, numberOfInstances, firstIndex, vertexOffset, firstInstance);
     }
 
     public void Bind(IGpuBindable bindable, uint slot = 0)
@@ -195,25 +196,24 @@ public struct ImRenderPass
 
     public void End()
     {
-        if (_renderPass == IntPtr.Zero)
+        if (Handle == IntPtr.Zero)
         {
             return;
         }
         
-        SDL.EndGPURenderPass(_renderPass);
-        _renderPass = IntPtr.Zero;
+        SDL.EndGPURenderPass(Handle);
+        Handle = IntPtr.Zero;
     }
 }
 
-public struct ImCopyPass(IntPtr commandBuffer)
+public struct ImCopyPass(ImQueue queue)
 {
-    public IntPtr Handle => _copyPass;
-    
-    private IntPtr _copyPass = SDL.BeginGPUCopyPass(commandBuffer);
+    public IntPtr Handle { get; private set; } = SDL.BeginGPUCopyPass(queue.Handle);
+    public ImQueue Queue { get; } = queue;
 
     public void Upload(IGpuUploadable uploadable)
     {
-        if (_copyPass == IntPtr.Zero)
+        if (Handle == IntPtr.Zero)
         {
             WLog.Error("The copy pass is not active it either finished or hadn't started");
             return;
@@ -224,12 +224,12 @@ public struct ImCopyPass(IntPtr commandBuffer)
 
     public void End()
     {
-        if (_copyPass == IntPtr.Zero)
+        if (Handle == IntPtr.Zero)
         {
             return;
         }
         
-        SDL.EndGPUCopyPass(_copyPass);
-        _copyPass = IntPtr.Zero;
+        SDL.EndGPUCopyPass(Handle);
+        Handle = IntPtr.Zero;
     }
 }

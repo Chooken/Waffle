@@ -89,6 +89,8 @@ public sealed class WindowSdl : Window
         SDL.SetWindowTitle(WindowPtr, title);
     }
 
+    public float GetDisplayScale() => SDL.GetWindowDisplayScale(WindowPtr);
+
     public override void Dispose()
     {
         WLog.Info("Window Disposed");

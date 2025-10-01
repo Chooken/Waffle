@@ -26,6 +26,8 @@ public class UIToplevel
         if (Root is null)
             return UiTexture;
         
+        UISize.SetScale(Window.GetDisplayScale());
+        
         Root.Update();
 
         bool resized = _screenSize != new Vector2(Window.Width, Window.Height);
@@ -35,7 +37,7 @@ public class UIToplevel
             UiTexture.Resize((uint)Window.Width, (uint)Window.Height);
         }
 
-        if (Root.Dirty || resized)
+        if (Root.Dirty || resized || true)
         {
             ColorTargetSettings bgColorTargetSettings = new ColorTargetSettings
             {
