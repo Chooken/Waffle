@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WaffleEngine", "WaffleEngine\WaffleEngine.csproj", "{D1F7BAA8-B32C-4954-BDC6-ED616676F14F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Editor", "Editor\Editor.csproj", "{50C9FF13-0991-43CA-A885-B918D002DDDD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Our Story", "Our Story\Our Story.csproj", "{71F4F886-B197-4B24-AFB6-65CA30F10A41}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D1F7BAA8-B32C-4954-BDC6-ED616676F14F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D1F7BAA8-B32C-4954-BDC6-ED616676F14F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D1F7BAA8-B32C-4954-BDC6-ED616676F14F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D1F7BAA8-B32C-4954-BDC6-ED616676F14F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{50C9FF13-0991-43CA-A885-B918D002DDDD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{50C9FF13-0991-43CA-A885-B918D002DDDD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{50C9FF13-0991-43CA-A885-B918D002DDDD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{50C9FF13-0991-43CA-A885-B918D002DDDD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{71F4F886-B197-4B24-AFB6-65CA30F10A41}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{71F4F886-B197-4B24-AFB6-65CA30F10A41}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{71F4F886-B197-4B24-AFB6-65CA30F10A41}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{71F4F886-B197-4B24-AFB6-65CA30F10A41}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
