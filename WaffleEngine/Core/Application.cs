@@ -1,6 +1,4 @@
-
 using System.Diagnostics;
-using SDL3;
 using WaffleEngine.Rendering;
 using WaffleEngine.Text;
 
@@ -10,13 +8,15 @@ public static class Application
 {
     private static bool _isRunning;
     private static readonly IWindowEventSystem AppEventSystem = new WindowEventSystemSdl();
-    public static void Run()
+    public static void Run(IScene startScene)
     {
         if (_isRunning)
             return;
         
         if (!Init())
             return;
+
+        SceneManager.SetScene(startScene, "_start_scene");
         
         MainLoop();
         
@@ -28,10 +28,15 @@ public static class Application
         if (!Device.Init())
             return false;
 
-        if (!ShaderManager.Init())
+        if (!ShaderCompiler.Init())
             return false;
         
-        //FontLoader.Init();
+        FontLoader.Init();
+        
+        Assets.StartAssetThread();
+
+        if (!Assets.TryLoadAssetBundle("builtin"))
+            return false;
         
         WLog.Info("Application Initialised");
         
@@ -41,8 +46,6 @@ public static class Application
     private static void MainLoop()
     {
         WLog.Info("Started Application Main Loop");
-        
-        ShaderManager.CompileAllShaders();
         
         _isRunning = true;
         
@@ -55,7 +58,7 @@ public static class Application
             if (!_isRunning)
                 break;
             
-            SceneManager.RunActiveSceneQueries();
+            SceneManager.UpdateScenes();
             
             Input.GlobalInputHandler.Update();
             
@@ -66,7 +69,7 @@ public static class Application
     private static void CleanUp()
     {
         SceneManager.CleanUp();
-        ShaderManager.CleanUp();
+        Assets.Dispose();
         WindowManager.CloseAllWindows();
         WLog.Info("Clean up finished.");
     }

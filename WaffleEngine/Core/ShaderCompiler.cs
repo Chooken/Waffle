@@ -5,19 +5,8 @@ using WaffleEngine.Rendering;
 
 namespace WaffleEngine;
 
-public static class ShaderManager
+public static class ShaderCompiler
 {
-    private static ShaderFormat _format;
-    private static string _formatString = "";
-    
-    private static Dictionary<string, Shader> _shaders = new ();
-
-    private static string[] _slangcArgs =
-    [
-        "",
-        "-target", ""
-    ];
-
     public static bool Init()
     {
         if (!ShaderCross.Init())
@@ -28,20 +17,8 @@ public static class ShaderManager
 
         return true;
     }
-    
-    public static void CompileAllShaders()
-    {
-        var shaderFiles = Directory.EnumerateFiles(Directory.GetCurrentDirectory(), "*.hlsl", SearchOption.AllDirectories);
-        
-        // Parallel.ForEach(shaderFiles, CompileShader);
 
-        foreach (var shader in shaderFiles)
-        {
-            CompileShader(shader);
-        }
-    }
-
-    public static void CompileShader(string shaderPath)
+    public static Shader CompileShader(string shaderPath)
     {
         string source = File.ReadAllText(shaderPath);
         
@@ -109,33 +86,15 @@ public static class ShaderManager
         SDL.Free(fragmentSpriv);
         
         string relPath = $"{Path.GetRelativePath(AppDomain.CurrentDomain.BaseDirectory, Path.GetDirectoryName(shaderPath) ?? string.Empty)}/{Path.GetFileNameWithoutExtension(shaderPath)}";
-
-        lock (_shaders)
-        {
-            _shaders.Add(relPath, new Shader(
-                vertexShader, 
-                fragmentShader,
-                metadata.Value.NumSamplers, 
-                metadata.Value.NumUniformBuffers, 
-                metadata.Value.NumStorageBuffers, 
-                metadata.Value.NumStorageTextures));
-        }
         
         WLog.Info($"Shader compiled: {relPath}");
-    }
-    
-    
-    public static bool TryGetShader(string shaderPath, [NotNullWhen(true)] out Shader? shader)
-    {
-        return _shaders.TryGetValue(shaderPath, out shader);
-    }
-
-    internal static void CleanUp()
-    {
-        foreach (var shader in _shaders.Values)
-        {
-            shader.Dispose();
-        }
-        WLog.Info("All Shaders Disposed");
+        
+        return new Shader(
+            vertexShader, 
+            fragmentShader,
+            metadata.Value.NumSamplers, 
+            metadata.Value.NumUniformBuffers, 
+            metadata.Value.NumStorageBuffers, 
+            metadata.Value.NumStorageTextures);
     }
 }

@@ -1,13 +1,12 @@
 using System.Runtime.InteropServices;
 using SDL3;
-using StbImageSharp;
 using WaffleEngine.Native;
 using WaffleEngine.Rendering;
 using WaffleEngine.Rendering.Immediate;
 
 namespace WaffleEngine;
 
-public unsafe class Texture : IGpuUploadable
+public unsafe class Texture : IGpuUploadable, IDisposable
 {
     public int Width => _surface.Value.Width;
     public int Height => _surface.Value.Height;
@@ -98,6 +97,12 @@ public unsafe class Texture : IGpuUploadable
         SDL.UploadToGPUTexture(copyPass.Handle, info, region, true);
 
         SDL.ReleaseGPUTransferBuffer(Device.Handle, transferBuffer);
+    }
+
+    public void Dispose()
+    {
+        _gpuTexture.Dispose();
+        SDL.DestroySurface(_surface);
     }
 
     public static implicit operator GpuTexture(Texture value) => value._gpuTexture;

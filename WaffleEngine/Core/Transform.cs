@@ -4,7 +4,7 @@ using VYaml.Parser;
 
 namespace WaffleEngine;
 
-public struct Transform : ISerializable
+public struct Transform : ISerializable, IDeserializable<Transform>
 {
     private Vector3 _position;
     private Vector3 _scale;
@@ -96,7 +96,7 @@ public struct Transform : ISerializable
         emitter.EndMapping();
     }
 
-    public bool TryDeserialize(ref YamlParser parser)
+    public static bool TryDeserialize(ref YamlParser parser, out Transform transform)
     {
         throw new NotImplementedException();
     }

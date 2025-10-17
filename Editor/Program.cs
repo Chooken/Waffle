@@ -13,12 +13,14 @@ scene.InstantiateEntity();
 scene.InstantiateEntity();
 scene.InstantiateEntity().AddComponent(new Camera((WindowSdl)window, 8, 0.1f, 100f));
 scene.InstantiateEntity().AddComponent(new InitAndDisposeTest());
-//scene.AddQuery(new TestQuery());
 scene.AddQuery(new RenderQuery());
 
-SceneManager.AddScene(scene, "initial");
+Yaml.TrySerialize("scenes/scene.scene", scene);
 
-SceneSerializer.TrySerialize("scenes/scene", scene);
-SceneSerializer.TryDeserialize("scenes/scene", out var scene2);
+if (Yaml.TryDeserialize("scenes/scene", out Scene? scene2))
+{
+    Log.Error("Failed to deserialize scene.");
+    return;
+}
 
-Application.Run();
+Application.Run(scene);

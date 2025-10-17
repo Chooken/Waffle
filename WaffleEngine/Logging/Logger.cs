@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 namespace WaffleEngine;
 
 public class Logger(string loggerName)
@@ -12,10 +14,12 @@ public class Logger(string loggerName)
 
     public void Error(string message, string? tag = null)
     {
+        StackTrace trace = new StackTrace(2);
         Console.ForegroundColor = ConsoleColor.Red;
 
         Console.Write($"[{DateTime.Now:HH:mm:ss}] [ERROR] ");
         LogMessage(message, tag);
+        Console.WriteLine(trace);
     }
 
     public void Warning(string message, string? tag = null)

@@ -2,20 +2,26 @@ namespace WaffleEngine;
 
 public static class SceneManager
 {
-    private static Dictionary<string, Scene> _activeScenes = new Dictionary<string, Scene>();
-
-    public static void RunActiveSceneQueries()
+    private static Dictionary<string, IScene> _activeScenes = new Dictionary<string, IScene>();
+    
+    public static void UpdateScenes()
     {
         foreach (var scene in _activeScenes.Values)
         {
-            scene.RunQueries(QueryEvent.Update);
+            scene.OnSceneUpdate();
         }
     }
 
-    public static void AddScene(Scene scene, string name)
+    public static bool AddScene(IScene scene, string name)
     {
-        scene.Init();
+        if (!scene.OnSceneLoaded())
+        {
+            WLog.Warning($"Failed to load scene: {name}");
+            return false;
+        }
+        
         _activeScenes.Add(name, scene);
+        return true;
     }
     
     public static void RemoveScene(string name)
@@ -23,23 +29,36 @@ public static class SceneManager
         if (!_activeScenes.TryGetValue(name, out var scene))
             return;
         
-        scene.Dispose();
+        scene.OnSceneExit();
         
         _activeScenes.Remove(name);
     }
 
-    public static void SetScene(Scene scene, string name)
+    public static bool SetScene(IScene newScene, string name)
     {
+        if (!newScene.OnSceneLoaded())
+        {
+            WLog.Warning($"Failed to load scene: {name}");
+            return false;
+        }
+        
+        foreach (var scene in _activeScenes.Values)
+        {
+            scene.OnSceneExit();
+        }
+        
         _activeScenes.Clear();
-        _activeScenes.Add(name, scene);
+        _activeScenes.Add(name, newScene);
+        return true;
     }
 
     public static void CleanUp()
     {
         foreach (var scene in _activeScenes.Values)
         {
-            scene.Dispose();
+            scene.OnSceneExit();
         }
+        
         _activeScenes.Clear();
     }
 }

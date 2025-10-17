@@ -122,20 +122,12 @@ public sealed class WindowSdl : Window
         
         switch ((SDL.EventType)sdlEvent.Type)
         {
-            // case SDL.EventType.WindowExposed:
-            //     if (window->Resizeable)
-            //     {
-            //         SceneManager.RunActiveSceneQueries();
-            //     }
-            //
-            //     break;
-            
             case SDL.EventType.WindowPixelSizeChanged:
                 window->Width = sdlEvent.Window.Data1;
                 window->Height = sdlEvent.Window.Data2;
                 
                 // I'm pretty sure I shouldn't be doing this but idk how to fix it otherwise.
-                SceneManager.RunActiveSceneQueries();
+                SceneManager.UpdateScenes();
                 
                 break;
         }

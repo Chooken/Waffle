@@ -43,12 +43,6 @@ public class AtlasedText
         };
         
         _sampler = SDL.CreateGPUSampler(Device.Handle, samplerCreateInfo);
-        
-        if (!ShaderManager.TryGetShader("BuiltinShaders/textured-quad", out _shader))
-        {
-            Log.Error("Shader not found");
-            return;
-        }
     }
 
     public void SetColor(Color color)
@@ -104,6 +98,15 @@ public class AtlasedText
 
     public unsafe void Render(ImRenderPass renderPass, Vector3 position, Vector2 renderSize)
     {
+        if (_shader is null)
+        {
+            if (!Assets.TryGetShader("builtin", "textured-quad", out _shader))
+            {
+                WLog.Error("Shader not found: BuiltinShaders/textured-quad");
+                return;
+            }
+        }
+        
         if (_empty)
             return;
         

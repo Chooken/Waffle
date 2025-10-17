@@ -4,7 +4,7 @@ using WaffleEngine.Serializer;
 namespace Editor;
 
 [SerializeDefault]
-public struct InitAndDisposeTest : ISceneInit, ISceneUpdate, IDisposable
+public struct InitAndDisposeTest
 {
     private int i;
     

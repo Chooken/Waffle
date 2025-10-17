@@ -38,9 +38,12 @@ public struct ImQueue()
             WLog.Error("Command Queue wasn't created before calling AddCopyPass");
             return;
         }
-        
+
         if (_blitMaterial is null)
-            CreateBlitMaterial();
+        {
+            if (!CreateBlitMaterial())
+                return;
+        }
 
         _blitMaterial.Clear();
         _blitMaterial.AddTexture(source, 0);
@@ -59,12 +62,12 @@ public struct ImQueue()
         renderPass.End();
     }
 
-    private void CreateBlitMaterial()
+    private bool CreateBlitMaterial()
     {
-        if (!ShaderManager.TryGetShader("BuiltinShaders/blit", out Shader? shader))
+        if (!Assets.TryGetShader("builtin", "blit", out Shader? shader))
         {
-            WLog.Error("Shader not found");
-            return;
+            WLog.Error("The builtin blit shader isn't loaded.");
+            return false;
         }
     
         shader.SetPipeline(new PipelineSettings()
@@ -82,6 +85,7 @@ public struct ImQueue()
         });
     
         _blitMaterial = new Material(shader);
+        return true;
     }
 
     public unsafe void SetUniforms<T>(T value)

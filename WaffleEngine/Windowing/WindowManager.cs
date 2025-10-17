@@ -26,8 +26,6 @@ public static class WindowManager
         if (_windows.TryGetValue(windowHandle, out window))
         {
             window.Focus();
-            
-            WLog.Info($"Window already existed focused instead [name: {windowName}, handle: {windowHandle}]");
             return true;
         }
         

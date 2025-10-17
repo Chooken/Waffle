@@ -4,7 +4,7 @@ namespace WaffleEngine;
 
 public struct Entity
 {
-    internal Scene ParentScene;
+    internal EcsWorld ParentScene;
     internal Arch.Core.Entity ArchEntity;
 
     public void AddComponent<T>(T component) where T : struct

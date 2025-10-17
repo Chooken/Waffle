@@ -1,4 +1,3 @@
-using System.Runtime.InteropServices;
 using WaffleEngine.Rendering;
 using WaffleEngine.Rendering.Immediate;
 
@@ -191,9 +190,12 @@ public class UIRect
             position.x + MarginX.AsPixels(parentSize.x),
             position.y + MarginY.AsPixels(parentSize.y),
             position.z + 1);
-        
+
         if (BaseRectMaterial is null || BaseTexturedRectMaterial is null)
-            SetupMaterials();
+        {
+            if (!SetupMaterials())
+                return Vector2.Zero;
+        }
 
         UIRectData data = new UIRectData()
         {
@@ -271,18 +273,18 @@ public class UIRect
         return realSize;
     }
 
-    private void SetupMaterials()
+    private bool SetupMaterials()
     {
-        if (!ShaderManager.TryGetShader("BuiltinShaders/ui-rect", out var _shader))
+        if (!Assets.TryGetShader("builtin", "ui-rect", out var _shader))
         {
-            Log.Error("Shader not found");
-            return;
+            WLog.Error("Shader not found");
+            return false;
         }
         
-        if (!ShaderManager.TryGetShader("BuiltinShaders/ui-rect-texture", out var _shaderTex))
+        if (!Assets.TryGetShader("builtin", "ui-rect-texture", out var _shaderTex))
         {
-            Log.Error("Shader not found");
-            return;
+            WLog.Error("Shader not found");
+            return false;
         }
         
         _shader.SetPipeline(new PipelineSettings()
@@ -315,6 +317,8 @@ public class UIRect
 
         BaseRectMaterial = new Material(_shader);
         BaseTexturedRectMaterial = new Material(_shaderTex);
+
+        return true;
     }
 
     public virtual void Update()

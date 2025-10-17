@@ -10,7 +10,7 @@ public interface IQuery
     public void Run(in World world);
 }
 
-public abstract class Query<T> : IQuery, ISerializable where T : struct
+public abstract class Query<T> : IQuery, ISerializable, IDeserializable<Query<T>> where T : struct
 {
     public void Run(in World world)
     {
@@ -47,13 +47,13 @@ public abstract class Query<T> : IQuery, ISerializable where T : struct
         emitter.EndMapping();
     }
 
-    public bool TryDeserialize(ref YamlParser parser)
+    public static bool TryDeserialize(ref YamlParser parser, out Query<T> query)
     {
         throw new NotImplementedException();
     }
 }
 
-public abstract class Query<T1, T2>  : IQuery, ISerializable
+public abstract class Query<T1, T2>  : IQuery, ISerializable, IDeserializable<Query<T1, T2>>
 {
     public void Run(in World world)
     {
@@ -94,13 +94,13 @@ public abstract class Query<T1, T2>  : IQuery, ISerializable
         emitter.EndMapping();
     }
 
-    public bool TryDeserialize(ref YamlParser parser)
+    public static bool TryDeserialize(ref YamlParser parser, out Query<T1, T2> query)
     {
         throw new NotImplementedException();
     }
 }
 
-public abstract class Query<T1, T2, T3>  : IQuery, ISerializable
+public abstract class Query<T1, T2, T3>  : IQuery, ISerializable, IDeserializable<Query<T1, T2, T3>>
 {
     public void Run(in World world)
     {
@@ -143,13 +143,13 @@ public abstract class Query<T1, T2, T3>  : IQuery, ISerializable
         emitter.EndMapping();
     }
 
-    public bool TryDeserialize(ref YamlParser parser)
+    public static bool TryDeserialize(ref YamlParser parser, out Query<T1, T2, T3> query)
     {
         throw new NotImplementedException();
     }
 }
 
-public abstract class Query<T1, T2, T3, T4>  : IQuery, ISerializable
+public abstract class Query<T1, T2, T3, T4>  : IQuery, ISerializable, IDeserializable<Query<T1, T2, T3, T4>>
 {
     public void Run(in World world)
     {
@@ -194,13 +194,13 @@ public abstract class Query<T1, T2, T3, T4>  : IQuery, ISerializable
         emitter.EndMapping();
     }
 
-    public bool TryDeserialize(ref YamlParser parser)
+    public static bool TryDeserialize(ref YamlParser parser, out Query<T1, T2, T3, T4> query)
     {
         throw new NotImplementedException();
     }
 }
 
-public abstract class Query<T1 ,T2, T3, T4, T5>  : IQuery, ISerializable
+public abstract class Query<T1 ,T2, T3, T4, T5>  : IQuery, ISerializable, IDeserializable<Query<T1 ,T2, T3, T4, T5>>
 {
     public void Run(in World world)
     {
@@ -247,13 +247,13 @@ public abstract class Query<T1 ,T2, T3, T4, T5>  : IQuery, ISerializable
         emitter.EndMapping();
     }
 
-    public bool TryDeserialize(ref YamlParser parser)
+    public static bool TryDeserialize(ref YamlParser parser, out Query<T1 ,T2, T3, T4, T5> query)
     {
         throw new NotImplementedException();
     }
 }
 
-public abstract class Query<T1, T2, T3, T4, T5, T6>  : IQuery, ISerializable
+public abstract class Query<T1, T2, T3, T4, T5, T6>  : IQuery, ISerializable, IDeserializable<Query<T1, T2, T3, T4, T5, T6>>
 {
     public void Run(in World world)
     {
@@ -302,7 +302,7 @@ public abstract class Query<T1, T2, T3, T4, T5, T6>  : IQuery, ISerializable
         emitter.EndMapping();
     }
 
-    public bool TryDeserialize(ref YamlParser parser)
+    public static bool TryDeserialize(ref YamlParser parser, out Query<T1, T2, T3, T4, T5, T6> query)
     {
         throw new NotImplementedException();
     }

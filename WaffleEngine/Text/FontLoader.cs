@@ -27,7 +27,7 @@ public static class FontLoader
         
         var font = new Font(TTF.OpenFontIO(SDL.IOFromFile(name, "r"), true, pointSize));
         font.SetFontHinting(HintingFlags.LightSubpixel);
-        _font.Add(name, font);
+        _font.Add($"{name}_{pointSize}", font);
     }
 
     public static Font GetFont(string name, int pointSize)
@@ -37,7 +37,7 @@ public static class FontLoader
         
         font = new Font(TTF.OpenFontIO(SDL.IOFromFile(name, "r"), true, pointSize));
         font.SetFontHinting(HintingFlags.LightSubpixel);
-        _font.Add(name, font);
+        _font.Add($"{name}_{pointSize}", font);
 
         return font;
     }

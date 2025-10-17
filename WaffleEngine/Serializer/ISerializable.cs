@@ -6,6 +6,9 @@ namespace WaffleEngine;
 public interface ISerializable
 {
     public void Serialize(ref Utf8YamlEmitter emitter);
+}
 
-    public bool TryDeserialize(ref YamlParser parser);
+public interface IDeserializable<T>
+{
+    public static abstract bool TryDeserialize(ref YamlParser parser, out T obj);
 }

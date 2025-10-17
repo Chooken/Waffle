@@ -3,30 +3,20 @@ using System.Runtime.CompilerServices;
 using Arch.Buffer;
 using Arch.Core;
 using Arch.Core.Extensions;
+using VYaml.Emitter;
+using VYaml.Parser;
 
 namespace WaffleEngine;
 
-public sealed class Scene : IDisposable
+public sealed class Scene : IScene, ISerializable, IDeserializable<Scene>
 {
-    internal readonly World _world = World.Create();
+    private EcsWorld _world = new EcsWorld();
     
     internal List<IQuery> _init_queries = new List<IQuery>();
     internal List<IQuery> _update_queries = new List<IQuery>();
     internal List<IQuery> _dispose_queries = new List<IQuery>();
 
-    private bool _commandBufferUsed = false;
-    private CommandBuffer _commandBuffer = new CommandBuffer();
-
-    public Entity InstantiateEntity(Transform transform = new Transform())
-    {
-        Entity entity = new Entity
-        {
-            ParentScene = this,
-            ArchEntity = _world.Create(transform),
-        };
-
-        return entity;
-    }
+    public Entity InstantiateEntity(Transform transform = new Transform()) => _world.InstantiateEntity(transform);
 
     public void AddQuery(IQuery query, QueryEvent qEvent = QueryEvent.Update)
     {
@@ -44,15 +34,16 @@ public sealed class Scene : IDisposable
         }
     }
 
-    internal void AddComponentToEntity<T>(Entity entity, T component) where T : struct
+    public bool OnSceneLoaded()
     {
-        _commandBuffer.Add(entity.ArchEntity, component);
-        _commandBufferUsed = true;
+        RunQueries(QueryEvent.Init);
+        _world.RunArchCommandBuffer();
+        return true;
     }
 
-    internal void Init()
+    public void OnSceneUpdate()
     {
-        RunArchCommandBuffer();
+        RunQueries(QueryEvent.Update);
     }
 
     internal void RunQueries(QueryEvent qEvent)
@@ -80,23 +71,40 @@ public sealed class Scene : IDisposable
         
         foreach (IQuery query in queries)
         {
-            query.Run(in _world);
+            _world.RunQuery(query);
         }
         
-        RunArchCommandBuffer();
-    }
-    
-    private void RunArchCommandBuffer()
-    {
-        if (!_commandBufferUsed)
-            return;
-        
-        _commandBuffer.Playback(_world);
-        _commandBufferUsed = false;
+        _world.RunArchCommandBuffer();
     }
 
-    public void Dispose()
+    public void OnSceneExit()
     {
+        RunQueries(QueryEvent.Dispose);
         _world.Dispose();
+    }
+
+    public void Serialize(ref Utf8YamlEmitter emitter)
+    {
+        emitter.BeginMapping();
+        
+        _world.Serialize(ref emitter);
+        
+        emitter.WriteString("queries");
+        
+        emitter.BeginSequence();
+
+        foreach (var query in _update_queries)
+        {
+            ((ISerializable)query).Serialize(ref emitter);
+        }
+        
+        emitter.EndSequence();
+        
+        emitter.EndMapping();
+    }
+
+    public static bool TryDeserialize(ref YamlParser parser, out Scene scene)
+    {
+        throw new NotImplementedException();
     }
 }

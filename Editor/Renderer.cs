@@ -1,6 +1,3 @@
-using System.Numerics;
-using System.Text.Json;
-using WaffleEngine.Text;
 using WaffleEngine.UI;
 
 namespace WaffleEngine.Rendering;
@@ -30,7 +27,7 @@ public class Renderer
         
         texture = new Texture("textures/texture.png");
         
-        if (!ShaderManager.TryGetShader("BuiltinShaders/triangle", out _shader))
+        if (!Assets.TryGetShader("builtin", "triangle", out _shader))
         {
             Log.Error("Shader not found");
             return;

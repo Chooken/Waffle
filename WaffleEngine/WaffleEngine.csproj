@@ -13,8 +13,12 @@
     </ItemGroup>
     
     <ItemGroup>
-        <Content Include="BuiltinShaders\**" CopyToOutputDirectory="Always"  />
+        <Content Include="builtin/**" CopyToOutputDirectory="Always"  />
         <Content Include="runtimes/**" CopyToOutputDirectory="Always" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <Folder Include="AssetLoading\" />
     </ItemGroup>
 
 </Project>
