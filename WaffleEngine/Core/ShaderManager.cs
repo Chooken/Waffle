@@ -1,6 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
-using Slangc.NET;
-using Slangc.NET.Enums;
+using SDL3;
+using WaffleEngine.Native;
 using WaffleEngine.Rendering;
 
 namespace WaffleEngine;
@@ -18,40 +18,20 @@ public static class ShaderManager
         "-target", ""
     ];
 
-    public static void Init()
+    public static bool Init()
     {
-        _format = Device.GetShaderFormat();
+        if (!ShaderCross.Init())
+        {
+            WLog.Error("Failed to initialise the shader compiler.");
+            return false;
+        }
 
-        if (_format.HasFlag(ShaderFormat.SpirV))
-        {
-            _format = ShaderFormat.SpirV;
-            _formatString = "spirv";
-        }
-        else if (_format.HasFlag(ShaderFormat.Msl))
-        {
-            _format = ShaderFormat.Msl;
-            _formatString = "metal";
-        }
-        else if (_format.HasFlag(ShaderFormat.Dxil))
-        {
-            _format = ShaderFormat.Dxil;
-            _formatString = "dxil";
-        }
-        else
-        {
-            WLog.Error("Failed to find a suiteable shader format");
-        }
+        return true;
     }
     
     public static void CompileAllShaders()
     {
-        var shaderFiles = Directory.EnumerateFiles(Directory.GetCurrentDirectory(), "*.slang", SearchOption.AllDirectories);
-        
-        if (_formatString == "")
-        {
-            WLog.Error("Shader format not initialised");
-            return;
-        }
+        var shaderFiles = Directory.EnumerateFiles(Directory.GetCurrentDirectory(), "*.hlsl", SearchOption.AllDirectories);
         
         // Parallel.ForEach(shaderFiles, CompileShader);
 
@@ -63,93 +43,82 @@ public static class ShaderManager
 
     public static void CompileShader(string shaderPath)
     {
-        if (_formatString == "")
-        {
-            WLog.Error("Shader format not initialised");
-            return;
-        }
-
-        _slangcArgs[0] = shaderPath;
-        _slangcArgs[2] = _formatString;
-
-        // This Uses a SHHIIITT ton of memory on first call probably won't
-        // include in Engine instead use in Editor in the future.
-        byte[] bytecode = SlangCompiler.CompileWithReflection(_slangcArgs, out var reflection);
-
-        string? vertexEntry = null;
-        string? fragmentEntry = null;
+        string source = File.ReadAllText(shaderPath);
         
-        uint samplerCount = 0;
-        uint uniformBufferCount = 0;
-        uint storageBufferCount = 0;
-        uint storageTextureCount = 0;
-
-        foreach (var entry in reflection.EntryPoints)
+        var vertexInfo = new ShaderCross.HLSLInfo()
         {
-            if (entry.Stage == SlangStage.Vertex)
-            {
-                vertexEntry = entry.Name;
-                continue;
-            }
-
-            if (entry.Stage == SlangStage.Fragment)
-            {
-                fragmentEntry = entry.Name;
-                continue;
-            }
-        }
+            EnableDebug = true,
+            Entrypoint = "vsMain",
+            IncludeDir = null,
+            Name = null,
+            Props = 0,
+            ShaderStage = ShaderCross.ShaderStage.Vertex,
+            Source = source,
+            Defines = IntPtr.Zero,
+        };
         
-        foreach (var parameter in reflection.Parameters)
+        var fragmentInfo = new ShaderCross.HLSLInfo()
         {
-            switch (parameter.Type.Kind)
-            {
-                case SlangTypeKind.Resource:
-                    switch (parameter.Type.Resource.BaseShape)
-                    {
-                        case SlangResourceShape.StructuredBuffer:
-                            storageBufferCount++;
-                            break;
-                    }
-                    break;
-                case SlangTypeKind.ConstantBuffer:
-                    uniformBufferCount++;
-                    break;
-                case SlangTypeKind.SamplerState:
-                    samplerCount++;
-                    break;
-            }
-        }
+            EnableDebug = true,
+            Entrypoint = "fsMain",
+            IncludeDir = null,
+            Name = null,
+            Props = 0,
+            ShaderStage = ShaderCross.ShaderStage.Fragment,
+            Source = source,
+            Defines = IntPtr.Zero,
+        };
 
-        bool failed = false;
+        IntPtr vertexSpriv = ShaderCross.CompileSPIRVFromHLSL(in vertexInfo, out UIntPtr vertexSize);
+
+        var vertexSprivInfo = new ShaderCross.SPIRVInfo()
+        {
+            ByteCode = vertexSpriv,
+            ByteCodeSize = vertexSize,
+            Entrypoint = vertexInfo.Entrypoint,
+            Name = vertexInfo.Name,
+            Props = vertexInfo.Props,
+            ShaderStage = vertexInfo.ShaderStage,
+        };
         
-        if (vertexEntry == null)
-        {
-            WLog.Error("Failed to compile shader, missing a vertex entry point");
-            failed = true;
-        }
+        IntPtr fragmentSpriv = ShaderCross.CompileSPIRVFromHLSL(in fragmentInfo, out UIntPtr fragmentSize);
 
-        if (fragmentEntry == null)
+        var fragmentSprivInfo = new ShaderCross.SPIRVInfo()
         {
-            WLog.Error("Failed to compile shader, missing a fragment entry point");
-            failed = true;
-        }
+            ByteCode = fragmentSpriv,
+            ByteCodeSize = fragmentSize,
+            Entrypoint = fragmentInfo.Entrypoint,
+            Name = fragmentInfo.Name,
+            Props = fragmentInfo.Props,
+            ShaderStage = fragmentInfo.ShaderStage
+        };
 
-        if (failed)
-            return;
+        NativePtr<ShaderCross.GraphicsShaderMetadata> metadata = ShaderCross.ReflectGraphicsSPIRV(fragmentSpriv, fragmentSize, 0);
+        
+        IntPtr vertexShader = ShaderCross.CompileGraphicsShaderFromSPIRV(Device.Handle, in vertexSprivInfo, in metadata.Value, 0);
+        
+        if (vertexShader == IntPtr.Zero)
+            WLog.Error(SDL.GetError());
+        
+        IntPtr fragmentShader = ShaderCross.CompileGraphicsShaderFromSPIRV(Device.Handle, in fragmentSprivInfo, in metadata.Value, 0);
+        if (fragmentShader == IntPtr.Zero)
+            WLog.Error(SDL.GetError());
+        
+        SDL.Free(metadata);
+        SDL.Free(vertexSpriv);
+        SDL.Free(fragmentSpriv);
         
         string relPath = $"{Path.GetRelativePath(AppDomain.CurrentDomain.BaseDirectory, Path.GetDirectoryName(shaderPath) ?? string.Empty)}/{Path.GetFileNameWithoutExtension(shaderPath)}";
 
         lock (_shaders)
         {
             _shaders.Add(relPath, new Shader(
-                bytecode, 
-                vertexEntry!, 
-                fragmentEntry!, 
-                _format, 
-                samplerCount, 
-                uniformBufferCount, 
-                storageBufferCount, 
-                storageTextureCount));
+                vertexShader, 
+                fragmentShader,
+                metadata.Value.NumSamplers, 
+                metadata.Value.NumUniformBuffers, 
+                metadata.Value.NumStorageBuffers, 
+                metadata.Value.NumStorageTextures));
         }
         
         WLog.Info($"Shader compiled: {relPath}");

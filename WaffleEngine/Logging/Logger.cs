@@ -1,8 +1,8 @@
 namespace WaffleEngine;
 
-public class Logger(string logger_name)
+public class Logger(string loggerName)
 {
-    public void Fatal(string message, string tag = "")
+    public void Fatal(string message, string? tag = null)
     {
         Console.ForegroundColor = ConsoleColor.Red;
 
@@ -10,7 +10,7 @@ public class Logger(string logger_name)
         LogMessage(message, tag);
     }
 
-    public void Error(string message, string tag = "")
+    public void Error(string message, string? tag = null)
     {
         Console.ForegroundColor = ConsoleColor.Red;
 
@@ -18,7 +18,7 @@ public class Logger(string logger_name)
         LogMessage(message, tag);
     }
 
-    public void Warning(string message, string tag = "")
+    public void Warning(string message, string? tag = null)
     {
         Console.ForegroundColor = ConsoleColor.Yellow;
 
@@ -26,7 +26,7 @@ public class Logger(string logger_name)
         LogMessage(message, tag);
     }
 
-    public void Info(string message, string tag = "")
+    public void Info(string message, string? tag = null)
     {
         Console.ForegroundColor = ConsoleColor.Gray;
 
@@ -34,7 +34,7 @@ public class Logger(string logger_name)
         LogMessage(message, tag);
     }
 
-    public void Trace(string message, string tag = "")
+    public void Trace(string message, string? tag = null)
     {
         Console.ForegroundColor = ConsoleColor.DarkGray;
 
@@ -42,11 +42,11 @@ public class Logger(string logger_name)
         LogMessage(message, tag);
     }
     
-    private void LogMessage(string message, string tag = "")
+    private void LogMessage(string message, string? tag = null)
     {
         Console.ResetColor();
-        if (logger_name.Length != 0) Console.Write($"[{logger_name}] ");
-        if (tag != "") Console.Write($"[{tag}] ");
+        if (loggerName.Length != 0) Console.Write($"[{loggerName}] ");
+        if (tag is not null) Console.Write($"[{tag}] ");
         Console.WriteLine(message);
     }
 }

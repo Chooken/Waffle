@@ -9,9 +9,6 @@
 
     <ItemGroup>
       <PackageReference Include="Arch" Version="2.1.0" />
-      <PackageReference Include="SDL3-CS" Version="3.2.16.7" />
-      <PackageReference Include="Slangc.NET" Version="2025.10.0" />
-      <PackageReference Include="StbImageSharp" Version="2.30.15" />
       <PackageReference Include="VYaml" Version="1.2.0" />
     </ItemGroup>
     

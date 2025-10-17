@@ -31,7 +31,7 @@ public static class WindowManager
             return true;
         }
         
-        if (!WindowSdl.TryCreate(windowName, 800, 600, out window))
+        if (!WindowSdl.TryCreate(windowHandle, windowName, 800, 600, out window))
             return false;
         
         _windows.Add(windowHandle, window!);

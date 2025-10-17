@@ -1,8 +1,13 @@
+using WaffleEngine.Rendering;
+using WaffleEngine.Rendering.Immediate;
+
 namespace WaffleEngine;
 
 public abstract class Window : IDisposable
 {
     public InputHandler WindowInput = new InputHandler();
+    
+    public string WindowHandle { get; internal set; }
     
     public int Width { get; internal set; }
     
@@ -17,6 +22,12 @@ public abstract class Window : IDisposable
     public abstract void Focus();
 
     public abstract void SetTitle(string title);
+
+    public abstract float GetDisplayScale();
+
+    public abstract bool TryGetSwapchainTexture(ImQueue queue, ref GpuTexture texture);
+
+    public abstract TextureFormat GetSwapchainTextureFormat();
     
     public abstract void Dispose();
 }

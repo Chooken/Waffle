@@ -16,4 +16,8 @@
         <Content Include="Fonts\**" CopyToOutputDirectory="Always"  />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Shaders\" />
+    </ItemGroup>
+
 </Project>

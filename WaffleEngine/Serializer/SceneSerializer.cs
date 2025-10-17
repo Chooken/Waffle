@@ -74,7 +74,7 @@ public static class SceneSerializer
         
         emitter.BeginSequence();
 
-        foreach (var query in scene._queries)
+        foreach (var query in scene._update_queries)
         {
             ((ISerializable)query).Serialize(ref emitter);
         }

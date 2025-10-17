@@ -32,7 +32,7 @@ public unsafe struct NativePtr<T> : IDisposable where T : unmanaged
 
     public void ReAlloc(uint size)
     {
-        if (Null)
+        if (IsNull)
             return;
 
         _pointer = (T*)NativeMemory.Realloc(_pointer, size * (uint)sizeof(T));
@@ -40,7 +40,7 @@ public unsafe struct NativePtr<T> : IDisposable where T : unmanaged
 
     public ref T Value => ref *_pointer;
 
-    public bool Null => _pointer == null;
+    public bool IsNull => _pointer is null;
 
     public bool TryGetValue([NotNullWhen(true)] out T? value)
     {
@@ -59,6 +59,8 @@ public unsafe struct NativePtr<T> : IDisposable where T : unmanaged
     public static implicit operator IntPtr(NativePtr<T> value) => (IntPtr)value._pointer;
 
     public static implicit operator NativePtr<T>(IntPtr value) => new NativePtr<T>(value);
+
+    public static NativePtr<T> Null => new NativePtr<T>();
 }
 
 public unsafe struct NativeVoidPtr : IDisposable

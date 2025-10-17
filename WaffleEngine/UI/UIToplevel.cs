@@ -4,9 +4,9 @@ using WaffleEngine.Rendering.Immediate;
 
 namespace WaffleEngine.UI;
 
-public class UIToplevel
+public struct UIToplevel
 {
-    public readonly WindowSdl Window;
+    public readonly Window Window;
     public UIRect? Root;
     public Color BackgroundColor = Color.RGBA255(0,0,0,0);
     
@@ -14,7 +14,7 @@ public class UIToplevel
     
     public GpuTexture UiTexture;
 
-    public UIToplevel(WindowSdl window)
+    public UIToplevel(Window window)
     {
         Window = window;
         UiTexture = new GpuTexture(Window);

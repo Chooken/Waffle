@@ -7,7 +7,7 @@ namespace WaffleEngine.Rendering;
 
 public class Renderer
 {
-    private WindowSdl _window;
+    private Window _window;
     
     private Shader _shader;
     private Queue _queue;
@@ -23,14 +23,10 @@ public class Renderer
 
     private UIToplevel ui;
     
-    public Renderer(WindowSdl window)
+    public Renderer(Window window)
     {
         _window = window;
         _queue = new Queue();
-
-        var dpi = window.GetDisplayScale();
-        
-        Log.Info($"{dpi}");
         
         texture = new Texture("textures/texture.png");
         
@@ -72,6 +68,11 @@ public class Renderer
         renderPass.AddCommand(new DrawIndexedPrimatives(6, instances, 0, 0, 0));
         _queue.AddPass(renderPass);
 
+        Vector4 startButtonRadius = new Vector4(8, 8, 4, 4);
+        Vector4 buttonRadius = new Vector4(4, 4, 4, 4);
+        Vector4 endButtonRadius = new Vector4(4, 4, 8, 8);
+        Vector2 buttonSize = new Vector2(40, 24);
+
         ui = new UIToplevel(window);
         ui.BackgroundColor = Color.RGBA255(34, 40, 49, 255);
         ui.Root = new UIRect()
@@ -84,51 +85,47 @@ public class Renderer
                 .SetWidth(UISize.Percentage(100))
                 .SetHeight(UISize.Percentage(100))
                 .SetBorderRadius(new Vector4(24, 24, 24, 24), UISizeType.Pixels)
+                .SetBorderColor(Color.RGBA255(69, 74, 93, 255))
+                .SetBorderSize(UISize.Pixels(2))
                 .SetTexture(text)
-            )
-            .AddUIElement(new UIRect()
-                .SetWidth(UISize.Percentage(100))
-                .SetHeight(UISize.Percentage(100))
                 .SetPaddingX(UISize.Pixels(12))
                 .SetPaddingY(UISize.Pixels(12))
                 .SetChildAnchor(UIAnchor.TopLeft)
                 .AddUIElement(new UIRect()
-                    .SetWidth(UISize.Pixels(32))
-                    .SetHeight(UISize.Pixels(32))
-                    .SetPaddingX(UISize.Pixels(8))
-                    .SetPaddingY(UISize.Pixels(8))
-                    .SetGap(UISize.Pixels(8))
-                    .SetBorderRadius(new Vector4(24, 24, 24, 24), UISizeType.Pixels)
+                    .SetPaddingX(UISize.Pixels(6))
+                    .SetPaddingY(UISize.Pixels(6))
+                    .SetGap(UISize.Pixels(2))
+                    .SetBorderRadius(new Vector4(12, 12, 12, 12), UISizeType.Pixels)
                     .SetColor(Color.RGBA255(34, 40, 49, 255))
                     .AddUIElement(new UIRect()
-                        .SetWidth(UISize.Pixels(48))
-                        .SetHeight(UISize.Pixels(24))
+                        .SetWidth(UISize.Pixels(buttonSize.x))
+                        .SetHeight(UISize.Pixels(buttonSize.y))
                         .SetColor(Color.RGBA255(49, 54, 63, 255))
-                        .SetBorderRadius(new Vector4(16, 16, 16, 16), UISizeType.Pixels)
+                        .SetBorderRadius(startButtonRadius, UISizeType.Pixels)
                     )
                     .AddUIElement(new UIRect()
-                        .SetWidth(UISize.Pixels(48))
-                        .SetHeight(UISize.Pixels(24))
+                        .SetWidth(UISize.Pixels(buttonSize.x))
+                        .SetHeight(UISize.Pixels(buttonSize.y))
                         .SetColor(Color.RGBA255(49, 54, 63, 255))
-                        .SetBorderRadius(new Vector4(16, 16, 16, 16), UISizeType.Pixels)
+                        .SetBorderRadius(buttonRadius, UISizeType.Pixels)
                     )
                     .AddUIElement(new UIRect()
-                        .SetWidth(UISize.Pixels(48))
-                        .SetHeight(UISize.Pixels(24))
+                        .SetWidth(UISize.Pixels(buttonSize.x))
+                        .SetHeight(UISize.Pixels(buttonSize.y))
                         .SetColor(Color.RGBA255(49, 54, 63, 255))
-                        .SetBorderRadius(new Vector4(16, 16, 16, 16), UISizeType.Pixels)
+                        .SetBorderRadius(buttonRadius, UISizeType.Pixels)
                     )
                     .AddUIElement(new UIRect()
-                        .SetWidth(UISize.Pixels(48))
-                        .SetHeight(UISize.Pixels(24))
+                        .SetWidth(UISize.Pixels(buttonSize.x))
+                        .SetHeight(UISize.Pixels(buttonSize.y))
                         .SetColor(Color.RGBA255(49, 54, 63, 255))
-                        .SetBorderRadius(new Vector4(16, 16, 16, 16), UISizeType.Pixels)
+                        .SetBorderRadius(buttonRadius, UISizeType.Pixels)
                     )
                     .AddUIElement(new UIRect()
-                        .SetWidth(UISize.Pixels(48))
-                        .SetHeight(UISize.Pixels(24))
+                        .SetWidth(UISize.Pixels(buttonSize.x))
+                        .SetHeight(UISize.Pixels(buttonSize.y))
                         .SetColor(Color.RGBA255(49, 54, 63, 255))
-                        .SetBorderRadius(new Vector4(16, 16, 16, 16), UISizeType.Pixels)
+                        .SetBorderRadius(endButtonRadius, UISizeType.Pixels)
                     )
                 )
             );

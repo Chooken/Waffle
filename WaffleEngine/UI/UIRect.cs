@@ -11,7 +11,9 @@ public struct UIRectData
     public Vector2 VertexOffset;
     public Vector4 Color;
     public Vector4 BorderRadius;
+    public Vector4 BorderColor;
     public Vector2 ScreenSize;
+    public float BorderSize;
 }
 
 public class UIRect
@@ -32,7 +34,9 @@ public class UIRect
     public UISize Gap;
     public UIDirection ChildDirection = UIDirection.Right;
     public UIAnchor ChildAnchor;
-    public Color Color = new Color(0, 0, 0, 0);
+    public Color Color;
+    public Color BorderColor;
+    public UISize BorderSize;
     public GpuTexture? Texture;
     public bool Dirty = true;
 
@@ -199,7 +203,9 @@ public class UIRect
             Color = Color,
             BorderRadius = new Vector4(BorderRadiusTL.Value, BorderRadiusBL.Value, BorderRadiusTR.Value,
                 BorderRadiusBR.Value),
-            ScreenSize = renderSize
+            BorderColor = BorderColor,
+            ScreenSize = renderSize,
+            BorderSize = BorderSize.AsPixels(parentSize.x)
         };
         
         Dirty = false;
@@ -224,10 +230,6 @@ public class UIRect
         Vector2 adjustedSize = new Vector2(
             size.x - PaddingX.AsPixels(parentSize.x) * 2,
             size.y - PaddingY.AsPixels(parentSize.y) * 2);
-        
-        Vector2 adjustedRealSize = new Vector2(
-            realSize.x - PaddingX.AsPixels(parentSize.x) * 2,
-            realSize.y - PaddingY.AsPixels(parentSize.y) * 2);
 
         Vector3 adjustedPos = new Vector3(
             position.x + PaddingX.AsPixels(parentSize.x) + realSize.x * ChildAnchor.Position.x,
@@ -404,6 +406,20 @@ public class UIRect
     public UIRect SetColor(Color color)
     {
         Color = color;
+        SetDirty();
+        return this;
+    }
+
+    public UIRect SetBorderColor(Color color)
+    {
+        BorderColor = color;
+        SetDirty();
+        return this;
+    }
+    
+    public UIRect SetBorderSize(UISize size)
+    {
+        BorderSize = size;
         SetDirty();
         return this;
     }

@@ -7,10 +7,6 @@ namespace WaffleEngine;
 
 public sealed unsafe class Shader : IDisposable
 {
-    public byte[] Bytecode { get; private set; }
-    public string VertexEntry { get; private set; }
-    public string FragmentEntry { get; private set; }
-    public ShaderFormat Format { get; private set; }
     public int Samplers { get; private set; }
     public int UniformBuffers { get; private set; }
     public int StorageBuffers { get; private set; }
@@ -22,19 +18,15 @@ public sealed unsafe class Shader : IDisposable
     public Pipeline? Pipeline { get; private set; }
 
     public Shader(
-        byte[] bytecode, 
-        string vertexEntry, 
-        string fragmentEntry, 
-        ShaderFormat format, 
+        IntPtr vertexHandle,
+        IntPtr fragmentHandle,
         uint samplers, 
         uint uniformBuffers, 
         uint storageBuffers, 
         uint storageTextures)
     {
-        Bytecode = bytecode;
-        VertexEntry = vertexEntry;
-        FragmentEntry = fragmentEntry;
-        Format = format;
+        VertexHandle = vertexHandle;
+        FragmentHandle = fragmentHandle;
         Samplers = (int) samplers;
         UniformBuffers = (int) uniformBuffers;
         StorageBuffers = (int) storageBuffers;
@@ -45,37 +37,6 @@ public sealed unsafe class Shader : IDisposable
 
     private void Build()
     {
-        var vertexEntryPtr = Marshal.StringToHGlobalAnsi(VertexEntry);
-        var fragmentEntryPtr = Marshal.StringToHGlobalAnsi(FragmentEntry);
-        
-        SDL.GPUShaderCreateInfo shaderInfo;
-        
-        fixed (byte* bytecodePtr = Bytecode)
-        {
-            shaderInfo = new SDL.GPUShaderCreateInfo()
-            {
-                Code = (IntPtr)bytecodePtr,
-                CodeSize = (uint)Bytecode.Length,
-                Entrypoint = vertexEntryPtr,
-                Stage = SDL.GPUShaderStage.Vertex,
-                Format = (SDL.GPUShaderFormat)Format,
-                NumSamplers = (uint)Samplers,
-                NumUniformBuffers = (uint)UniformBuffers,
-                NumStorageBuffers = (uint)StorageBuffers,
-                NumStorageTextures = (uint)StorageTextures
-            };
-        }
-        
-        VertexHandle = SDL.CreateGPUShader(Device.Handle, shaderInfo);
-
-        shaderInfo.Entrypoint = fragmentEntryPtr;
-        shaderInfo.Stage = SDL.GPUShaderStage.Fragment;
-        
-        FragmentHandle = SDL.CreateGPUShader(Device.Handle, shaderInfo);
-        
-        Marshal.FreeHGlobal(vertexEntryPtr);
-        Marshal.FreeHGlobal(fragmentEntryPtr);
-        
         if (!Pipeline.TryBuild(PipelineSettings.Default, this, out Pipeline? pipeline))
             WLog.Error("Failed to Build Pipeline");
 

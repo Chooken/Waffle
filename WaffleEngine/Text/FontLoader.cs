@@ -1,7 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using SDL3;
 using WaffleEngine.Rendering;
-using WaffleEngine.SDLExtra.TTF;
 
 namespace WaffleEngine.Text;
 
@@ -69,7 +68,7 @@ public static class FontLoader
         
         IntPtr textHandle = TTF.CreateText(_textEngine, font, text, 0);
 
-        GPUAtlasDrawSequenceFormatted drawFormatted = ((GPUAtlasDrawSequence*)TTF.GetGPUTextDrawData(textHandle))->AsFormatted();
+        TTF.GPUAtlasDrawSequenceFormatted drawFormatted = ((TTF.GPUAtlasDrawSequence*)TTF.GetGPUTextDrawData(textHandle))->AsFormatted();
 
         var surface = TTF.RenderTextLCDWrapped(font, text, 0, foregoundColor, backgroundColor, widthInPixels);
         

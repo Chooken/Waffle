@@ -18,16 +18,28 @@ public unsafe class Texture : IGpuUploadable
     
     public Texture(string path)
     {
-        IntPtr startSurface = Image.Load(path);
-        if (startSurface == IntPtr.Zero)
+        NativePtr<SDL.Surface> startSurface = Image.Load(path);
+        if (startSurface.IsNull)
         {
             WLog.Error($"Failed to load image {path}: {SDL.GetError()}");
             return;
         }
 
-        _surface = SDL.ConvertSurface(startSurface, SDL.PixelFormat.ABGR8888);
-        
-        SDL.DestroySurface(startSurface);
+        if (startSurface.Value.Format != SDL.PixelFormat.ABGR8888)
+        {
+            _surface = SDL.ConvertSurface(startSurface, SDL.PixelFormat.ABGR8888);
+            SDL.DestroySurface(startSurface);
+        }
+        else
+        {
+            _surface = startSurface;
+        }
+
+        if (_surface.IsNull)
+        {
+            WLog.Error(SDL.GetError());
+            return;
+        }
 
         _gpuTexture = new GpuTexture((uint)Width, (uint)Height, TextureFormat.R8G8B8A8Unorm);
     }

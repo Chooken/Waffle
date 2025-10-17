@@ -6,7 +6,7 @@ namespace WaffleEngine;
 
 public struct Camera : ISerializable
 {
-    private WindowSdl _window;
+    private Window _window;
     private float _fov;
     private float _near;
     private float _far;
@@ -17,12 +17,12 @@ public struct Camera : ISerializable
     public float Width => (float)_window.Width / _window.Height * _fov;
     public float Height => _fov;
 
-    public WindowSdl Window => _window;
+    public Window Window => _window;
     public float Fov => _fov;
     public float Near => _near;
     public float Far => _far;
 
-    public Camera(WindowSdl window, float fov, float near, float far)
+    public Camera(Window window, float fov, float near, float far)
     {
         _window = window;
         _fov = fov;
@@ -31,7 +31,7 @@ public struct Camera : ISerializable
         _needsViewBuild = true;
     }
 
-    public void SetWindow(WindowSdl window)
+    public void SetWindow(Window window)
     {
         _window = window;
         _needsViewBuild = true;

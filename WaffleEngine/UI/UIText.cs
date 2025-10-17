@@ -11,7 +11,6 @@ public class UIText : UIRect
     public UIText()
     {
         Font font = FontLoader.GetFont("Fonts/Nunito-Regular.ttf", 24);
-
         _text = new AtlasedText("", font, Color.RGBA255(0,0,0,255));
     }
 

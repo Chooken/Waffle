@@ -15,11 +15,11 @@ public sealed class GpuTexture : IGpuBindable
 
     public GpuTexture() => Handle = IntPtr.Zero;
     
-    public GpuTexture(WindowSdl window) => 
-        Init((uint)window.Width, (uint)window.Height, (TextureFormat)SDL.GetGPUSwapchainTextureFormat(Device.Handle, window.WindowPtr));
+    public GpuTexture(Window window) => 
+        Init((uint)window.Width, (uint)window.Height, window.GetSwapchainTextureFormat());
 
-    public GpuTexture(uint width, uint height, WindowSdl window) => 
-        Init(width, height, (TextureFormat)SDL.GetGPUSwapchainTextureFormat(Device.Handle, window.WindowPtr));
+    public GpuTexture(uint width, uint height, Window window) => 
+        Init(width, height, window.GetSwapchainTextureFormat());
 
     public GpuTexture(uint width, uint height) => Init(width, height, TextureFormat.B8G8R8A8Unorm);
 

@@ -10,7 +10,9 @@ public sealed class Scene : IDisposable
 {
     internal readonly World _world = World.Create();
     
-    internal List<IQuery> _queries = new List<IQuery>();
+    internal List<IQuery> _init_queries = new List<IQuery>();
+    internal List<IQuery> _update_queries = new List<IQuery>();
+    internal List<IQuery> _dispose_queries = new List<IQuery>();
 
     private bool _commandBufferUsed = false;
     private CommandBuffer _commandBuffer = new CommandBuffer();
@@ -26,9 +28,20 @@ public sealed class Scene : IDisposable
         return entity;
     }
 
-    public void AddQuery(IQuery query)
+    public void AddQuery(IQuery query, QueryEvent qEvent = QueryEvent.Update)
     {
-        _queries.Add(query);
+        switch (qEvent)
+        {
+            case QueryEvent.Init:
+                _init_queries.Add(query);
+                break;
+            case QueryEvent.Update:
+                _update_queries.Add(query);
+                break;
+            case QueryEvent.Dispose:
+                _dispose_queries.Add(query);
+                break;
+        }
     }
 
     internal void AddComponentToEntity<T>(Entity entity, T component) where T : struct
@@ -42,9 +55,30 @@ public sealed class Scene : IDisposable
         RunArchCommandBuffer();
     }
 
-    internal void RunQueries()
+    internal void RunQueries(QueryEvent qEvent)
     {
-        foreach (IQuery query in _queries)
+        List<IQuery> queries;
+        
+        switch (qEvent)
+        {
+            case QueryEvent.Init:
+                queries = _init_queries;
+                break;
+            
+            case QueryEvent.Update:
+                queries = _update_queries;
+                break;
+            
+            case QueryEvent.Dispose:
+                queries = _dispose_queries;
+                break;
+            
+            default:
+                queries = _update_queries;
+                break;
+        }
+        
+        foreach (IQuery query in queries)
         {
             query.Run(in _world);
         }

@@ -1,5 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
-
 namespace WaffleEngine;
 
 public static class SceneManager
@@ -10,7 +8,7 @@ public static class SceneManager
     {
         foreach (var scene in _activeScenes.Values)
         {
-            scene.RunQueries();
+            scene.RunQueries(QueryEvent.Update);
         }
     }
 

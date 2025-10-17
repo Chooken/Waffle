@@ -27,9 +27,11 @@ public static class Application
     {
         if (!Device.Init())
             return false;
+
+        if (!ShaderManager.Init())
+            return false;
         
-        ShaderManager.Init();
-        FontLoader.Init();
+        //FontLoader.Init();
         
         WLog.Info("Application Initialised");
         

@@ -8,13 +8,13 @@ public interface IPreprocess
     public void Run(ImQueue queue);
 }
 
-public sealed class GetSwapchain(WindowSdl window, ref GpuTexture texture) : IPreprocess
+public sealed class GetSwapchain(Window window, ref GpuTexture texture) : IPreprocess
 {
     private GpuTexture _texture = texture;
 
     public void Run(ImQueue queue)
     {
-        if (!queue.TryGetSwapchainTexture(window, ref _texture))
+        if (!window.TryGetSwapchainTexture(queue, ref _texture))
         {
             WLog.Error("Failed to retrieve swapchain texture");
             return;

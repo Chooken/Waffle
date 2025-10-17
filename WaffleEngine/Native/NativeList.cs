@@ -1,5 +1,3 @@
-using System.Runtime.InteropServices;
-
 namespace WaffleEngine.Native;
 
 public struct NativeList<T> : IDisposable where T : unmanaged

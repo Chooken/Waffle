@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using SDL3;
 using WaffleEngine.Rendering;
+using WaffleEngine.Rendering.Immediate;
 
 namespace WaffleEngine;
 
@@ -8,13 +9,14 @@ public sealed class WindowSdl : Window
 {
     internal IntPtr WindowPtr;
 
-    public string? WindowHandle => WindowManager.TryGetWindowHandle(SDL.GetWindowID(WindowPtr));
-    
-    public static bool TryCreate(string title, int width, int height, out Window? window)
+
+    public static bool TryCreate(string handle, string title, int width, int height, out Window? window)
     {
         window = null;
 
         WindowSdl windowSdl = new WindowSdl();
+
+        windowSdl.WindowHandle = handle;
 
         windowSdl.Resizeable = true;
         
@@ -89,12 +91,29 @@ public sealed class WindowSdl : Window
         SDL.SetWindowTitle(WindowPtr, title);
     }
 
-    public float GetDisplayScale() => SDL.GetWindowDisplayScale(WindowPtr);
+    public override float GetDisplayScale() => SDL.GetWindowDisplayScale(WindowPtr);
+
+    public override TextureFormat GetSwapchainTextureFormat()
+    {
+        return (TextureFormat)SDL.GetGPUSwapchainTextureFormat(Device.Handle, WindowPtr);
+    }
 
     public override void Dispose()
     {
         WLog.Info("Window Disposed");
         SDL.DestroyWindow(WindowPtr);
+    }
+
+    public override bool TryGetSwapchainTexture(ImQueue queue, ref GpuTexture texture)
+    {
+        if (!SDL.WaitAndAcquireGPUSwapchainTexture(queue.Handle, WindowPtr, out IntPtr handle, out uint width, out uint height))
+        {
+            WLog.Error("Failed to acquire a swapchain texture");
+            return false;
+        }
+
+        texture.Set(width, height, handle);
+        return true;
     }
 
     private static unsafe bool HandleWindowResize(IntPtr userdata, ref SDL.Event sdlEvent)

@@ -104,17 +104,7 @@ public struct ImQueue()
             return false;
         }
         
-        IntPtr handle;
-
-        if (!SDL.WaitAndAcquireGPUSwapchainTexture(Handle, ((WindowSdl)window).WindowPtr, out handle, out uint width, out uint height))
-        {
-            WLog.Error("Failed to acquire a swapchain texture");
-            return false;
-        }
-
-        texture.Set(width, height, handle);
-        
-        return true;
+        return window.TryGetSwapchainTexture(this, ref texture);
     }
 
     public void Submit()

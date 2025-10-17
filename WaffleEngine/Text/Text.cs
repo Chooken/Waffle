@@ -1,7 +1,6 @@
 using SDL3;
 using WaffleEngine.Rendering;
 using WaffleEngine.Rendering.Immediate;
-using WaffleEngine.SDLExtra.TTF;
 
 namespace WaffleEngine.Text;
 
@@ -69,7 +68,7 @@ public class AtlasedText
 
     public unsafe void Update()
     {
-        var sequence = (GPUAtlasDrawSequence*)TTF.GetGPUTextDrawData(Handle);
+        var sequence = (TTF.GPUAtlasDrawSequence*)TTF.GetGPUTextDrawData(Handle);
 
         if (sequence is null)
         {
