@@ -6,7 +6,7 @@ using WaffleEngine.Rendering.Immediate;
 
 namespace WaffleEngine;
 
-public unsafe class Texture : IGpuUploadable, IDisposable
+public unsafe class Texture : IGpuUploadable, IRenderBindable, IDisposable
 {
     public int Width => _surface.Value.Width;
     public int Height => _surface.Value.Height;
@@ -18,6 +18,7 @@ public unsafe class Texture : IGpuUploadable, IDisposable
     public Texture(string path)
     {
         NativePtr<SDL.Surface> startSurface = Image.Load(path);
+        
         if (startSurface.IsNull)
         {
             WLog.Error($"Failed to load image {path}: {SDL.GetError()}");
@@ -40,7 +41,16 @@ public unsafe class Texture : IGpuUploadable, IDisposable
             return;
         }
 
-        _gpuTexture = new GpuTexture((uint)Width, (uint)Height, TextureFormat.R8G8B8A8Unorm);
+        _gpuTexture = new GpuTexture(GpuTextureSettings.Default((uint)Width, (uint)Height) with
+        {
+            Format = TextureFormat.R8G8B8A8Unorm,
+        });
+
+        ImQueue queue = new ImQueue();
+        ImCopyPass copyPass = queue.AddCopyPass();
+        UploadToGpu(copyPass);
+        copyPass.End();
+        queue.Submit();
     }
 
     public Texture(IntPtr surface)
@@ -49,7 +59,7 @@ public unsafe class Texture : IGpuUploadable, IDisposable
         
         SDL.DestroySurface(surface);
         
-        _gpuTexture = new GpuTexture((uint)Width, (uint)Height, TextureFormat.R8G8B8A8Unorm);
+        _gpuTexture = new GpuTexture(GpuTextureSettings.Default((uint)Width, (uint)Height));
     }
 
     public void SetSurface(IntPtr surface)

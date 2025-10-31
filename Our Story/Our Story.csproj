@@ -13,7 +13,17 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Content Include="Fonts\**" CopyToOutputDirectory="Always"  />
+        <Content Include="Assets/**" CopyToOutputDirectory="Always" />
+        <Content Include="Fonts/**" CopyToOutputDirectory="Always"  />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Assets\Fonts\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ClCompile Include="Assets\Core\shaders\crt.hlsl" />
+      <ClCompile Include="Assets\Core\shaders\texture_canvas.hlsl" />
     </ItemGroup>
 
 </Project>

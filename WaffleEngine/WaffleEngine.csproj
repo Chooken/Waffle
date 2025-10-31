@@ -9,16 +9,20 @@
 
     <ItemGroup>
       <PackageReference Include="Arch" Version="2.1.0" />
+      <PackageReference Include="SDL3-CS.Native" Version="3.2.24" />
+      <PackageReference Include="SDL3-CS.Native.Image" Version="3.2.4" />
+      <PackageReference Include="SDL3-CS.Native.Mixer" Version="2.8.1.1" />
+      <PackageReference Include="SDL3-CS.Native.TTF" Version="3.2.2" />
       <PackageReference Include="VYaml" Version="1.2.0" />
     </ItemGroup>
     
     <ItemGroup>
-        <Content Include="builtin/**" CopyToOutputDirectory="Always"  />
+        <Content Include="Assets/**" CopyToOutputDirectory="Always"  />
         <Content Include="runtimes/**" CopyToOutputDirectory="Always" />
     </ItemGroup>
     
     <ItemGroup>
-      <Folder Include="AssetLoading\" />
+      <ClCompile Include="Assets\builtin\shaders\sprite.hlsl" />
     </ItemGroup>
 
 </Project>

@@ -5,14 +5,19 @@ using WaffleEngine.Rendering.Immediate;
 
 namespace WaffleEngine.Rendering;
 
-public unsafe interface IGpuUploadable
+public interface IGpuUploadable
 {
     internal void UploadToGpu(ImCopyPass copyPass);
 }
 
-public unsafe interface IGpuBindable
+public interface IRenderBindable
 {
     internal void Bind(ImRenderPass renderPass, uint slot);
+}
+
+public interface IComputeBindable
+{
+    internal void Bind(ImComputePass computePass, uint slot);
 }
 
 [Flags]
@@ -26,10 +31,10 @@ public enum BufferUsage : uint
     ComputeStorageWrite = 32,
 }
 
-public sealed class Buffer<T>: IGpuBindable, IGpuUploadable where T : unmanaged
+public sealed class Buffer<T>: IRenderBindable, IComputeBindable, IGpuUploadable where T : unmanaged
 {
     private T[] _data;
-    private GpuBuffer<T> _gpuBuffer;
+    private RenderBuffer<T> _gpuBuffer;
     
     private bool _updated = false;
     private int _count;
@@ -41,7 +46,7 @@ public sealed class Buffer<T>: IGpuBindable, IGpuUploadable where T : unmanaged
     public Buffer(BufferUsage usage, int startSize = 16)
     {
         _data = new T[startSize];
-        _gpuBuffer = new GpuBuffer<T>(usage);
+        _gpuBuffer = new RenderBuffer<T>(usage);
         _count = 0;
     }
     
@@ -86,14 +91,6 @@ public sealed class Buffer<T>: IGpuBindable, IGpuUploadable where T : unmanaged
     }
 
     public void Bind(ImRenderPass renderPass, uint slot) => _gpuBuffer.Bind(renderPass, slot);
-}
 
-public static partial class SDLExtra
-{
-    [LibraryImport("SDL3", EntryPoint = "SDL_BindGPUVertexStorageBuffers"), UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    public static partial void BindGPUVertexStorageBuffers(
-        IntPtr renderPass,
-        uint firstSlot,
-        IntPtr storageBuffers,
-        uint numBindings);
+    public void Bind(ImComputePass computePass, uint slot) => _gpuBuffer.Bind(computePass, slot);
 }

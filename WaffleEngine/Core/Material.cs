@@ -7,9 +7,9 @@ using WaffleEngine.Rendering.Immediate;
 
 namespace WaffleEngine;
 
-public class Material : IGpuBindable
+public class Material : IRenderBindable
 {
-    private List<(IGpuBindable, uint)> _binds = new List<(IGpuBindable, uint)>();
+    private List<(IRenderBindable, uint)> _binds = new List<(IRenderBindable, uint)>();
     
     private Shader _shader;
 

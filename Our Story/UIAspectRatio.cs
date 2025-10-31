@@ -20,7 +20,7 @@ public class UIAspectRatio : UIRect
 
         if (widthBound)
         {
-            float width = Width.AsPixels(parentSize.x);
+            float width = Settings.Width.AsPixels(parentSize);
 
             float scaledWidth = MathF.Floor(width / scaling.x) * scaling.x;
             float scaledHeight = MathF.Floor(width / AspectRatio.x * AspectRatio.y / scaling.x) * scaling.x;
@@ -31,7 +31,7 @@ public class UIAspectRatio : UIRect
         }
         else
         {
-            float height = Height.AsPixels(parentSize.y);
+            float height = Settings.Height.AsPixels(parentSize);
 
             float scaledWidth = MathF.Floor(height / AspectRatio.y * AspectRatio.x / scaling.x) * scaling.x;
             float scaledHeight = MathF.Floor(height / scaling.x) * scaling.x;

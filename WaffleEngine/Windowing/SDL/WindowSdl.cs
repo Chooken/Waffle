@@ -9,7 +9,6 @@ public sealed class WindowSdl : Window
 {
     internal IntPtr WindowPtr;
 
-
     public static bool TryCreate(string handle, string title, int width, int height, out Window? window)
     {
         window = null;
@@ -102,6 +101,12 @@ public sealed class WindowSdl : Window
     {
         WLog.Info("Window Disposed");
         SDL.DestroyWindow(WindowPtr);
+        WindowPtr = IntPtr.Zero;
+    }
+
+    public override bool IsOpen()
+    {
+        return WindowPtr != IntPtr.Zero;
     }
 
     public override bool TryGetSwapchainTexture(ImQueue queue, ref GpuTexture texture)
@@ -112,19 +117,26 @@ public sealed class WindowSdl : Window
             return false;
         }
 
-        texture.Set(width, height, handle);
+        texture.Set(GpuTextureSettings.Default(width, height) with
+        {
+            ColorTarget = true,
+        }, handle);
         return true;
     }
 
     private static unsafe bool HandleWindowResize(IntPtr userdata, ref SDL.Event sdlEvent)
     {
-        WindowSdl* window = (WindowSdl*)userdata; 
-        
         switch ((SDL.EventType)sdlEvent.Type)
         {
             case SDL.EventType.WindowPixelSizeChanged:
-                window->Width = sdlEvent.Window.Data1;
-                window->Height = sdlEvent.Window.Data2;
+
+                if (!WindowManager.TryGetWindowWithId(sdlEvent.Window.WindowID, out var window))
+                {
+                    return true;
+                }
+                
+                window.Width = sdlEvent.Window.Data1;
+                window.Height = sdlEvent.Window.Data2;
                 
                 // I'm pretty sure I shouldn't be doing this but idk how to fix it otherwise.
                 SceneManager.UpdateScenes();

@@ -3,31 +3,31 @@ namespace WaffleEngine
 {
     public class Log
     {
-        private static readonly Logger Logger = new ("");
+        public static readonly ILogger ConsoleLogger = new ConsoleLogger(null, 1);
         
         public static void Fatal(string message)
         {
-            Logger.Fatal(message);
+            ConsoleLogger.Fatal(message);
         }
 
         public static void Error(string message)
         {
-            Logger.Error(message);
+            ConsoleLogger.Error(message);
         }
 
         public static void Warning(string message)
         {
-            Logger.Warning(message);
+            ConsoleLogger.Warning(message);
         }
 
         public static void Info(string message)
         {
-            Logger.Info(message);
+            ConsoleLogger.Info(message);
         }
 
         public static void Trace(string message)
         {
-            Logger.Trace(message);
+            ConsoleLogger.Trace(message);
         }
     }
 }

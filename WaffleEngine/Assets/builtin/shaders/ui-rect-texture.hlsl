@@ -1,7 +1,6 @@
 cbuffer UIElement : register(b0, space1) {
     float3 Position;
     float2 Size;
-    float2 VertexOffset;
     float4 Color;
     float4 BorderRadius;
     float4 BorderColor;
@@ -22,6 +21,9 @@ static const float2 vertexPos[4] = {
     {0.0f, 1.0f},
     {1.0f, 1.0f}
 };
+
+Texture2D<float4> Texture : register(t0, space2);
+SamplerState Sampler : register(s0, space2);
 
 VertexOutput vsMain(uint vertexID : SV_VertexID) {
     uint spriteIndex = vertexID / 6;
@@ -58,8 +60,12 @@ float roundedBoxSDF(float2 uv, float2 halfSize, float4 corners) {
 float4 fsMain(VertexOutput input) : SV_Target {
 
     float alpha = roundedBoxSDF((input.UV - 0.5f) * Size, Size * 0.5f, BorderRadius);
-    
-    float4 color = lerp(Color, BorderColor, saturate(alpha + BorderSize) * saturate(BorderSize));
 
+    float2 uv = float2(input.UV.x, input.UV.y);
+
+    float4 color = Texture.Sample(Sampler, uv);
+    
+    color = lerp(color, BorderColor, saturate(alpha + BorderSize) * saturate(BorderSize));
+    
     return float4(color.rgb, color.a * -alpha);
 }

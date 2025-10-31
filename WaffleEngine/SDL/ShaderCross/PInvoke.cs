@@ -23,6 +23,7 @@
 
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using WaffleEngine.Native;
 
 namespace SDL3;
 
@@ -129,7 +130,7 @@ public partial class ShaderCross
     /// <returns>a compiled SDL_GPUComputePipeline.</returns>
     /// <threadsafety>It is safe to call this function from any thread.</threadsafety>
     [LibraryImport(ShaderCrossLibrary, EntryPoint = "SDL_ShaderCross_CompileComputePipelineFromSPIRV"), UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    public static partial IntPtr CompileComputePipelineFromSPIRV(IntPtr device, in SPIRVInfo info, in GraphicsShaderMetadata metadata, uint props);
+    public static partial IntPtr CompileComputePipelineFromSPIRV(IntPtr device, in SPIRVInfo info, in ComputePipelineMetadata metadata, uint props);
     
     
     /// <code>extern SDL_DECLSPEC SDL_ShaderCross_GraphicsShaderMetadata * SDLCALL SDL_ShaderCross_ReflectGraphicsSPIRV(const Uint8 *bytecode, size_t bytecode_size, SDL_PropertiesID props);</code>
@@ -142,7 +143,7 @@ public partial class ShaderCross
     /// <returns>A metadata struct on success, NULL otherwise. The struct must be free'd when it is no longer needed.</returns>
     /// <threadsafety>It is safe to call this function from any thread.</threadsafety>
     [LibraryImport(ShaderCrossLibrary, EntryPoint = "SDL_ShaderCross_ReflectGraphicsSPIRV"), UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    public static partial IntPtr ReflectGraphicsSPIRV(IntPtr bytecode, UIntPtr bytecodeSize, uint props);
+    public static partial NativePtr<GraphicsShaderMetadata> ReflectGraphicsSPIRV(IntPtr bytecode, UIntPtr bytecodeSize, uint props);
     
     
     /// <code>extern SDL_DECLSPEC bool SDLCALL SDL_ShaderCross_ReflectComputeSPIRV(const Uint8 *bytecode, size_t bytecode_size, SDL_ShaderCross_ComputePipelineMetadata *metadata);</code>
@@ -151,11 +152,11 @@ public partial class ShaderCross
     /// </summary>
     /// <param name="bytecode">the SPIRV bytecode.</param>
     /// <param name="bytecodeSize">the length of the SPIRV bytecode.</param>
-    /// <param name="metadata">a pointer filled in with compute pipeline metadata.</param>
+    /// <param name="props">a properties object filled in with extra shader metadata, provided by the user.</param>
+    /// <returns>A metadata struct on success, NULL otherwise. The struct must be free'd when it is no longer needed.</returns>
     /// <threadsafety>It is safe to call this function from any thread.</threadsafety>
     [LibraryImport(ShaderCrossLibrary, EntryPoint = "SDL_ShaderCross_ReflectComputeSPIRV"), UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    [return: MarshalAs(UnmanagedType.I1)]
-    public static partial bool ReflectComputeSPIRV(IntPtr bytecode, UIntPtr bytecodeSize, out GraphicsShaderMetadata metadata);
+    public static partial NativePtr<ComputePipelineMetadata> ReflectComputeSPIRV(IntPtr bytecode, UIntPtr bytecodeSize, uint props);
     
     
     /// <code>extern SDL_DECLSPEC SDL_GPUShaderFormat SDLCALL SDL_ShaderCross_GetHLSLShaderFormats(void);</code>

@@ -8,7 +8,7 @@ public class Renderer
     
     private Shader _shader;
     private Queue _queue;
-    private GpuTexture _renderTexture = new();
+    private GpuTexture _gpuTexture = new();
 
     private Buffer<Vertex> vertices;
     private Buffer<int> indices;
@@ -58,7 +58,7 @@ public class Renderer
             StoreOperation = StoreOperation.Store,
         };
         
-        _queue.AddPreprocess(new GetSwapchain(_window, ref _renderTexture));
+        _queue.AddPreprocess(new GetSwapchain(_window, ref _gpuTexture));
         RenderPass renderPass = new RenderPass(colorTargetSettings);
         renderPass.AddCommand(new Bind(material));
         renderPass.AddCommand(new Bind(mesh));
@@ -129,7 +129,7 @@ public class Renderer
         
         _queue.AddPass(new UIPass(ui));
         
-        BlitPass blitPass2 = new BlitPass(ui.UiTexture, _renderTexture, true);
+        BlitPass blitPass2 = new BlitPass(ui.UiTexture, _gpuTexture, true);
         _queue.AddPass(blitPass2);
     }
     

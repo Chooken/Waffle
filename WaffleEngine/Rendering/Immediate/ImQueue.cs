@@ -1,4 +1,6 @@
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using Arch.LowLevel;
 using SDL3;
 
 namespace WaffleEngine.Rendering.Immediate;
@@ -82,22 +84,11 @@ public struct ImQueue()
             PrimitiveType = PrimitiveType.TriangleList,
             FillMode = FillMode.Fill,
             VertexInputRate = VertexInputRate.Vertex,
+            VertexAttributes = null
         });
     
         _blitMaterial = new Material(shader);
         return true;
-    }
-
-    public unsafe void SetUniforms<T>(T value)
-    {
-        if (Handle == IntPtr.Zero)
-        {
-            WLog.Error("Command Queue wasn't created before calling AddCopyPass");
-            return;
-        }
-        
-        SDL.PushGPUVertexUniformData(Handle, 0, (IntPtr)Unsafe.AsPointer(ref value), (uint) Unsafe.SizeOf<T>());
-        SDL.PushGPUFragmentUniformData(Handle, 0, (IntPtr)Unsafe.AsPointer(ref value), (uint) Unsafe.SizeOf<T>());
     }
     
     public bool TryGetSwapchainTexture(Window window, ref GpuTexture texture)
@@ -151,6 +142,18 @@ public struct ImRenderPass
         
         Handle = SDL.BeginGPURenderPass(queue.Handle, (IntPtr)(&colorTargetInfo), 1, IntPtr.Zero);
     }
+    
+    public unsafe void SetUniforms<T>(T value)
+    {
+        if (Queue.Handle == IntPtr.Zero)
+        {
+            WLog.Error("Command Queue wasn't created before calling AddCopyPass");
+            return;
+        }
+        
+        SDL.PushGPUVertexUniformData(Queue.Handle, 0, (IntPtr)Unsafe.AsPointer(ref value), (uint) Unsafe.SizeOf<T>());
+        SDL.PushGPUFragmentUniformData(Queue.Handle, 0, (IntPtr)Unsafe.AsPointer(ref value), (uint) Unsafe.SizeOf<T>());
+    }
 
     public void DrawPrimatives(
         uint numberOfVertices, 
@@ -183,7 +186,7 @@ public struct ImRenderPass
         SDL.DrawGPUIndexedPrimitives(Handle, numberOfIndices, numberOfInstances, firstIndex, vertexOffset, firstInstance);
     }
 
-    public void Bind(IGpuBindable bindable, uint slot = 0)
+    public void Bind(IRenderBindable bindable, uint slot = 0)
     {
         bindable.Bind(this, slot);
     }
@@ -225,5 +228,37 @@ public struct ImCopyPass(ImQueue queue)
         
         SDL.EndGPUCopyPass(Handle);
         Handle = IntPtr.Zero;
+    }
+}
+
+public struct ImComputePass(ImQueue queue, ReadWriteTextureBinding[] readWriteTextureBindings)
+{
+    public IntPtr Handle { get; private set; } = SDL.BeginGPUComputePass(queue.Handle, Unsafe.BitCast<ReadWriteTextureBinding[], SDL.GPUStorageTextureReadWriteBinding[]>(readWriteTextureBindings), (uint)readWriteTextureBindings.Length, null, 0);
+    public ImQueue Queue { get; } = queue;
+
+    public unsafe void SetUniforms<T>(T value)
+    {
+        if (Queue.Handle == IntPtr.Zero)
+        {
+            WLog.Error("Command Queue wasn't created before calling AddCopyPass");
+            return;
+        }
+        
+        SDL.PushGPUComputeUniformData(Queue.Handle, 0, (IntPtr)Unsafe.AsPointer(ref value), (uint) Unsafe.SizeOf<T>());
+    }
+
+    public void Bind(IComputeBindable bindable, uint slot = 0)
+    {
+        bindable.Bind(this, slot);
+    }
+
+    public void Dispatch(uint groupCountX, uint groupCountY, uint groupCountZ)
+    {
+        SDL.DispatchGPUCompute(Handle, groupCountX, groupCountY, groupCountZ);
+    }
+
+    public void End()
+    {
+        SDL.EndGPUComputePass(Handle);
     }
 }

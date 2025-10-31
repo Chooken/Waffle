@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using WaffleEngine.Rendering;
 using WaffleEngine.Rendering.Immediate;
 
@@ -7,7 +8,6 @@ public struct UIRectData
 {
     public AlignedVector3 Position;
     public Vector2 Size;
-    public Vector2 VertexOffset;
     public Vector4 Color;
     public Vector4 BorderRadius;
     public Vector4 BorderColor;
@@ -18,94 +18,31 @@ public struct UIRectData
 public class UIRect
 {
     public UIRect? Parent { get; private set; }
-    private List<UIRect> _uiElements = new List<UIRect>();
-    
-    public UISize Width;
-    public UISize Height;
-    public UISize MarginX;
-    public UISize MarginY;
-    public UISize PaddingX;
-    public UISize PaddingY;
-    public UISize BorderRadiusTL;
-    public UISize BorderRadiusBL;
-    public UISize BorderRadiusTR;
-    public UISize BorderRadiusBR;
-    public UISize Gap;
-    public UIDirection ChildDirection = UIDirection.Right;
-    public UIAnchor ChildAnchor;
-    public Color Color;
-    public Color BorderColor;
-    public UISize BorderSize;
-    public GpuTexture? Texture;
+    protected List<UIRect> _uiElements = new List<UIRect>();
+
+    //public UISettings DefaultSettings;
+    public UISettings Settings;
+    private UISettings _newSettings;
+
+    public delegate void ActionRef<T>(ref T item);
+
+    private Func<UISettings>? _default;
+    private ActionRef<UISettings>? _onHoverEvent;
+    private ActionRef<UISettings>? _onClickEvent;
+    private ActionRef<UISettings>? _onHoldEvent;
     public bool Dirty = true;
 
     protected static Material? BaseRectMaterial;
     protected static Material? BaseTexturedRectMaterial;
 
+    public Vector2 LastSize;
+    public Vector3 LastPosition;
+
     public virtual Vector2 GetBoundingSize(Vector2 parentSize)
     {
         var size = GetSize(parentSize);
-        
-        Vector2 contentSize = Vector2.Zero;
 
-        foreach (var uiElement in _uiElements)
-        {
-            Vector2 childSize = uiElement.GetBoundingSize(
-                new Vector2(
-                    size.x - PaddingX.AsPixels(parentSize.x) * 2, 
-                    size.y - PaddingY.AsPixels(parentSize.y) * 2));
-
-            switch (ChildDirection)
-            {
-                case UIDirection.Right:
-                    contentSize = new Vector2(
-                        contentSize.x + childSize.x, 
-                        MathF.Max(contentSize.y, childSize.y));
-                    break;
-                case UIDirection.Left:
-                    contentSize = new Vector2(
-                        contentSize.x + childSize.x, 
-                        MathF.Max(contentSize.y, childSize.y));
-                    break;
-                case UIDirection.Up:
-                    contentSize = new Vector2(
-                        MathF.Max(contentSize.x, childSize.x),
-                        contentSize.y + childSize.y);
-                    break;
-                case UIDirection.Down:
-                    contentSize = new Vector2(
-                        MathF.Max(contentSize.x, childSize.x),
-                        contentSize.y + childSize.y);
-                    break;
-                default:
-                    contentSize = new Vector2(
-                        MathF.Max(contentSize.x, childSize.x),
-                        MathF.Max(contentSize.y, childSize.y));
-                    break;
-            }
-        }
-        
-        switch (ChildDirection)
-        {
-            case UIDirection.Right:
-                contentSize.x += MathF.Max(_uiElements.Count - 1, 0) * Gap.AsPixels(parentSize.x);
-                break;
-            case UIDirection.Left:
-                contentSize.x += MathF.Max(_uiElements.Count - 1, 0) * Gap.AsPixels(parentSize.x);
-                break;
-            case UIDirection.Up:
-                contentSize.y += MathF.Max(_uiElements.Count - 1, 0) * Gap.AsPixels(parentSize.y);
-                break;
-            case UIDirection.Down:
-                contentSize.y += MathF.Max(_uiElements.Count - 1, 0) * Gap.AsPixels(parentSize.y);
-                break;
-            default:
-                break;
-        }
-
-        contentSize = new Vector2(
-            contentSize.x + PaddingX.AsPixels(parentSize.x) * 2, 
-            contentSize.y + PaddingY.AsPixels(parentSize.y) * 2);
+        Vector2 contentSize = GetContentSize(parentSize);
 
         Vector2 realSize = new Vector2(MathF.Max(contentSize.x, size.x), MathF.Max(contentSize.y, size.y));
 
@@ -115,80 +52,21 @@ public class UIRect
     public virtual Vector2 GetSize(Vector2 parentSize)
     {
         return new Vector2(
-            Width.AsPixels(parentSize.x) - MarginX.AsPixels(parentSize.x) * 2, 
-            Height.AsPixels(parentSize.y) - MarginY.AsPixels(parentSize.y) * 2);
+            Settings.Width.AsPixels(parentSize) - Settings.MarginX.AsPixels(parentSize) * 2, 
+            Settings.Height.AsPixels(parentSize) - Settings.MarginY.AsPixels(parentSize) * 2);
     }
 
-    public virtual Vector2 Render(ImQueue queue, ImRenderPass renderPass, Vector3 position, UIAnchor anchor, Vector2 parentSize, Vector2 renderSize)
+    public virtual Vector2 Render(ImQueue queue, ImRenderPass renderPass, Vector3 position, Vector2 parentSize, Vector2 renderSize)
     {
         var size = GetSize(parentSize);
-        
-        Vector2 contentSize = Vector2.Zero;
 
-        foreach (var uiElement in _uiElements)
-        {
-            Vector2 childSize = uiElement.GetBoundingSize(
-                new Vector2(
-                    size.x - PaddingX.AsPixels(parentSize.x) * 2, 
-                    size.y - PaddingY.AsPixels(parentSize.y) * 2));
-
-            switch (ChildDirection)
-            {
-                case UIDirection.Right:
-                    contentSize = new Vector2(
-                        contentSize.x + childSize.x, 
-                        MathF.Max(contentSize.y, childSize.y));
-                    break;
-                case UIDirection.Left:
-                    contentSize = new Vector2(
-                        contentSize.x + childSize.x, 
-                        MathF.Max(contentSize.y, childSize.y));
-                    break;
-                case UIDirection.Up:
-                    contentSize = new Vector2(
-                        MathF.Max(contentSize.x, childSize.x),
-                        contentSize.y + childSize.y);
-                    break;
-                case UIDirection.Down:
-                    contentSize = new Vector2(
-                        MathF.Max(contentSize.x, childSize.x),
-                        contentSize.y + childSize.y);
-                    break;
-                default:
-                    contentSize = new Vector2(
-                        MathF.Max(contentSize.x, childSize.x),
-                        MathF.Max(contentSize.y, childSize.y));
-                    break;
-            }
-        }
-        
-        switch (ChildDirection)
-        {
-            case UIDirection.Right:
-                contentSize.x += MathF.Max(_uiElements.Count - 1, 0) * Gap.AsPixels(parentSize.x);
-                break;
-            case UIDirection.Left:
-                contentSize.x += MathF.Max(_uiElements.Count - 1, 0) * Gap.AsPixels(parentSize.x);
-                break;
-            case UIDirection.Up:
-                contentSize.y += MathF.Max(_uiElements.Count - 1, 0) * Gap.AsPixels(parentSize.y);
-                break;
-            case UIDirection.Down:
-                contentSize.y += MathF.Max(_uiElements.Count - 1, 0) * Gap.AsPixels(parentSize.y);
-                break;
-            default:
-                break;
-        }
-        
-        contentSize = new Vector2(
-            contentSize.x + PaddingX.AsPixels(parentSize.x) * 2, 
-            contentSize.y + PaddingY.AsPixels(parentSize.y) * 2);
+        Vector2 contentSize = GetContentSize(parentSize);
 
         Vector2 realSize = new Vector2(MathF.Max(contentSize.x, size.x), MathF.Max(contentSize.y, size.y));
 
         position = new Vector3(
-            position.x + MarginX.AsPixels(parentSize.x),
-            position.y + MarginY.AsPixels(parentSize.y),
+            position.x + Settings.MarginX.AsPixels(parentSize),
+            position.y + Settings.MarginY.AsPixels(parentSize),
             position.z + 1);
 
         if (BaseRectMaterial is null || BaseTexturedRectMaterial is null)
@@ -201,79 +79,157 @@ public class UIRect
         {
             Position = position,
             Size = realSize,
-            VertexOffset = anchor.Position,
-            Color = Color,
-            BorderRadius = new Vector4(BorderRadiusTL.Value, BorderRadiusBL.Value, BorderRadiusTR.Value,
-                BorderRadiusBR.Value),
-            BorderColor = BorderColor,
+            Color = Settings.Color,
+            BorderRadius = Settings.BorderRadius.AsPixels(realSize),
+            BorderColor = Settings.BorderColor,
             ScreenSize = renderSize,
-            BorderSize = BorderSize.AsPixels(parentSize.x)
+            BorderSize = Settings.BorderSize.AsPixels(parentSize)
         };
         
         Dirty = false;
 
-        if (Color.a != 0 || Texture is not null)
+        if (Settings.Color.a != 0 || Settings.Texture is not null)
         {
-            queue.SetUniforms(data);
+            renderPass.SetUniforms(data);
 
-            if (Texture is null)
+            if (Settings.Texture is null)
             {
                 renderPass.Bind(BaseRectMaterial);
             }
             else
             {
                 renderPass.Bind(BaseTexturedRectMaterial);
-                renderPass.Bind(Texture);
+                renderPass.Bind(Settings.Texture);
             }
 
             renderPass.DrawPrimatives(6, 1, 0, 0);
         }
 
         Vector2 adjustedSize = new Vector2(
-            size.x - PaddingX.AsPixels(parentSize.x) * 2,
-            size.y - PaddingY.AsPixels(parentSize.y) * 2);
+            size.x - Settings.PaddingX.AsPixels(parentSize) * 2,
+            size.y - Settings.PaddingY.AsPixels(parentSize) * 2);
 
         Vector3 adjustedPos = new Vector3(
-            position.x + PaddingX.AsPixels(parentSize.x) + realSize.x * ChildAnchor.Position.x,
-            position.y + PaddingY.AsPixels(parentSize.y) + realSize.y * ChildAnchor.Position.y, 
+            position.x + Settings.PaddingX.AsPixels(parentSize) + realSize.x * Settings.ChildAnchor.Position.x,
+            position.y + Settings.PaddingY.AsPixels(parentSize) + realSize.y * Settings.ChildAnchor.Position.y, 
             position.z + 1);
 
-        adjustedPos.x -= contentSize.x * ChildAnchor.Position.x;
-        adjustedPos.y -= contentSize.y * ChildAnchor.Position.y;
+        Vector3 childShift = new Vector3();
         
         foreach (var child in _uiElements)
         {
-            Vector2 childSize = child.Render( 
+            Vector2 childSize = child.GetSize(adjustedSize);
+
+            Vector2 childContentSize = child.GetContentSize(adjustedSize);
+
+            childSize = new Vector2(MathF.Max(childSize.x, childContentSize.x),
+                MathF.Max(childSize.y, childContentSize.y));
+            
+            Vector3 childPos = new Vector3(
+                adjustedPos.x - childSize.x * Settings.ChildAnchor.Position.x + childShift.x,
+                adjustedPos.y - childSize.y * Settings.ChildAnchor.Position.y + childShift.y, adjustedPos.z);
+            
+            child.Render( 
                 queue,
                 renderPass,
-                adjustedPos, 
-                ChildAnchor,
+                childPos, 
                 adjustedSize, 
                 renderSize);
-
-            switch (ChildDirection)
+                
+            switch (Settings.ChildDirection)
             {
                 case UIDirection.Right:
-                    adjustedPos.x += childSize.x + Gap.AsPixels(parentSize.x);
+                    childShift.x += childSize.x + Settings.Gap.AsPixels(parentSize);
                     break;
                 case UIDirection.Left:
-                    adjustedPos.x -= childSize.x + Gap.AsPixels(parentSize.x);
+                    childShift.x -= childSize.x + Settings.Gap.AsPixels(parentSize);
                     break;
                 case UIDirection.Up:
-                    adjustedPos.y -= childSize.y + Gap.AsPixels(parentSize.y);
+                    childShift.y -= childSize.y + Settings.Gap.AsPixels(parentSize);
                     break;
                 case UIDirection.Down:
-                    adjustedPos.y += childSize.y + Gap.AsPixels(parentSize.y);
+                    childShift.y += childSize.y + Settings.Gap.AsPixels(parentSize);
                     break;
                 default:
                     break;
             }
         }
+
+        LastSize = realSize;
+        LastPosition = position;
         
         return realSize;
     }
 
-    private bool SetupMaterials()
+    protected Vector2 GetContentSize(Vector2 parentSize)
+    {
+        Vector2 size = GetSize(parentSize);
+        
+        Vector2 contentSize = Vector2.Zero;
+        
+        foreach (var uiElement in _uiElements)
+        {
+            Vector2 childSize = uiElement.GetBoundingSize(
+                new Vector2(
+                    size.x - Settings.PaddingX.AsPixels(parentSize) * 2, 
+                    size.y - Settings.PaddingY.AsPixels(parentSize) * 2));
+
+            switch (Settings.ChildDirection)
+            {
+                case UIDirection.Right:
+                    contentSize = new Vector2(
+                        contentSize.x + childSize.x, 
+                        MathF.Max(contentSize.y, childSize.y));
+                    break;
+                case UIDirection.Left:
+                    contentSize = new Vector2(
+                        contentSize.x + childSize.x, 
+                        MathF.Max(contentSize.y, childSize.y));
+                    break;
+                case UIDirection.Up:
+                    contentSize = new Vector2(
+                        MathF.Max(contentSize.x, childSize.x),
+                        contentSize.y + childSize.y);
+                    break;
+                case UIDirection.Down:
+                    contentSize = new Vector2(
+                        MathF.Max(contentSize.x, childSize.x),
+                        contentSize.y + childSize.y);
+                    break;
+                default:
+                    contentSize = new Vector2(
+                        MathF.Max(contentSize.x, childSize.x),
+                        MathF.Max(contentSize.y, childSize.y));
+                    break;
+            }
+        }
+        
+        switch (Settings.ChildDirection)
+        {
+            case UIDirection.Right:
+                contentSize.x += MathF.Max(_uiElements.Count - 1, 0) * Settings.Gap.AsPixels(parentSize);
+                break;
+            case UIDirection.Left:
+                contentSize.x += MathF.Max(_uiElements.Count - 1, 0) * Settings.Gap.AsPixels(parentSize);
+                break;
+            case UIDirection.Up:
+                contentSize.y += MathF.Max(_uiElements.Count - 1, 0) * Settings.Gap.AsPixels(parentSize);
+                break;
+            case UIDirection.Down:
+                contentSize.y += MathF.Max(_uiElements.Count - 1, 0) * Settings.Gap.AsPixels(parentSize);
+                break;
+            default:
+                break;
+        }
+        
+        contentSize = new Vector2(
+            contentSize.x + Settings.PaddingX.AsPixels(parentSize) * 2, 
+            contentSize.y + Settings.PaddingY.AsPixels(parentSize) * 2);
+
+        return contentSize;
+    }
+
+    protected bool SetupMaterials()
     {
         if (!Assets.TryGetShader("builtin", "ui-rect", out var _shader))
         {
@@ -299,6 +255,7 @@ public class UIRect
             PrimitiveType = PrimitiveType.TriangleList,
             FillMode = FillMode.Fill,
             VertexInputRate = VertexInputRate.Vertex,
+            VertexAttributes = null,
         });
         
         _shaderTex.SetPipeline(new PipelineSettings()
@@ -313,6 +270,7 @@ public class UIRect
             PrimitiveType = PrimitiveType.TriangleList,
             FillMode = FillMode.Fill,
             VertexInputRate = VertexInputRate.Vertex,
+            VertexAttributes = null,
         });
 
         BaseRectMaterial = new Material(_shader);
@@ -321,12 +279,62 @@ public class UIRect
         return true;
     }
 
-    public virtual void Update()
+    public bool PropagateUpdate(Window window, bool propagateEvents)
     {
-        foreach (var uiElement in _uiElements)
+        Settings = _default.Invoke();
+        
+        for (int i = _uiElements.Count - 1; i >= 0; i--)
         {
-            uiElement.Update();
+            propagateEvents = _uiElements[i].PropagateUpdate(window, propagateEvents);
         }
+        
+        Update();
+        
+        if (propagateEvents)
+        {
+            propagateEvents = !ProcessEvents(window);
+        }
+
+        return propagateEvents;
+    }
+
+    public virtual void Update() {}
+
+    public bool ProcessEvents(Window window)
+    {
+        Vector2 b = new Vector2(LastPosition.x + LastSize.x, LastPosition.y + LastSize.y);
+        Vector2 mousePos = window.WindowInput.MouseData.Position;
+        
+        UISettings settings = Settings;
+
+        bool captured = false;
+
+        if (MathF.Min(LastPosition.x, b.x) < mousePos.x && MathF.Min(LastPosition.y, b.y) < mousePos.y &&
+            MathF.Max(LastPosition.x, b.x) > mousePos.x && MathF.Max(LastPosition.y, b.y) > mousePos.y)
+        {
+            if (window.WindowInput.MouseData.IsLeftPressed && _onClickEvent is not null)
+            {
+                _onClickEvent.Invoke(ref settings);
+            }
+            else if (window.WindowInput.MouseData.IsLeftDown && _onHoldEvent is not null)
+            {
+                _onHoldEvent.Invoke(ref settings);
+            }
+            else if (_onHoverEvent is not null)
+            {
+                _onHoverEvent.Invoke(ref settings);
+            }
+
+            captured = true;
+        }
+
+        if (!settings.Equals(Settings))
+        {
+            SetDirty();
+            Settings = settings;
+        }
+
+        return captured;
     }
 
     public UIRect AddUIElement(UIRect uiRect)
@@ -337,108 +345,27 @@ public class UIRect
         return this;
     }
 
-    public UIRect SetWidth(UISize size)
+    public UIRect Default(Func<UISettings> defaultSettings)
     {
-        Width = size;
-        SetDirty();
+        _default += defaultSettings;
         return this;
     }
 
-    public UIRect SetHeight(UISize size)
+    public UIRect OnHover(ActionRef<UISettings> hover)
     {
-        Height = size;
-        SetDirty();
+        _onHoverEvent += hover;
         return this;
     }
 
-    public UIRect SetMarginX(UISize size)
+    public UIRect OnClick(ActionRef<UISettings> click)
     {
-        MarginX = size;
-        SetDirty();
-        return this;
-    }
-
-    public UIRect SetMarginY(UISize size)
-    {
-        MarginY = size;
-        SetDirty();
-        return this;
-    }
-
-    public UIRect SetPaddingX(UISize size)
-    {
-        PaddingX = size;
-        SetDirty();
-        return this;
-    }
-
-    public UIRect SetPaddingY(UISize size)
-    {
-        PaddingY = size;
-        SetDirty();
-        return this;
-    }
-
-    public UIRect SetBorderRadius(Vector4 borderRadius, UISizeType type)
-    {
-        BorderRadiusTL.Value = borderRadius.x;
-        BorderRadiusTL.Type = type;
-        BorderRadiusBL.Value = borderRadius.y;
-        BorderRadiusBL.Type = type;
-        BorderRadiusTR.Value = borderRadius.z;
-        BorderRadiusTR.Type = type;
-        BorderRadiusBR.Value = borderRadius.w;
-        BorderRadiusBR.Type = type;
-        SetDirty();
-        return this;
-    }
-
-    public UIRect SetChildDirection(UIDirection direction)
-    {
-        ChildDirection = direction;
-        SetDirty();
-        return this;
-    }
-
-    public UIRect SetChildAnchor(UIAnchor anchor)
-    {
-        ChildAnchor = anchor;
-        SetDirty();
-        return this;
-    }
-
-    public UIRect SetColor(Color color)
-    {
-        Color = color;
-        SetDirty();
-        return this;
-    }
-
-    public UIRect SetBorderColor(Color color)
-    {
-        BorderColor = color;
-        SetDirty();
+        _onClickEvent += click;
         return this;
     }
     
-    public UIRect SetBorderSize(UISize size)
+    public UIRect OnHold(ActionRef<UISettings> hold)
     {
-        BorderSize = size;
-        SetDirty();
-        return this;
-    }
-
-    public UIRect SetTexture(GpuTexture? texture)
-    {
-        Texture = texture;
-        SetDirty();
-        return this;
-    }
-
-    public UIRect SetGap(UISize size)
-    {
-        Gap = size;
-        SetDirty();
+        _onHoldEvent += hold;
         return this;
     }
 

@@ -3,7 +3,7 @@ using WaffleEngine.Rendering.Immediate;
 
 namespace WaffleEngine;
 
-public class Mesh : IGpuUploadable, IGpuBindable
+public class Mesh : IGpuUploadable, IRenderBindable
 {
     private Buffer<Vertex> _vertexBuffer = new Buffer<Vertex>(BufferUsage.Vertex);
     private Buffer<int> _indexBuffer = new Buffer<int>(BufferUsage.Index);

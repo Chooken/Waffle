@@ -20,66 +20,55 @@ public static class FontLoader
         _textEngine = TTF.CreateGPUTextEngine(Device.Handle);
     }
 
-    public static void LoadFont(string name, int pointSize)
+    public static bool TryLoadFont(string name, int pointSize)
     {
-        if (_font.ContainsKey(name))
-            return;
-        
-        var font = new Font(TTF.OpenFontIO(SDL.IOFromFile(name, "r"), true, pointSize));
-        font.SetFontHinting(HintingFlags.LightSubpixel);
-        _font.Add($"{name}_{pointSize}", font);
-    }
+        if (_font.ContainsKey($"{name}_{pointSize}"))
+            return true;
 
-    public static Font GetFont(string name, int pointSize)
-    {
-        if (_font.TryGetValue(name, out var font))
-            return font;
+        string path = $"Assets/{name}";
         
-        font = new Font(TTF.OpenFontIO(SDL.IOFromFile(name, "r"), true, pointSize));
-        font.SetFontHinting(HintingFlags.LightSubpixel);
-        _font.Add($"{name}_{pointSize}", font);
-
-        return font;
-    }
-
-    public static unsafe bool TryRenderText(string text, string fontName, Color foregoundColor, Color backgroundColor, int widthInPixels, [NotNullWhen(true)] out Texture? texture)
-    {
-        texture = null;
-        
-        if (!_font.TryGetValue(fontName, out var font))
+        if (!File.Exists(path))
         {
+            WLog.Error($"Font does not exist at: {path}");
             return false;
         }
         
+        var font = new Font(TTF.OpenFontIO(SDL.IOFromFile(path, "r"), true, pointSize));
 
-        // var surface = TTF.RenderTextLCDWrapped(font, text, 0, foregoundColor, backgroundColor, widthInPixels);
-        //
-        // texture = new Texture(surface);
-
+        if (font.Handle == IntPtr.Zero)
+        {
+            WLog.Error("Font failed to load.");
+            return false;
+        }
+        
+        font.SetFontHinting(HintingFlags.LightSubpixel);
+        _font.Add($"{name}_{pointSize}", font);
         return true;
     }
-    
-    public static unsafe bool TryRenderTextToTexture(string text, string fontName, Color foregoundColor, Color backgroundColor, int widthInPixels, ref Texture? texture)
+
+    public static bool TryGetFont(string name, int pointSize, [NotNullWhen(true)] out Font? font)
     {
-        if (!_font.TryGetValue(fontName, out var font))
+        if (_font.TryGetValue($"{name}_{pointSize}", out font))
+            return true;
+        
+        string path = $"Assets/{name}";
+
+        if (!File.Exists(path))
         {
+            WLog.Error($"Font does not exist at: {path}");
             return false;
         }
         
-        IntPtr textHandle = TTF.CreateText(_textEngine, font, text, 0);
+        font = new Font(TTF.OpenFontIO(SDL.IOFromFile(path, "r"), true, pointSize));
 
-        TTF.GPUAtlasDrawSequenceFormatted drawFormatted = ((TTF.GPUAtlasDrawSequence*)TTF.GetGPUTextDrawData(textHandle))->AsFormatted();
+        if (font.Handle == IntPtr.Zero)
+        {
+            WLog.Error("Font failed to load.");
+            return false;
+        }
 
-        var surface = TTF.RenderTextLCDWrapped(font, text, 0, foregoundColor, backgroundColor, widthInPixels);
-        
-        if (texture is null)
-        {
-            texture = new Texture(surface);
-        }
-        else
-        {
-            texture.SetSurface(surface);
-        }
+        font.SetFontHinting(HintingFlags.LightSubpixel);
+        _font.Add($"{name}_{pointSize}", font);
 
         return true;
     }

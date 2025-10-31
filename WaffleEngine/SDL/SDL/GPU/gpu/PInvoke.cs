@@ -1186,6 +1186,21 @@ public partial class SDL
     [LibraryImport(SDLLibrary, EntryPoint = "SDL_BindGPUVertexStorageBuffers"), UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     public static partial void BindGPUVertexStorageBuffers(IntPtr renderPass, uint firstSlot, IntPtr[] storageBuffers, uint numBindings);
 
+    /// <code>extern SDL_DECLSPEC void SDLCALL SDL_BindGPUVertexStorageBuffers(SDL_GPURenderPass *render_pass, Uint32 first_slot, SDL_GPUBuffer *const *storage_buffers, Uint32 num_bindings);</code>
+    /// <summary>
+    /// <para>Binds storage buffers for use on the vertex shader.</para>
+    /// <para>These buffers must have been created with
+    /// <see cref="GPUBufferUsageFlags.GraphicsStorageRead"/>.</para>
+    /// <para>Be sure your shader is set up according to the requirements documented in <see cref="CreateGPUShader"/>.</para>
+    /// </summary>
+    /// <param name="renderPass">a render pass handle.</param>
+    /// <param name="firstSlot">the vertex storage buffer slot to begin binding from.</param>
+    /// <param name="storageBuffers">an array of buffers.</param>
+    /// <param name="numBindings">the number of buffers to bind from the array.</param>
+    /// <since>This function is available since SDL 3.2.0</since>
+    /// <seealso cref="CreateGPUShader"/>
+    [LibraryImport(SDLLibrary, EntryPoint = "SDL_BindGPUVertexStorageBuffers"), UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    public static partial void BindGPUVertexStorageBuffers(IntPtr renderPass, uint firstSlot, IntPtr storageBuffers, uint numBindings);
     
     #region BindGPUFragmentSamplers
     /// <code>extern SDL_DECLSPEC void SDLCALL SDL_BindGPUFragmentSamplers(SDL_GPURenderPass *render_pass, Uint32 first_slot, const SDL_GPUTextureSamplerBinding *texture_sampler_bindings, Uint32 num_bindings);</code>

@@ -7,6 +7,15 @@ public static class WindowManager
     private static Dictionary<string, Window> _windows = new ();
     private static Dictionary<uint, string> _windowIdToWindowHandleDict = new();
 
+    public static Window? Main
+    {
+        get
+        {
+            _windows.TryGetValue("main", out Window? window);
+            return window;
+        }
+    }
+
     public static int WindowCount => _windows.Count;
 
     public static IEnumerable<Window> Windows => _windows.Values;
@@ -17,6 +26,11 @@ public static class WindowManager
         {
             window.WindowInput.Update();
         }
+    }
+
+    public static bool TryOpenMainWindow(string title, int width, int height, [NotNullWhen(true)] out Window? window)
+    {
+        return TryOpenWindow(title, "main", width, height, out window);
     }
     
     public static bool TryOpenWindow(string windowName, string windowHandle, int width, int height, [NotNullWhen(true)] out Window? window)

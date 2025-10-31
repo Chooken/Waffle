@@ -1,58 +1,67 @@
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
 using SDL3;
 using WaffleEngine.Rendering.Immediate;
 
 namespace WaffleEngine.Rendering;
 
-public sealed class GpuTexture : IGpuBindable
+public sealed class GpuTexture : IRenderBindable
 {
     public IntPtr Handle { get; private set; }
-    public int Width { get; private set; }
-    public int Height { get; private set; }
+    public uint Width { get => _settings.Width; }
+    public uint Height { get => _settings.Height; }
 
-    public TextureFormat Format { get; private set; }
+    public TextureFormat Format { get => _settings.Format; }
+    
+    public bool ColorTarget { get => _settings.ColorTarget; }
+    
+    public bool RandomWrites { get => _settings.RandomWrites; }
+
+    private GpuTextureSettings _settings;
+    
 
     private IntPtr _sampler;
 
     public GpuTexture() => Handle = IntPtr.Zero;
     
     public GpuTexture(Window window) => 
-        Init((uint)window.Width, (uint)window.Height, window.GetSwapchainTextureFormat());
+        Init(GpuTextureSettings.FromWindow(window));
 
-    public GpuTexture(uint width, uint height, Window window) => 
-        Init(width, height, window.GetSwapchainTextureFormat());
+    public GpuTexture(GpuTextureSettings settings) => 
+        Init(settings);
 
-    public GpuTexture(uint width, uint height) => Init(width, height, TextureFormat.B8G8R8A8Unorm);
-
-    public GpuTexture(uint width, uint height, IntPtr handle) => Set(width, height, handle);
-    public GpuTexture(uint width, uint height, TextureFormat format) => Init(width, height, format);
-    
-    private void Init(uint width, uint height, TextureFormat format)
+    private void Init(GpuTextureSettings settings)
     {
+        _settings = settings;
+        
         var createInfo = new SDL.GPUTextureCreateInfo
         {
-            Format = (SDL.GPUTextureFormat)format,
-            Width = width,
-            Height = height,
-            Usage = SDL.GPUTextureUsageFlags.ColorTarget | SDL.GPUTextureUsageFlags.Sampler,
+            Format = (SDL.GPUTextureFormat)settings.Format,
+            Width = settings.Width,
+            Height = settings.Height,
+            Usage = SDL.GPUTextureUsageFlags.Sampler,
             Type = SDL.GPUTextureType.Texturetype2D,
             LayerCountOrDepth = 1,
             NumLevels = 1,
         };
 
-        Width = (int)width;
-        Height = (int)height;
-        Format = format;
+        if (settings.ColorTarget)
+            createInfo.Usage |= SDL.GPUTextureUsageFlags.ColorTarget;
+
+        if (settings.RandomWrites)
+            createInfo.Usage |= SDL.GPUTextureUsageFlags.ComputeStorageSimultaneousReadWrite;
+        
 
         Handle = SDL.CreateGPUTexture(Device.Handle, createInfo);
         
         var samplerCreateInfo = new SDL.GPUSamplerCreateInfo
         {
-            MinFilter = SDL.GPUFilter.Nearest,
-            MagFilter = SDL.GPUFilter.Nearest,
-            MipmapMode = SDL.GPUSamplerMipmapMode.Nearest,
-            AddressModeU = SDL.GPUSamplerAddressMode.Repeat,
-            AddressModeV = SDL.GPUSamplerAddressMode.Repeat,
-            AddressModeW = SDL.GPUSamplerAddressMode.Repeat,
+            MinFilter = (SDL.GPUFilter)settings.MinFilter,
+            MagFilter = (SDL.GPUFilter)settings.MagFilter,
+            MipmapMode = (SDL.GPUSamplerMipmapMode)settings.MipsFilter,
+            AddressModeU = (SDL.GPUSamplerAddressMode)settings.SamplerMode,
+            AddressModeV = (SDL.GPUSamplerAddressMode)settings.SamplerMode,
+            AddressModeW = (SDL.GPUSamplerAddressMode)settings.SamplerMode,
         };
         
         _sampler = SDL.CreateGPUSampler(Device.Handle, samplerCreateInfo);
@@ -60,15 +69,35 @@ public sealed class GpuTexture : IGpuBindable
 
     public void Resize(uint width, uint height)
     {
+        _settings.Width = width;
+        _settings.Height = height;
+        
         Dispose();
-        Init(width, height, Format);
+        
+        Init(_settings);
     }
 
-    public void Set(uint width, uint height, IntPtr handle)
+    public void Set(GpuTextureSettings settings, IntPtr handle)
     {
-        Width = (int)width;
-        Height = (int)height;
+        _settings = settings;
         Handle = handle;
+    }
+
+    public bool TryGetReadWriteBinding(uint mipLevel, [NotNullWhen(true)] out ReadWriteTextureBinding? binding)
+    {
+        binding = null;
+
+        if (!RandomWrites)
+            return false;
+
+        binding = new ReadWriteTextureBinding()
+        {
+            Handle = Handle,
+            Layer = 0,
+            MipLevel = mipLevel,
+        };
+        
+        return true;
     }
     
     public unsafe void Bind(ImRenderPass renderPass, uint slot)
@@ -101,4 +130,13 @@ public sealed class GpuTexture : IGpuBindable
         Handle = 0x0;
         _sampler = 0x0;
     }
+}
+
+[StructLayout(LayoutKind.Sequential)]
+public struct ReadWriteTextureBinding
+{
+    public IntPtr Handle;
+    public uint Layer;
+    public uint MipLevel;
+    private byte padding;
 }

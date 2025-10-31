@@ -44,14 +44,6 @@ public abstract class PassCommands<T>
     }
 }
 
-public sealed class SetUniforms<T>(ValueBox<T> data) : IPass
-{
-    public unsafe void Submit(ImQueue queue)
-    {
-        queue.SetUniforms(data.Value);
-    }
-}
-
 public sealed class CopyPass : PassCommands<IGpuCopyCommand>, IPass
 {
     public unsafe void Submit(ImQueue queue)

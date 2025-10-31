@@ -12,10 +12,10 @@ public class AtlasedText
     private int _fontSize;
     
     private static IntPtr _textEngine;
-    private static Shader _shader;
+    private static Shader? _shader;
 
     private Buffer<Vertex> _vertexBuffer = new Buffer<Vertex>(BufferUsage.Vertex);
-    private GpuBuffer<int> _indexBuffer = new GpuBuffer<int>(BufferUsage.Index);
+    private RenderBuffer<int> _indexBuffer = new RenderBuffer<int>(BufferUsage.Index);
 
     private IntPtr _texture;
     private IntPtr _sampler;
@@ -43,6 +43,11 @@ public class AtlasedText
         };
         
         _sampler = SDL.CreateGPUSampler(Device.Handle, samplerCreateInfo);
+    }
+
+    public void SetFont(Font font)
+    {
+        TTF.SetTextFont(Handle, font.Handle);
     }
 
     public void SetColor(Color color)
@@ -110,7 +115,7 @@ public class AtlasedText
         if (_empty)
             return;
         
-        renderPass.Queue.SetUniforms((new AlignedVector3(position), renderSize));
+        renderPass.SetUniforms((new AlignedVector3(position), renderSize));
         
         _shader.Bind(renderPass);
         renderPass.Bind(_vertexBuffer);

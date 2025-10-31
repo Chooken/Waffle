@@ -30,4 +30,6 @@ public abstract class Window : IDisposable
     public abstract TextureFormat GetSwapchainTextureFormat();
     
     public abstract void Dispose();
+
+    public abstract bool IsOpen();
 }

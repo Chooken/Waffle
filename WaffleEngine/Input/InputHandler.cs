@@ -2,6 +2,11 @@ namespace WaffleEngine;
 
 public sealed class InputHandler
 {
+    // Mouse
+    private MouseData _mouseData;
+    public MouseData MouseData => _mouseData;
+
+    // Keyboard
     private EventSpace _defaultEventSpace = new();
     private HashSet<Keycode> _activeKeys = new();
     private Dictionary<Modifier, EventSpace> _modifiers = new(new ModifierComparer());
@@ -9,6 +14,9 @@ public sealed class InputHandler
     internal void Update()
     {
         _defaultEventSpace.Update();
+
+        _mouseData.IsLeftPressed = false;
+        _mouseData.IsRightPressed = false;
 
         foreach (var eventSpace in _modifiers.Values)
         {
@@ -47,7 +55,7 @@ public sealed class InputHandler
                 _activeKeys.Remove(key);
             }
 
-            eventSpace.TriggerKeyEvent(keyEvent);
+            return eventSpace.TriggerKeyEvent(keyEvent);
         }
         
         if (isPressed)
@@ -78,5 +86,25 @@ public sealed class InputHandler
     public void AddEventSpace(Modifier modifier)
     {
         _modifiers.Add(modifier, new EventSpace());
+    }
+
+    public void UpdateMouseMotion(float x, float y, float deltaX, float deltaY)
+    {
+        _mouseData.Position.x = x;
+        _mouseData.Position.y = y;
+        _mouseData.Delta.x = deltaX;
+        _mouseData.Delta.y = deltaY;
+    }
+
+    public void SetMouseLeftDown(bool down)
+    {
+        _mouseData.IsLeftPressed = down;
+        _mouseData.IsLeftDown = down;
+    }
+    
+    public void SetMouseRightDown(bool down)
+    {
+        _mouseData.IsRightPressed = down;
+        _mouseData.IsRightDown = down;
     }
 }

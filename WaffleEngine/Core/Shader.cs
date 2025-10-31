@@ -5,7 +5,7 @@ using WaffleEngine.Rendering.Immediate;
 
 namespace WaffleEngine;
 
-public sealed unsafe class Shader : IDisposable
+public sealed unsafe class Shader : IRenderBindable, IDisposable
 {
     public int Samplers { get; private set; }
     public int UniformBuffers { get; private set; }
@@ -75,7 +75,7 @@ public sealed unsafe class Shader : IDisposable
         ReleaseGpuShaders();
     }
 
-    public void Bind(ImRenderPass pass)
+    public void Bind(ImRenderPass pass, uint _ = 0)
     {
         if (Pipeline is null)
         {

@@ -25,6 +25,8 @@ public static class Application
     
     private static bool Init()
     {
+        _isRunning = true;
+        
         if (!Device.Init())
             return false;
 
@@ -37,6 +39,8 @@ public static class Application
 
         if (!Assets.TryLoadAssetBundle("builtin"))
             return false;
+
+        SpriteBatch.Init();
         
         WLog.Info("Application Initialised");
         
@@ -46,8 +50,6 @@ public static class Application
     private static void MainLoop()
     {
         WLog.Info("Started Application Main Loop");
-        
-        _isRunning = true;
         
         Stopwatch timer = Stopwatch.StartNew();
         
@@ -61,6 +63,7 @@ public static class Application
             SceneManager.UpdateScenes();
             
             Input.GlobalInputHandler.Update();
+            WindowManager.UpdateWindowInput();
             
             timer.Restart();
         }

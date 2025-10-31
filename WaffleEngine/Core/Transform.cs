@@ -9,6 +9,13 @@ public struct Transform : ISerializable, IDeserializable<Transform>
     private Vector3 _position;
     private Vector3 _scale;
     private Quaternion _rotation;
+
+    public Transform(Vector3 position, Vector3 scale, Quaternion rotation)
+    {
+        _position = position;
+        _scale = scale;
+        _rotation = rotation;
+    }
     
     public Vector3 Position
     {
@@ -28,7 +35,19 @@ public struct Transform : ISerializable, IDeserializable<Transform>
         set => SetRotation(value); 
     }
 
-    public Matrix4x4 TransformationMat;
+    public Matrix4x4 TransformationMatrix
+    {
+        get
+        {
+            if (NeedsRebuild || _transformationMat == default)
+                BuildMatrix();
+
+            return _transformationMat;
+        }
+    }
+
+    private Matrix4x4 _transformationMat;
+    
     public bool NeedsRebuild;
 
     public void SetPosition(Vector3 position)
@@ -51,14 +70,14 @@ public struct Transform : ISerializable, IDeserializable<Transform>
 
     public void BuildMatrix()
     {
-        if (!NeedsRebuild && TransformationMat != new Matrix4x4())
+        if (!NeedsRebuild && _transformationMat != new Matrix4x4())
             return;
         
         Matrix4x4 translation = Matrix4x4.CreateTranslation(_position);
         Matrix4x4 scale = Matrix4x4.CreateScale(_scale);
         Matrix4x4 rotation = Matrix4x4.CreateFromQuaternion(_rotation);
 
-        TransformationMat = translation * scale * rotation;
+        _transformationMat = translation * scale * rotation;
     }
     
     public void Serialize(ref Utf8YamlEmitter emitter)

@@ -60,8 +60,10 @@ public static class Assets
                 request.Item2.IsFinished = true;
                 continue;
             }
+            
+            string path = $"Assets/{request.Item1}";
 
-            if (!Directory.Exists(request.Item1))
+            if (!Directory.Exists(path))
             {
                 WLog.Warning($"Tried to load an asset bundle which doesn't exist: {request.Item1}");
                 request.Item2.Failed = true;
@@ -69,8 +71,8 @@ public static class Assets
                 continue;
             }
 
-            var textures = Directory.EnumerateFiles(request.Item1, "*.png", SearchOption.AllDirectories);
-            var shaders = Directory.EnumerateFiles(request.Item1, "*.hlsl", SearchOption.AllDirectories);
+            var textures = Directory.EnumerateFiles(path, "*.png", SearchOption.AllDirectories);
+            var shaders = Directory.EnumerateFiles(path, "*.hlsl", SearchOption.AllDirectories);
 
             AssetBundle bundle = new AssetBundle();
             
@@ -99,8 +101,12 @@ public static class Assets
                     WLog.Warning($"Bundle \"{request.Item1}\" contains duplicate texture with name: {name}");
                     continue;
                 }
+
+                if (!ShaderCompiler.CompileRasterShader(shaderPath, out var shader))
+                {
+                    continue;
+                }
                 
-                Shader shader = ShaderCompiler.CompileShader(shaderPath);
                 bundle.Shaders.Add(
                     name,
                     shader);

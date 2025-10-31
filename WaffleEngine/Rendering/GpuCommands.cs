@@ -29,7 +29,7 @@ public interface IGpuCopyCommand
     public unsafe void Add(ImCopyPass copyPass);
 }
 
-public class Bind(IGpuBindable value, uint slot = 0) : IGpuRenderCommand
+public class Bind(IRenderBindable value, uint slot = 0) : IGpuRenderCommand
 {
     public unsafe void Add(ImRenderPass renderPass)
     {

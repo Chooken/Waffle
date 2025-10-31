@@ -3,7 +3,7 @@ using WaffleEngine.Rendering.Immediate;
 
 namespace WaffleEngine.Rendering;
 
-public sealed unsafe class GpuBuffer<T> : IGpuBindable where T : unmanaged
+public sealed unsafe class RenderBuffer<T> : IRenderBindable, IComputeBindable where T : unmanaged
 {
     private IntPtr _gpuBuffer;
     private BufferUsage _usage;
@@ -12,7 +12,7 @@ public sealed unsafe class GpuBuffer<T> : IGpuBindable where T : unmanaged
     public BufferUsage Usage => _usage;
     public int Length => _gpuBufferSize;
 
-    public GpuBuffer(BufferUsage usage)
+    public RenderBuffer(BufferUsage usage)
     {
         _usage = usage;
         _gpuBufferSize = 0;
@@ -99,6 +99,17 @@ public sealed unsafe class GpuBuffer<T> : IGpuBindable where T : unmanaged
         
         WLog.Error($"Can't bind a buffer with the usage: {_usage}");
     }
+    
+    public void Bind(ImComputePass computePass, uint slot)
+    {
+        if (_usage.HasFlag(BufferUsage.ComputeStorageRead) || _usage.HasFlag(BufferUsage.ComputeStorageWrite))
+        {
+            IntPtr ptr = _gpuBuffer;
+            
+            SDL.BindGPUComputeStorageBuffers(computePass.Handle, slot, (IntPtr)(&ptr), 1);
+            return;
+        }
+    }
 
     private void BindAsVertexBuffer(ImRenderPass renderPass, uint slot)
     {
@@ -128,7 +139,9 @@ public sealed unsafe class GpuBuffer<T> : IGpuBindable where T : unmanaged
     {
         IntPtr ptr = _gpuBuffer;
         
-        SDLExtra.BindGPUVertexStorageBuffers(renderPass.Handle, slot, (IntPtr)(&ptr), 1);
+        SDL.BindGPUVertexStorageBuffers(renderPass.Handle, slot, (IntPtr)(&ptr), 1);
         SDL.BindGPUFragmentStorageBuffers(renderPass.Handle, slot, (IntPtr)(&ptr), 1);
     }
+
+    
 }

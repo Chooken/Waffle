@@ -17,4 +17,14 @@ public struct UIAnchor
     public static UIAnchor BottomLeft => new UIAnchor() { _position = new Vector2(0, 1f) };
     public static UIAnchor Bottom => new UIAnchor() { _position = new Vector2(0.5f, 1f) };
     public static UIAnchor BottomRight => new UIAnchor() { _position = new Vector2(1, 1f) };
+    
+    public static bool operator ==(UIAnchor left, UIAnchor right)
+    {
+        return left._position == right._position;
+    }
+    
+    public static bool operator !=(UIAnchor left, UIAnchor right)
+    {
+        return left._position != right._position;
+    }
 }

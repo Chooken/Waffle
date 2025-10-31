@@ -94,19 +94,23 @@ public sealed unsafe class Pipeline : IDisposable
     }
 }
 
-public struct PipelineSettings
+public struct PipelineSettings()
 {
-    public BlendOp ColorBlendOp;
-    public BlendOp AlphaBlendOp;
-    public BlendFactor SrcColorBlendFactor;
-    public BlendFactor SrcAlphaBlendFactor;
-    public BlendFactor DstColorBlendFactor;
-    public BlendFactor DstAlphaBlendFactor;
-    public List<VertexAttributeType>? VertexAttributes;
-    public TextureFormat ColorTargetFormat;
-    public PrimitiveType PrimitiveType;
-    public FillMode FillMode;
-    public VertexInputRate VertexInputRate;
+    public BlendOp ColorBlendOp = BlendOp.Add;
+    public BlendOp AlphaBlendOp = BlendOp.Add;
+    public BlendFactor SrcColorBlendFactor = BlendFactor.SrcAlpha;
+    public BlendFactor SrcAlphaBlendFactor = BlendFactor.SrcAlpha;
+    public BlendFactor DstColorBlendFactor = BlendFactor.OneMinusSrcAlpha;
+    public BlendFactor DstAlphaBlendFactor = BlendFactor.OneMinusSrcAlpha;
+    public List<VertexAttributeType>? VertexAttributes = new List<VertexAttributeType>()
+    {
+        VertexAttributeType.Float3,
+        VertexAttributeType.Float2,
+    };
+    public TextureFormat ColorTargetFormat = TextureFormat.B8G8R8A8Unorm;
+    public PrimitiveType PrimitiveType = PrimitiveType.TriangleList;
+    public FillMode FillMode = FillMode.Fill;
+    public VertexInputRate VertexInputRate = VertexInputRate.Vertex;
 
     public static PipelineSettings Default => new PipelineSettings
     {

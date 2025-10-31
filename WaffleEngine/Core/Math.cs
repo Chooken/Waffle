@@ -16,6 +16,9 @@ public struct Vector2
 
     public static Vector2 Zero => new Vector2(0, 0);
     
+    
+    public static Vector2 One => new Vector2(1, 1);
+    
     public static implicit operator System.Numerics.Vector2(Vector2 vector) =>
         new (vector.x, vector.y);
     
@@ -93,6 +96,8 @@ public struct Vector3
     }
     
     public static Vector3 Zero => new Vector3(0, 0, 0);
+
+    public static Vector3 One => new Vector3(1, 1, 1);
     
     public static implicit operator System.Numerics.Vector3(Vector3 vector) =>
         new (vector.x, vector.y, vector.z);
@@ -196,6 +201,7 @@ public struct Vector4
     }
     
     public static Vector4 Zero => new Vector4(0, 0, 0, 0);
+    public static Vector4 One => new Vector4(1, 1, 1, 1);
 
     public static implicit operator System.Numerics.Vector4(Vector4 vector) =>
         new (vector.x, vector.y, vector.z, vector.w);

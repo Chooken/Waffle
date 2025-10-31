@@ -21,14 +21,17 @@ public struct UIToplevel
         _screenSize = new Vector2(window.Width, window.Height);
     }
 
+    public void Update()
+    {
+        Root?.PropagateUpdate(Window, true);
+    }
+
     public GpuTexture Render(ImQueue queue)
     {
         if (Root is null)
             return UiTexture;
         
         UISize.SetScale(Window.GetDisplayScale());
-        
-        Root.Update();
 
         bool resized = _screenSize != new Vector2(Window.Width, Window.Height);
         
@@ -37,7 +40,7 @@ public struct UIToplevel
             UiTexture.Resize((uint)Window.Width, (uint)Window.Height);
         }
 
-        if (Root.Dirty || resized || true)
+        if (Root.Dirty || resized)
         {
             ColorTargetSettings bgColorTargetSettings = new ColorTargetSettings
             {
@@ -53,7 +56,6 @@ public struct UIToplevel
                 queue,
                 renderPass,
                 new Vector3(0, 0, 0), 
-                UIAnchor.TopLeft,
                 new Vector2(UiTexture.Width, UiTexture.Height), 
                 new Vector2(UiTexture.Width, UiTexture.Height));
             
