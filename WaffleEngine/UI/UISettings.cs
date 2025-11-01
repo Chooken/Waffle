@@ -20,6 +20,7 @@ public struct UISettings()
     public Color BorderColor;
     public UISize BorderSize;
     public Color TextColor;
+    public bool Grow;
     public GpuTexture? Texture;
 
     public static bool operator ==(UISettings left, UISettings right)

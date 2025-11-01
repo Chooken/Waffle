@@ -51,6 +51,11 @@ public struct Vector2
     {
         return new Vector2(lhs.x / rhs, lhs.y / rhs);
     }
+    
+    public static Vector2 operator -(Vector2 lhs, Vector2 rhs)
+    {
+        return new Vector2(lhs.x - rhs.x, lhs.y - rhs.y);
+    }
 
     public static Vector2 operator -(Vector2 lhs, int rhs)
     {
@@ -62,14 +67,19 @@ public struct Vector2
         return new Vector2(lhs.x - rhs, lhs.y - rhs);
     }
     
+    public static Vector2 operator +(Vector2 lhs, Vector2 rhs)
+    {
+        return new Vector2(lhs.x + rhs.x, lhs.y + rhs.y);
+    }
+    
     public static Vector2 operator +(Vector2 lhs, int rhs)
     {
-        return new Vector2(lhs.x - rhs, lhs.y + rhs);
+        return new Vector2(lhs.x + rhs, lhs.y + rhs);
     }
     
     public static Vector2 operator +(Vector2 lhs, float rhs)
     {
-        return new Vector2(lhs.x - rhs, lhs.y + rhs);
+        return new Vector2(lhs.x + rhs, lhs.y + rhs);
     }
 
     public static Vector2 operator -(Vector2 vector) => new (-vector.x, -vector.y);

@@ -42,7 +42,7 @@ public class UIRect
     {
         var size = GetSize(parentSize);
 
-        Vector2 contentSize = GetContentSize(parentSize);
+        Vector2 contentSize = GetContentSize(parentSize, size);
 
         Vector2 realSize = new Vector2(MathF.Max(contentSize.x, size.x), MathF.Max(contentSize.y, size.y));
 
@@ -56,11 +56,13 @@ public class UIRect
             Settings.Height.AsPixels(parentSize) - Settings.MarginY.AsPixels(parentSize) * 2);
     }
 
-    public virtual Vector2 Render(ImQueue queue, ImRenderPass renderPass, Vector3 position, Vector2 parentSize, Vector2 renderSize)
+    public virtual Vector2 Render(ImQueue queue, ImRenderPass renderPass, Vector3 position, Vector2 parentSize, Vector2 grow, Vector2 renderSize)
     {
-        var size = GetSize(parentSize);
+        Vector2 elementGrow = Settings.Grow ? grow : Vector2.Zero;
+        
+        var size = GetSize(parentSize) + elementGrow;
 
-        Vector2 contentSize = GetContentSize(parentSize);
+        Vector2 contentSize = GetContentSize(parentSize, size);
 
         Vector2 realSize = new Vector2(MathF.Max(contentSize.x, size.x), MathF.Max(contentSize.y, size.y));
 
@@ -113,42 +115,56 @@ public class UIRect
             position.x + Settings.PaddingX.AsPixels(parentSize) + realSize.x * Settings.ChildAnchor.Position.x,
             position.y + Settings.PaddingY.AsPixels(parentSize) + realSize.y * Settings.ChildAnchor.Position.y, 
             position.z + 1);
+        
+        int growCount = GetGrowCount();
+        
+        Vector2 growSize;
+        
+        switch (Settings.ChildDirection)
+        {
+            case UIDirection.Right or UIDirection.Left:
+                growSize = new Vector2((adjustedSize.x - contentSize.x) / growCount, adjustedSize.y);
+                break;
+            case UIDirection.Up or UIDirection.Down:
+                growSize = new Vector2(adjustedSize.x, (adjustedSize.y - contentSize.y) / growCount);
+                break;
+            default:
+                growSize = Vector2.Zero;
+                break;
+        }
 
-        Vector3 childShift = new Vector3();
+        if (growCount != 0)
+        {
+            contentSize.x = MathF.Max(contentSize.x, realSize.x);
+            contentSize.y = MathF.Max(contentSize.y, realSize.y);
+        }
+        
+        adjustedPos.x -= contentSize.x * Settings.ChildAnchor.Position.x;
+        adjustedPos.y -= contentSize.y * Settings.ChildAnchor.Position.y;
         
         foreach (var child in _uiElements)
         {
-            Vector2 childSize = child.GetSize(adjustedSize);
-
-            Vector2 childContentSize = child.GetContentSize(adjustedSize);
-
-            childSize = new Vector2(MathF.Max(childSize.x, childContentSize.x),
-                MathF.Max(childSize.y, childContentSize.y));
-            
-            Vector3 childPos = new Vector3(
-                adjustedPos.x - childSize.x * Settings.ChildAnchor.Position.x + childShift.x,
-                adjustedPos.y - childSize.y * Settings.ChildAnchor.Position.y + childShift.y, adjustedPos.z);
-            
-            child.Render( 
+            Vector2 childSize = child.Render( 
                 queue,
                 renderPass,
-                childPos, 
+                adjustedPos, 
                 adjustedSize, 
+                growSize,
                 renderSize);
                 
             switch (Settings.ChildDirection)
             {
                 case UIDirection.Right:
-                    childShift.x += childSize.x + Settings.Gap.AsPixels(parentSize);
+                    adjustedPos.x += childSize.x + Settings.Gap.AsPixels(parentSize);
                     break;
                 case UIDirection.Left:
-                    childShift.x -= childSize.x + Settings.Gap.AsPixels(parentSize);
+                    adjustedPos.x -= childSize.x + Settings.Gap.AsPixels(parentSize);
                     break;
                 case UIDirection.Up:
-                    childShift.y -= childSize.y + Settings.Gap.AsPixels(parentSize);
+                    adjustedPos.y -= childSize.y + Settings.Gap.AsPixels(parentSize);
                     break;
                 case UIDirection.Down:
-                    childShift.y += childSize.y + Settings.Gap.AsPixels(parentSize);
+                    adjustedPos.y += childSize.y + Settings.Gap.AsPixels(parentSize);
                     break;
                 default:
                     break;
@@ -161,10 +177,21 @@ public class UIRect
         return realSize;
     }
 
-    protected Vector2 GetContentSize(Vector2 parentSize)
+    protected int GetGrowCount()
     {
-        Vector2 size = GetSize(parentSize);
+        int count = 0;
         
+        foreach (var element in _uiElements)
+        {
+            if (element.Settings.Grow)
+                count++;
+        }
+
+        return count;
+    }
+
+    protected Vector2 GetContentSize(Vector2 parentSize, Vector2 size)
+    {
         Vector2 contentSize = Vector2.Zero;
         
         foreach (var uiElement in _uiElements)
@@ -225,7 +252,7 @@ public class UIRect
         contentSize = new Vector2(
             contentSize.x + Settings.PaddingX.AsPixels(parentSize) * 2, 
             contentSize.y + Settings.PaddingY.AsPixels(parentSize) * 2);
-
+        
         return contentSize;
     }
 

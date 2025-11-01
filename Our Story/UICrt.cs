@@ -69,6 +69,7 @@ public class UICrt(Vector2 resolution, float chromaticAberration) : UIRect
     }
 
     public override Vector2 Render(ImQueue queue, ImRenderPass renderPass, Vector3 position, Vector2 parentSize,
+        Vector2 grow,
         Vector2 renderSize)
     {
         if (Settings.Texture is null)
@@ -77,11 +78,13 @@ public class UICrt(Vector2 resolution, float chromaticAberration) : UIRect
             return Vector2.Zero;
         }
         
-        var size = GetSize(parentSize);
+        Vector2 elementGrow = Settings.Grow ? grow : Vector2.Zero;
+        
+        var size = GetSize(parentSize) + elementGrow;
 
-        Vector2 contentSize = GetContentSize(parentSize);
+        Vector2 contentSize = GetContentSize(parentSize, size);
 
-        Vector2 realSize = new Vector2(MathF.Max(contentSize.x, size.x), MathF.Max(contentSize.y, size.y));
+        Vector2 realSize = new Vector2(MathF.Max(contentSize.x, size.x + elementGrow.x), MathF.Max(contentSize.y, size.y + elementGrow.y));
 
         position = new Vector3(
             position.x + Settings.MarginX.AsPixels(parentSize),

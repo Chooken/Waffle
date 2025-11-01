@@ -22,6 +22,7 @@ public class UIText : UIRect
     }
 
     public override Vector2 Render(ImQueue queue, ImRenderPass renderPass, Vector3 position, Vector2 parentSize,
+        Vector2 grow,
         Vector2 renderSize)
     {
         if (_text is null)

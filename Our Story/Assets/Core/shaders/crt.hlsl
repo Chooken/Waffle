@@ -90,5 +90,5 @@ float4 fsMain(VertexOutput input) : SV_Target {
 
     outputColor = lerp(outputColor * color.rgb, BorderColor.rgb, saturate(alpha + BorderSize) * saturate(BorderSize));
 
-    return float4(lerp(max(outputColor, color.rgb * 0.5f), input.Color.rgb, input.Color.a), -alpha);
+    return float4(lerp(max(outputColor, color.rgb * 0.0f), input.Color.rgb, input.Color.a), -alpha);
 }

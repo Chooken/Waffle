@@ -57,6 +57,7 @@ public struct UIToplevel
                 renderPass,
                 new Vector3(0, 0, 0), 
                 new Vector2(UiTexture.Width, UiTexture.Height), 
+                Vector2.Zero, 
                 new Vector2(UiTexture.Width, UiTexture.Height));
             
             renderPass.End();
