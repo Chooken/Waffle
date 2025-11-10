@@ -7,6 +7,7 @@ namespace WaffleEngine.UI;
 public class UIText : UIRect
 {
     private AtlasedText? _text = null;
+    public bool TextWrapping;
 
     public UIText()
     {
@@ -14,6 +15,16 @@ public class UIText : UIRect
         {
             _text = new AtlasedText("", font, WaffleEngine.Color.RGBA255(0, 0, 0, 255));
         }
+    }
+
+    public override Vector2 GetSize(Vector2 parentSize)
+    {
+        Vector2 baseSize = base.GetSize(parentSize);
+        Vector2 textSize = _text?.GetSize() ?? Vector2.Zero;
+
+        return TextWrapping ? baseSize : new Vector2(
+            MathF.Max(baseSize.x, textSize.x),
+            MathF.Max(baseSize.y, textSize.y));
     }
 
     public override void Update()
@@ -29,6 +40,8 @@ public class UIText : UIRect
         {
             return Vector2.Zero;
         }
+
+        Vector2 size = GetSize(parentSize);
         
         position = new Vector3(
             position.x + Settings.MarginX.AsPixels(parentSize),
@@ -36,13 +49,15 @@ public class UIText : UIRect
             position.z + 1);
         
         _text.Render(renderPass, position, renderSize);
+        
+        Vector2 elementGrow = Settings.Grow ? grow : Vector2.Zero;
 
-        int width = (int)GetSize(parentSize).x;
+        int width = (int)size.x + (int)elementGrow.x;
         
-        if (width > 0)
-            _text.SetWrapWidth((int)GetSize(parentSize).x);
+        if (TextWrapping)
+            _text.SetWrapWidth((int)size.x);
         
-        return new Vector2(MathF.Max(28 + Settings.MarginX.AsPixels(parentSize) * 2, parentSize.x), parentSize.y);
+        return _text.GetSize();
     }
 
     public UIText SetText(string text)
@@ -62,6 +77,13 @@ public class UIText : UIRect
     public UIText SetTextColor(Color color)
     {
         _text?.SetColor(color);
+        SetDirty();
+        return this;
+    }
+
+    public UIText SetTextWrapping(bool wrapping)
+    {
+        TextWrapping = wrapping;
         SetDirty();
         return this;
     }

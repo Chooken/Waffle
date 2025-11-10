@@ -51,13 +51,15 @@ public struct UIToplevel
             };
 
             var renderPass = queue.AddRenderPass(bgColorTargetSettings);
+
+            Vector2 rootSize = Root.GetBoundingSize(new Vector2(UiTexture.Width, UiTexture.Height));
             
             Root.Render(
                 queue,
                 renderPass,
                 new Vector3(0, 0, 0), 
                 new Vector2(UiTexture.Width, UiTexture.Height), 
-                Vector2.Zero, 
+                new Vector2(UiTexture.Width - rootSize.x, UiTexture.Height - rootSize.y), 
                 new Vector2(UiTexture.Width, UiTexture.Height));
             
             renderPass.End();

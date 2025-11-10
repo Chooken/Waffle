@@ -19,5 +19,10 @@ public class Font
         TTF.SetFontHinting(Handle, (TTF.HintingFlags)hintingFlags);
     }
 
+    public void SetFontAlignment()
+    {
+        TTF.SetFontWrapAlignment(Handle, TTF.HorizontalAlignment.Center);
+    }
+
     public static implicit operator IntPtr(Font font) => font.Handle;
 }

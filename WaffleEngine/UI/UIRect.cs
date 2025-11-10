@@ -41,6 +41,12 @@ public class UIRect
     public virtual Vector2 GetBoundingSize(Vector2 parentSize)
     {
         var size = GetSize(parentSize);
+        
+        Vector2 baseSize = GetContentSize(parentSize, Vector2.Zero);
+
+        size = new Vector2(
+            MathF.Max(baseSize.x, size.x),
+            MathF.Max(baseSize.y, size.y));
 
         Vector2 contentSize = GetContentSize(parentSize, size);
 
@@ -59,12 +65,23 @@ public class UIRect
     public virtual Vector2 Render(ImQueue queue, ImRenderPass renderPass, Vector3 position, Vector2 parentSize, Vector2 grow, Vector2 renderSize)
     {
         Vector2 elementGrow = Settings.Grow ? grow : Vector2.Zero;
+
+        if (Settings.Grow)
+        {
+            WLog.Info("Grow");
+        }
         
-        var size = GetSize(parentSize) + elementGrow;
+        var size = GetSize(parentSize);
+        
+        Vector2 baseSize = GetContentSize(parentSize, Vector2.Zero);
+
+        size = new Vector2(
+            MathF.Max(baseSize.x, size.x),
+            MathF.Max(baseSize.y, size.y));
 
         Vector2 contentSize = GetContentSize(parentSize, size);
 
-        Vector2 realSize = new Vector2(MathF.Max(contentSize.x, size.x), MathF.Max(contentSize.y, size.y));
+        Vector2 realSize = new Vector2(MathF.Max(contentSize.x, size.x), MathF.Max(contentSize.y, size.y)) + elementGrow;
 
         position = new Vector3(
             position.x + Settings.MarginX.AsPixels(parentSize),
@@ -108,8 +125,8 @@ public class UIRect
         }
 
         Vector2 adjustedSize = new Vector2(
-            size.x - Settings.PaddingX.AsPixels(parentSize) * 2,
-            size.y - Settings.PaddingY.AsPixels(parentSize) * 2);
+            realSize.x - Settings.PaddingX.AsPixels(parentSize) * 2,
+            realSize.y - Settings.PaddingY.AsPixels(parentSize) * 2);
 
         Vector3 adjustedPos = new Vector3(
             position.x + Settings.PaddingX.AsPixels(parentSize) + realSize.x * Settings.ChildAnchor.Position.x,
@@ -123,10 +140,10 @@ public class UIRect
         switch (Settings.ChildDirection)
         {
             case UIDirection.Right or UIDirection.Left:
-                growSize = new Vector2((adjustedSize.x - contentSize.x) / growCount, adjustedSize.y);
+                growSize = new Vector2((realSize.x - contentSize.x) / growCount, 0);
                 break;
             case UIDirection.Up or UIDirection.Down:
-                growSize = new Vector2(adjustedSize.x, (adjustedSize.y - contentSize.y) / growCount);
+                growSize = new Vector2(0, (realSize.y - contentSize.y) / growCount);
                 break;
             default:
                 growSize = Vector2.Zero;
@@ -200,7 +217,7 @@ public class UIRect
                 new Vector2(
                     size.x - Settings.PaddingX.AsPixels(parentSize) * 2, 
                     size.y - Settings.PaddingY.AsPixels(parentSize) * 2));
-
+            
             switch (Settings.ChildDirection)
             {
                 case UIDirection.Right:
@@ -308,7 +325,10 @@ public class UIRect
 
     public bool PropagateUpdate(Window window, bool propagateEvents)
     {
-        Settings = _default.Invoke();
+        if (_default is null)
+            Settings = default;
+        else
+            Settings = _default.Invoke();
         
         for (int i = _uiElements.Count - 1; i >= 0; i--)
         {

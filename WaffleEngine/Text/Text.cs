@@ -45,6 +45,12 @@ public class AtlasedText
         _sampler = SDL.CreateGPUSampler(Device.Handle, samplerCreateInfo);
     }
 
+    public Vector2 GetSize()
+    {
+        TTF.GetTextSize(Handle, out int w, out int h);
+        return new Vector2(w, h);
+    }
+
     public void SetFont(Font font)
     {
         TTF.SetTextFont(Handle, font.Handle);
@@ -62,7 +68,7 @@ public class AtlasedText
 
     public void SetWrapWidth(int width)
     {
-        TTF.SetTextWrapWidth(Handle, Math.Max(width, _fontSize));
+        TTF.SetTextWrapWidth(Handle, Math.Max(width, 0));
     }
 
     public unsafe void Update()
@@ -87,7 +93,7 @@ public class AtlasedText
             _vertexBuffer.Add(new Vertex()
             {
                 Position = formatted.Vertices[i],
-                Uv = formatted.UVs[i]
+                Uv = formatted.UVs[i],
             });
         }
 

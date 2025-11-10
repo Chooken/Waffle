@@ -9,9 +9,6 @@ struct VertexToFragment {
     float4 Position : SV_Position;
 };
 
-Texture2D<float4> Texture : register(t0, space2);
-SamplerState Sampler : register(s0, space2);
-
 VertexToFragment vsMain(uint vertexID : SV_VertexID) {
 
     VertexToFragment output;
@@ -23,7 +20,7 @@ VertexToFragment vsMain(uint vertexID : SV_VertexID) {
 }
 
 float4 fsMain(float2 uv : TEXCOORD0) : SV_Target0 {
-    float4 color = Texture.Sample(Sampler, uv);
+    float4 color;
     float2 pixelPos = floor(uv * TextureSize);
 
     if (pixelPos.x == CursorPosition.x && pixelPos.y == CursorPosition.y)

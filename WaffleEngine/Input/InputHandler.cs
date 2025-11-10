@@ -17,6 +17,7 @@ public sealed class InputHandler
 
         _mouseData.IsLeftPressed = false;
         _mouseData.IsRightPressed = false;
+        _mouseData.MouseWheelTicksDelta = 0;
 
         foreach (var eventSpace in _modifiers.Values)
         {
@@ -106,5 +107,10 @@ public sealed class InputHandler
     {
         _mouseData.IsRightPressed = down;
         _mouseData.IsRightDown = down;
+    }
+
+    public void SetMouseWheelTicksDelta(int delta)
+    {
+        _mouseData.MouseWheelTicksDelta = delta;
     }
 }

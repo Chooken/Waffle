@@ -18,6 +18,10 @@ internal sealed class WindowEventSystemSdl : IWindowEventSystem
                     ProcessMouseMotion(ref sdlEvent.Motion);
                     break;
                 
+                case SDL.EventType.MouseWheel:
+                    ProcessMouseWheel(ref sdlEvent.Wheel);
+                    break;
+                
                 case SDL.EventType.MouseButtonDown or SDL.EventType.MouseButtonUp:
                     ProcessMouseButton(ref sdlEvent.Button);
                     break;
@@ -63,6 +67,17 @@ internal sealed class WindowEventSystemSdl : IWindowEventSystem
                 sdlEvent.Y * window.GetDisplayScale(), 
                 sdlEvent.XRel * window.GetDisplayScale(), 
                 sdlEvent.YRel * window.GetDisplayScale());
+        }
+    }
+    
+    private void ProcessMouseWheel(ref SDL.MouseWheelEvent sdlEvent)
+    {
+        Input.GlobalInputHandler.SetMouseWheelTicksDelta(sdlEvent.IntegerY);
+        WLog.Info($"{sdlEvent.X} {sdlEvent.Y} {sdlEvent.Direction} {sdlEvent.IntegerX} {sdlEvent.IntegerY}");
+
+        if (WindowManager.TryGetWindowWithId(sdlEvent.WindowID, out var window))
+        {
+            window.WindowInput.SetMouseWheelTicksDelta(sdlEvent.IntegerY);
         }
     }
 

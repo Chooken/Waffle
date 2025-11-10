@@ -125,6 +125,9 @@ public unsafe class Texture : IGpuUploadable, IRenderBindable, IDisposable
         SDL.ReleaseGPUTransferBuffer(Device.Handle, transferBuffer);
     }
 
+    public Span<T> GetAs<T>() => new Span<T>((void*)_surface.Value.Pixels, Width * Height);
+    
+
     public void Dispose()
     {
         _gpuTexture.Dispose();

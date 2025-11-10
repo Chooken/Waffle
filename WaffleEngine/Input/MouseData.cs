@@ -4,6 +4,7 @@ public struct MouseData
 {
     public Vector2 Position;
     public Vector2 Delta;
+    public int MouseWheelTicksDelta;
     public bool IsLeftPressed;
     public bool IsLeftDown;
     public bool IsRightPressed;

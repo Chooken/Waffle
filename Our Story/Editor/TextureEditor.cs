@@ -18,6 +18,7 @@ public class TextureEditor
     private UIToplevel _ui;
     private Vector2 _cursorPosition = Vector2.Zero;
 
+    private ToolPanel _toolPanel = new ToolPanel();
     private ColorPanel _colorPanel = new ColorPanel();
     private CanvasPanel _canvasPanel;
     
@@ -28,30 +29,38 @@ public class TextureEditor
             "Texture Window Failed to Open."
         );
 
-        Assert.True(
-            Assets.TryGetTexture("Core", "Character_hat", out Texture),
-            "Base Texture not found."
-        );
-
         _canvasPanel = new CanvasPanel(EditorWindow, 16, 16);
+        _canvasPanel.CanvasTool = new PenTool();
         _colorPanel.OnColorSelected += color =>
         {
             _canvasPanel.CursorColor = color;
+        };
+        _toolPanel.OnToolSelected += tool =>
+        {
+            _canvasPanel.CanvasTool = tool;
         };
 
         _ui = new UIToplevel((WindowSdl)EditorWindow);
         _ui.Root = new UIRect()
             .Default(() => new UISettings()
             {
-                Width = UISize.PercentageWidth(100),
-                Height = UISize.PercentageHeight(100),
-                ChildAnchor = UIAnchor.Center,
+                Grow = true,
+                ChildDirection = UIDirection.Down,
                 PaddingX = UISize.Pixels(8),
                 PaddingY = UISize.Pixels(8),
                 Gap = UISize.Pixels(8),
             })
-            .AddUIElement(_colorPanel)
-            .AddUIElement(_canvasPanel);
+            .AddUIElement(_toolPanel)
+            .AddUIElement(new UIRect()
+                .Default(() => new UISettings()
+                {
+                    Grow = true,
+                    Width = UISize.PercentageWidth(100),
+                    Gap = UISize.Pixels(8),
+                })
+                .AddUIElement(_colorPanel)
+                .AddUIElement(_canvasPanel)
+            );
     }
 
     public void Update()
@@ -70,7 +79,7 @@ public class TextureEditor
         ImQueue queue = new ImQueue();
         queue.TryGetSwapchainTexture(EditorWindow, ref _swapchainTexture);
 
-        _canvasPanel.RenderCanvas(queue);
+        _canvasPanel.RenderCanvas(ref queue);
         
         GpuTexture _uiTexture = _ui.Render(queue);
         queue.AddBlitPass(_uiTexture, _swapchainTexture, true);
