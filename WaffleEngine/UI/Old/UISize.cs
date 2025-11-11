@@ -1,4 +1,4 @@
-namespace WaffleEngine.UI;
+namespace WaffleEngine.UI.Old;
 
 public enum UISizeType
 {

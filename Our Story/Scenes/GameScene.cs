@@ -5,6 +5,7 @@ using WaffleEngine.Rendering;
 using WaffleEngine.Rendering.Immediate;
 using WaffleEngine.Text;
 using WaffleEngine.UI;
+using WaffleEngine.UI.Old;
 using Vector2 = WaffleEngine.Vector2;
 using Vector3 = WaffleEngine.Vector3;
 
@@ -24,14 +25,16 @@ public class GameScene : IScene
     private Camera _camera = new Camera();
 
     private TextureEditor editor;
+
+    private Rect Root;
     
     public bool OnSceneLoaded()
     {
         if (!Assets.TryLoadAssetBundle("Core"))
             return false;
         
-        // if (!WindowManager.TryOpenMainWindow("Our Story", 800, 600, out _window))
-        //     return false;
+        if (!WindowManager.TryOpenMainWindow("Our Story", 800, 600, out _window))
+            return false;
         //
         // if (!Assets.TryGetTexture("Core", "Character_hat", out var texture))
         //     return false;
@@ -39,8 +42,44 @@ public class GameScene : IScene
         // if (!Assets.TryGetShader("builtin", "sprite", out var shader))
         //     return false;
 
-        editor = new TextureEditor();
-        editor.Start();
+        // editor = new TextureEditor();
+        // editor.Start();
+
+        _uiTexture = new GpuTexture(_window);
+
+        Root = new Rect();
+        Root.Width = Ui.Fixed(800);
+        //Root.Direction = UiDirection.TopToBottom;
+        // Root.Alignment = new UiAlignment()
+        // {
+        //     Horizontal = UiAlignmentHorizontal.Right,
+        //     Vertical = UiAlignmentVertical.Bottom,
+        // };
+        Root.Color = Color.RGBA255(50, 50, 50, 255);
+        Root.PaddingLeft = 16;
+        Root.PaddingRight = 16;
+        Root.PaddingTop = 16;
+        Root.PaddingBottom = 16;
+        Root.Gap = 16;
+        
+        Rect first = new Rect();
+        first.Color = Color.RGBA255(255, 0, 0, 255);
+        first.Width = Ui.Fixed(100);
+        first.Height = Ui.Fixed(200);
+        
+        Rect second = new Rect();
+        second.Color = Color.RGBA255(0, 255, 0, 255);
+        second.Width = Ui.Grow();
+        second.Height = Ui.Grow();
+        
+        Rect third = new Rect();
+        third.Color = Color.RGBA255(0, 0, 255, 255);
+        third.Width = Ui.Grow();
+        third.Height = Ui.Grow();
+
+        Root.Add(first);
+        Root.Add(second);
+        Root.Add(third);
         
         // shader.SetPipeline(new PipelineSettings()
         // {
@@ -103,7 +142,7 @@ public class GameScene : IScene
         //
         // _ui.Update();
         
-        editor.Update();
+        //editor.Update();
 
         // _spriteTransform.SetPosition(new Vector3(0, 0, 0));
         // _batch.AddSprite(_sprite, _spriteTransform);
@@ -133,7 +172,34 @@ public class GameScene : IScene
         // queue.AddBlitPass(_uiTexture, _swapchainTexture, true);
         // queue.Submit();
         
-        editor.Render();
+        //editor.Render();
+
+        ImQueue queue = new ImQueue();
+        queue.TryGetSwapchainTexture(_window, ref _swapchainTexture);
+        
+        ColorTargetSettings bgColorTargetSettings = new ColorTargetSettings
+        {
+            ClearColor = Color.RGBA255(20, 20, 20, 255),
+            GpuTexture = _uiTexture,
+            LoadOperation = LoadOperation.Clear,
+            StoreOperation = StoreOperation.Store,
+        };
+
+        var renderPass = queue.AddRenderPass(bgColorTargetSettings);
+
+        Root.Reset();
+        Root.CalculateFit(true);
+        Root.GrowOrShrink(true);
+        Root.CalculateFit(false);
+        Root.GrowOrShrink(false);
+        Root.CalculatePositions(Vector2.Zero);
+        Root.Render(renderPass, new Vector2(_uiTexture.Width, _uiTexture.Height));
+            
+        renderPass.End();
+        
+        queue.AddBlitPass(_uiTexture, _swapchainTexture, true);
+        
+        queue.Submit();
     }
 
     public void OnSceneExit()

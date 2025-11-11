@@ -13,7 +13,6 @@ scene.InstantiateEntity();
 scene.InstantiateEntity();
 scene.InstantiateEntity().AddComponent(new Camera((WindowSdl)window, 8, 0.1f, 100f));
 scene.InstantiateEntity().AddComponent(new InitAndDisposeTest());
-scene.AddQuery(new RenderQuery());
 
 Yaml.TrySerialize("scenes/scene.scene", scene);
 

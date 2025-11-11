@@ -1,7 +1,7 @@
 using WaffleEngine.Rendering;
 using WaffleEngine.Rendering.Immediate;
 
-namespace WaffleEngine.UI;
+namespace WaffleEngine.UI.Old;
 
 public class UIPass(UIToplevel toplevel) : IPass
 {

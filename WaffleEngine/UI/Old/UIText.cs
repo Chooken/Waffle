@@ -2,7 +2,7 @@ using SDL3;
 using WaffleEngine.Rendering.Immediate;
 using WaffleEngine.Text;
 
-namespace WaffleEngine.UI;
+namespace WaffleEngine.UI.Old;
 
 public class UIText : UIRect
 {

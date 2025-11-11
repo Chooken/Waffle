@@ -1,6 +1,6 @@
 using WaffleEngine.Native;
 
-namespace WaffleEngine.UI;
+namespace WaffleEngine.UI.Old;
 
 public class UIStyle
 {

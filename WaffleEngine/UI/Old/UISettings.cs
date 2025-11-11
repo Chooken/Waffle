@@ -2,7 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using WaffleEngine.Rendering;
 
-namespace WaffleEngine.UI;
+namespace WaffleEngine.UI.Old;
 
 public struct UISettings()
 {
