@@ -23,7 +23,9 @@ public class Rect
     public float ContentWidth;
     public float ContentHeight;
     public float CalculatedWidth;
+    public float CalculatedInnerWidth => CalculatedWidth - PaddingLeft - PaddingRight;
     public float CalculatedHeight;
+    public float CalculatedInnerHeight => CalculatedHeight - PaddingTop - PaddingBottom;
     public Vector2 CalulatedPosition;
 
     public void Reset()
@@ -118,6 +120,47 @@ public class Rect
         }
     }
 
+    public void CalculatePercentages(bool width)
+    {
+        foreach (var child in _children)
+        {
+            if (width)
+            {
+                if (child.Width.SizeType == UiSizeType.Percentage)
+                {
+                    if (Direction == UiDirection.LeftToRight)
+                    {
+                        child.CalculatedWidth = CalculatedInnerWidth * child.Width.Value;
+                        ContentWidth += child.CalculatedWidth;
+                    }
+                    else
+                    {
+                        child.CalculatedWidth = CalculatedInnerWidth * child.Width.Value;
+                        ContentWidth = MathF.Max(ContentWidth, child.CalculatedWidth);
+                    }
+                }
+            }
+            else
+            {
+                if (child.Height.SizeType == UiSizeType.Percentage)
+                {
+                    if (Direction == UiDirection.LeftToRight)
+                    {
+                        child.CalculatedHeight = CalculatedInnerHeight * child.Height.Value;
+                        ContentHeight = MathF.Max(ContentHeight, child.CalculatedHeight);
+                    }
+                    else
+                    {
+                        child.CalculatedHeight = CalculatedInnerHeight * child.Height.Value;
+                        ContentHeight += child.CalculatedHeight;
+                    }
+                }
+            }
+            
+            child.CalculatePercentages(width);
+        }
+    }
+
     /// <summary>
     /// Grows the children to fill the remainder.
     /// </summary>
@@ -130,6 +173,10 @@ public class Rect
 
         int childGrowCount = 0;
 
+        // Implement Shrink Later
+        if (remainder < 0)
+            return;
+        
         foreach (var child in _children)
         {
             if (width)

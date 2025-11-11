@@ -4,6 +4,7 @@ public enum UiSizeType
 {
     Fit,
     Grow,
+    Percentage,
     Fixed,
 }
 
@@ -51,6 +52,22 @@ public static partial class Ui
     {
         Value = 0,
         SizeType = UiSizeType.Grow,
+        Min = range.Min,
+        Max = range.Max,
+    };
+
+    public static UiSizeData Percentage(float value) => new UiSizeData
+    {
+        Value = value / 100,
+        SizeType = UiSizeType.Percentage,
+        Min = float.MinValue,
+        Max = float.MaxValue,
+    };
+    
+    public static UiSizeData Percentage(float value, Range range) => new UiSizeData
+    {
+        Value = value,
+        SizeType = UiSizeType.Percentage,
         Min = range.Min,
         Max = range.Max,
     };

@@ -75,7 +75,7 @@ public class GameScene : IScene
         Rect third = new Rect();
         third.Color = Color.RGBA255(0, 0, 255, 255);
         third.Width = Ui.Grow();
-        third.Height = Ui.Grow();
+        third.Height = Ui.Percentage(75);
 
         Root.Add(first);
         Root.Add(second);
@@ -189,8 +189,10 @@ public class GameScene : IScene
 
         Root.Reset();
         Root.CalculateFit(true);
+        Root.CalculatePercentages(true);
         Root.GrowOrShrink(true);
         Root.CalculateFit(false);
+        Root.CalculatePercentages(false);
         Root.GrowOrShrink(false);
         Root.CalculatePositions(Vector2.Zero);
         Root.Render(renderPass, new Vector2(_uiTexture.Width, _uiTexture.Height));
