@@ -188,11 +188,10 @@ public class GameScene : IScene
 
         var renderPass = queue.AddRenderPass(bgColorTargetSettings);
 
-        Root.Reset();
-        Root.CalculateFit(true);
+        Root.CalculateFitSize(true);
         Root.CalculatePercentages(true);
         Root.GrowOrShrink(true);
-        Root.CalculateFit(false);
+        Root.CalculateFitSize(false);
         Root.CalculatePercentages(false);
         Root.GrowOrShrink(false);
         Root.CalculatePositions(Vector2.Zero);

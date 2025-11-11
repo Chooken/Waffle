@@ -4,7 +4,7 @@ using WaffleEngine.UI.Old;
 
 namespace WaffleEngine.UI;
 
-public class Rect
+public class Rect : IUiElement
 {
     private Rect? _parent;
     private List<Rect> _children = new ();
@@ -27,31 +27,26 @@ public class Rect
     public float CalculatedHeight;
     public float CalculatedInnerHeight => CalculatedHeight - PaddingTop - PaddingBottom;
     public Vector2 CalulatedPosition;
-
-    public void Reset()
-    {
-        ContentWidth = 0;
-        ContentHeight = 0;
-        CalculatedHeight = 0;
-        CalculatedWidth = 0;
-        CalulatedPosition = Vector2.Zero;
-
-        foreach (var child in _children)
-        {
-            child.Reset();
-        }
-    }
     
     /// <summary>
     /// Calculates the fit size of the element.
     /// </summary>
     /// <param name="width">Is the Width or Height calculated.</param>
-    public void CalculateFit(bool width)
+    public void CalculateFitSize(bool width)
     {
+        if (width)
+        {
+            ContentWidth = 0;
+        }
+        else
+        {
+            ContentHeight = 0;
+        }
+        
         // Calculate Fit Content Size
         foreach (var child in _children)
         {
-            child.CalculateFit(width);
+            child.CalculateFitSize(width);
 
             switch (Direction)
             {
@@ -104,6 +99,9 @@ public class Rect
                 case UiSizeType.Fit or UiSizeType.Grow:
                     CalculatedWidth = MathF.Max(ContentWidth + PaddingLeft + PaddingRight, Width.MinValue);
                     break;
+                default:
+                    CalculatedWidth = 0;
+                    break;
             }
         }
         else
@@ -115,6 +113,9 @@ public class Rect
                     break;
                 case UiSizeType.Fit or UiSizeType.Grow:
                     CalculatedHeight = MathF.Max(ContentHeight + PaddingTop + PaddingBottom, Height.MinValue);
+                    break;
+                default:
+                    CalculatedHeight = 0;
                     break;
             }
         }
