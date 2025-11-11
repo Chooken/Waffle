@@ -6,6 +6,7 @@ using WaffleEngine.Rendering.Immediate;
 using WaffleEngine.Text;
 using WaffleEngine.UI;
 using WaffleEngine.UI.Old;
+using Range = WaffleEngine.UI.Range;
 using Vector2 = WaffleEngine.Vector2;
 using Vector3 = WaffleEngine.Vector3;
 
@@ -69,12 +70,12 @@ public class GameScene : IScene
         
         Rect second = new Rect();
         second.Color = Color.RGBA255(0, 255, 0, 255);
-        second.Width = Ui.Grow();
-        second.Height = Ui.Grow();
+        second.Width = Ui.Grow.Min(50).Max(300);
+        second.Height = Ui.Grow;
         
         Rect third = new Rect();
         third.Color = Color.RGBA255(0, 0, 255, 255);
-        third.Width = Ui.Grow();
+        third.Width = Ui.Grow;
         third.Height = Ui.Percentage(75);
 
         Root.Add(first);

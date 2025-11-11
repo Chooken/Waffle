@@ -12,8 +12,20 @@ public struct UiSizeData
 {
     public float Value;
     public UiSizeType SizeType;
-    public float Min;
-    public float Max;
+    public float MinValue;
+    public float MaxValue;
+
+    public UiSizeData Min(float value)
+    {
+        MinValue = value;
+        return this;
+    }
+
+    public UiSizeData Max(float value)
+    {
+        MaxValue = value;
+        return this;
+    }
 }
 
 public struct Range()
@@ -24,59 +36,35 @@ public struct Range()
 
 public static partial class Ui
 {
-    public static UiSizeData Fit() => new UiSizeData
+    public static UiSizeData Fit => new UiSizeData
     {
         Value = 0,
         SizeType = UiSizeType.Fit,
-        Min = float.MinValue,
-        Max = float.MaxValue,
+        MinValue = float.MinValue,
+        MaxValue = float.MaxValue,
     };
     
-    public static UiSizeData Fit(Range range) => new UiSizeData
-    {
-        Value = 0,
-        SizeType = UiSizeType.Fit,
-        Min = range.Min,
-        Max = range.Max,
-    };
-    
-    public static UiSizeData Grow() => new UiSizeData
+    public static UiSizeData Grow => new UiSizeData
     {
         Value = 0,
         SizeType = UiSizeType.Grow,
-        Min = float.MinValue,
-        Max = float.MaxValue,
-    };
-    
-    public static UiSizeData Grow(Range range) => new UiSizeData
-    {
-        Value = 0,
-        SizeType = UiSizeType.Grow,
-        Min = range.Min,
-        Max = range.Max,
+        MinValue = float.MinValue,
+        MaxValue = float.MaxValue,
     };
 
     public static UiSizeData Percentage(float value) => new UiSizeData
     {
         Value = value / 100,
         SizeType = UiSizeType.Percentage,
-        Min = float.MinValue,
-        Max = float.MaxValue,
-    };
-    
-    public static UiSizeData Percentage(float value, Range range) => new UiSizeData
-    {
-        Value = value,
-        SizeType = UiSizeType.Percentage,
-        Min = range.Min,
-        Max = range.Max,
+        MinValue = float.MinValue,
+        MaxValue = float.MaxValue,
     };
     
     public static UiSizeData Fixed(float value) => new UiSizeData
     {
         Value = value,
         SizeType = UiSizeType.Fixed,
-        Min = float.MinValue,
-        Max = float.MaxValue,
+        MinValue = float.MinValue,
+        MaxValue = float.MaxValue,
     };
 }

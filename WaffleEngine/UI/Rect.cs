@@ -9,8 +9,8 @@ public class Rect
     private Rect? _parent;
     private List<Rect> _children = new ();
 
-    public UiSizeData Width = Ui.Fit();
-    public UiSizeData Height = Ui.Fit();
+    public UiSizeData Width = Ui.Fit;
+    public UiSizeData Height = Ui.Fit;
     public float PaddingLeft;
     public float PaddingRight;
     public float PaddingTop;
@@ -102,7 +102,7 @@ public class Rect
                     CalculatedWidth = Width.Value;
                     break;
                 case UiSizeType.Fit or UiSizeType.Grow:
-                    CalculatedWidth = ContentWidth + PaddingLeft + PaddingRight;
+                    CalculatedWidth = MathF.Max(ContentWidth + PaddingLeft + PaddingRight, Width.MinValue);
                     break;
             }
         }
@@ -114,7 +114,7 @@ public class Rect
                     CalculatedHeight = Height.Value;
                     break;
                 case UiSizeType.Fit or UiSizeType.Grow:
-                    CalculatedHeight = ContentHeight + PaddingTop + PaddingBottom;
+                    CalculatedHeight = MathF.Max(ContentHeight + PaddingTop + PaddingBottom, Height.MinValue);
                     break;
             }
         }
@@ -168,8 +168,8 @@ public class Rect
     public void GrowOrShrink(bool width)
     {
         float remainder = width ? 
-            CalculatedWidth - PaddingLeft - PaddingRight - ContentWidth : 
-            CalculatedHeight - PaddingTop - PaddingBottom - ContentHeight;
+            CalculatedInnerWidth - ContentWidth : 
+            CalculatedInnerHeight - ContentHeight;
 
         int childGrowCount = 0;
 
@@ -194,39 +194,73 @@ public class Rect
                 }
             }
         }
-        
-        foreach (var child in _children)
+
+        bool fillPass = (width && Direction == UiDirection.TopToBottom) ||
+                        (!width && Direction == UiDirection.LeftToRight);
+
+        while (remainder > 0 || fillPass)
         {
-            if (width)
-            {
-                if (child.Width.SizeType == UiSizeType.Grow)
-                {
-                    if (child.Direction == UiDirection.LeftToRight)
-                    {
-                        child.CalculatedWidth += remainder / childGrowCount;
-                    }
-                    else
-                    {
-                        child.CalculatedWidth += CalculatedWidth - PaddingLeft - PaddingRight - child.CalculatedWidth;
-                    }
-                }
-            }
-            else
-            {
-                if (child.Height.SizeType == UiSizeType.Grow)
-                {
-                    if (child.Direction == UiDirection.LeftToRight)
-                    {
-                        child.CalculatedHeight += CalculatedHeight - PaddingTop - PaddingBottom - child.CalculatedHeight;
-                    }
-                    else
-                    {
-                        child.CalculatedHeight += remainder / childGrowCount;
-                    }
-                }
-            }
+            if (_children.Count == 0)
+                break;
             
-            child.GrowOrShrink(width);
+            float growValue = remainder / childGrowCount;
+            
+            foreach (var child in _children)
+            {
+                if (width)
+                {
+                    if (child.Width.SizeType == UiSizeType.Grow)
+                    {
+                        if (Direction == UiDirection.LeftToRight)
+                        {
+                            if (child.CalculatedWidth + growValue > child.Width.MaxValue)
+                            {
+                                remainder -= child.Width.MaxValue - child.CalculatedWidth;
+                                child.CalculatedWidth = child.Width.MaxValue;
+                            }
+                            else
+                            {
+                                child.CalculatedWidth += growValue;
+                                remainder -= growValue;
+                            }
+                        }
+                        else
+                        {
+                            child.CalculatedWidth +=
+                                CalculatedInnerWidth - child.CalculatedWidth;
+                        }
+                    }
+                }
+                else
+                {
+                    if (child.Height.SizeType == UiSizeType.Grow)
+                    {
+                        if (Direction == UiDirection.LeftToRight)
+                        {
+                            child.CalculatedHeight +=
+                                CalculatedInnerHeight - child.CalculatedHeight;
+                        }
+                        else
+                        {
+                            if (child.CalculatedHeight + growValue > child.Height.MaxValue)
+                            {
+                                remainder -= child.Height.MaxValue - child.CalculatedHeight;
+                                child.CalculatedHeight = child.Height.MaxValue;
+                            }
+                            else
+                            {
+                                child.CalculatedHeight += growValue;
+                                remainder -= growValue;
+                            }
+                        }
+                    }
+                }
+
+                child.GrowOrShrink(width);
+            }
+
+            if (fillPass)
+                break;
         }
     }
     
