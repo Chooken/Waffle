@@ -4,6 +4,10 @@ namespace WaffleEngine.UI;
 
 public interface IUiElement
 {
+    public ref IUiElement? Parent { get; }
+    public ref UiSettings Settings { get; }
+    public ref UiLayout Layout { get; }
+    
     /// <summary>
     /// Calculates the fit size of the element.
     /// </summary>
@@ -27,11 +31,20 @@ public interface IUiElement
     /// </summary>
     /// <param name="position">The position of the element.</param>
     public void CalculatePositions(Vector2 position);
-    
+
     /// <summary>
     /// Renders Elements in the render pass.
     /// </summary>
     /// <param name="renderPass">The render pass to render in.</param>
     /// <param name="renderSize">The Size of the Screen/Texture.</param>
-    public void Render(ImRenderPass renderPass, Vector2 renderSize);
+    /// <param name="scale">The Display Scale</param>
+    public void Render(ImRenderPass renderPass, Vector2 renderSize, float scale);
+
+    /// <summary>
+    /// Propagates a Update call.
+    /// </summary>
+    /// <param name="window">The window for events.</param>
+    /// <param name="propagateEvents">Whether to propagate events.</param>
+    /// <returns>If the function captured the event.</returns>
+    public bool PropagateUpdate(Window window, bool propagateEvents);
 }

@@ -63,10 +63,10 @@ internal sealed class WindowEventSystemSdl : IWindowEventSystem
         if (WindowManager.TryGetWindowWithId(sdlEvent.WindowID, out var window))
         {
             window.WindowInput.UpdateMouseMotion(
-                sdlEvent.X * window.GetDisplayScale(), 
-                sdlEvent.Y * window.GetDisplayScale(), 
-                sdlEvent.XRel * window.GetDisplayScale(), 
-                sdlEvent.YRel * window.GetDisplayScale());
+                sdlEvent.X, 
+                sdlEvent.Y, 
+                sdlEvent.XRel, 
+                sdlEvent.YRel);
         }
     }
     

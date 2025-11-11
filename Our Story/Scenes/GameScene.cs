@@ -48,39 +48,43 @@ public class GameScene : IScene
 
         _uiTexture = new GpuTexture(_window);
 
-        Root = new Rect();
-        Root.Width = Ui.Fixed(800);
-        //Root.Direction = UiDirection.TopToBottom;
-        // Root.Alignment = new UiAlignment()
-        // {
-        //     Horizontal = UiAlignmentHorizontal.Right,
-        //     Vertical = UiAlignmentVertical.Bottom,
-        // };
-        Root.Color = Color.RGBA255(50, 50, 50, 255);
-        Root.PaddingLeft = 16;
-        Root.PaddingRight = 16;
-        Root.PaddingTop = 16;
-        Root.PaddingBottom = 16;
-        Root.Gap = 16;
-        
-        Rect first = new Rect();
-        first.Color = Color.RGBA255(255, 0, 0, 255);
-        first.Width = Ui.Fixed(100);
-        first.Height = Ui.Fixed(200);
-        
-        Rect second = new Rect();
-        second.Color = Color.RGBA255(0, 255, 0, 255);
-        second.Width = Ui.Grow.Min(50).Max(300);
-        second.Height = Ui.Grow;
-        
-        Rect third = new Rect();
-        third.Color = Color.RGBA255(0, 0, 255, 255);
-        third.Width = Ui.Grow;
-        third.Height = Ui.Percentage(75);
-
-        Root.Add(first);
-        Root.Add(second);
-        Root.Add(third);
+        Root = 
+            new Rect()
+            .Default(() => new UiSettings()
+            {
+                Width = Ui.Fixed(800),
+                Color = Color.RGBA255(50, 50, 50, 255),
+                Padding = 16,
+                Gap = 16,
+            }).Add(
+                new Rect()
+                .Default(() => new UiSettings()
+                {
+                    Color = Color.RGBA255(255, 0, 0, 255),
+                    Width = Ui.Fixed(100),
+                    Height = Ui.Fixed(200),
+                })
+                .OnHover((ref UiSettings settings) =>
+                {
+                    settings.Color = Color.RGBA255(255, 255, 0, 255);
+                })
+            ).Add(
+                new Rect()
+                .Default(() => new UiSettings()
+                {
+                    Color = Color.RGBA255(0, 255, 0, 255),
+                    Width = Ui.Grow.Min(50).Max(300),
+                    Height = Ui.Grow,
+                })
+            ).Add(
+                new Rect()
+                .Default(() => new UiSettings()
+                {
+                    Color = Color.RGBA255(0, 0, 255, 255),
+                    Width = Ui.Grow,
+                    Height = Ui.Percentage(75),
+                })
+            );
         
         // shader.SetPipeline(new PipelineSettings()
         // {
@@ -144,6 +148,11 @@ public class GameScene : IScene
         // _ui.Update();
         
         //editor.Update();
+        
+        if (_window is null)
+            return;
+
+        Root.PropagateUpdate(_window, true);
 
         // _spriteTransform.SetPosition(new Vector3(0, 0, 0));
         // _batch.AddSprite(_sprite, _spriteTransform);
@@ -195,7 +204,7 @@ public class GameScene : IScene
         Root.CalculatePercentages(false);
         Root.GrowOrShrink(false);
         Root.CalculatePositions(Vector2.Zero);
-        Root.Render(renderPass, new Vector2(_uiTexture.Width, _uiTexture.Height));
+        Root.Render(renderPass, new Vector2(_uiTexture.Width, _uiTexture.Height), _window.GetDisplayScale());
             
         renderPass.End();
         

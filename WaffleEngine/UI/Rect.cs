@@ -6,27 +6,22 @@ namespace WaffleEngine.UI;
 
 public class Rect : IUiElement
 {
-    private Rect? _parent;
-    private List<Rect> _children = new ();
+    public ref IUiElement? Parent => ref _parent;
+    private IUiElement? _parent;
+    private List<IUiElement> _children = new ();
 
-    public UiSizeData Width = Ui.Fit;
-    public UiSizeData Height = Ui.Fit;
-    public float PaddingLeft;
-    public float PaddingRight;
-    public float PaddingTop;
-    public float PaddingBottom;
-    public UiDirection Direction = UiDirection.LeftToRight;
-    public UiAlignment Alignment;
-    public float Gap;
-    public Color Color;
-
-    public float ContentWidth;
-    public float ContentHeight;
-    public float CalculatedWidth;
-    public float CalculatedInnerWidth => CalculatedWidth - PaddingLeft - PaddingRight;
-    public float CalculatedHeight;
-    public float CalculatedInnerHeight => CalculatedHeight - PaddingTop - PaddingBottom;
-    public Vector2 CalulatedPosition;
+    public ref UiSettings Settings => ref _settings;
+    private UiSettings _settings = new UiSettings();
+    
+    public ref UiLayout Layout => ref _layout;
+    private UiLayout _layout;
+    
+    public delegate void ActionRef<T>(ref T item);
+    
+    private Func<UiSettings>? _default;
+    private ActionRef<UiSettings>? _onHoverEvent;
+    private ActionRef<UiSettings>? _onClickEvent;
+    private ActionRef<UiSettings>? _onHoldEvent;
     
     /// <summary>
     /// Calculates the fit size of the element.
@@ -36,11 +31,11 @@ public class Rect : IUiElement
     {
         if (width)
         {
-            ContentWidth = 0;
+            Layout.ContentWidth = 0;
         }
         else
         {
-            ContentHeight = 0;
+            Layout.ContentHeight = 0;
         }
         
         // Calculate Fit Content Size
@@ -48,17 +43,17 @@ public class Rect : IUiElement
         {
             child.CalculateFitSize(width);
 
-            switch (Direction)
+            switch (Settings.Direction)
             {
                 case UiDirection.LeftToRight:
                     
                     if (width)
                     {
-                        ContentWidth += child.CalculatedWidth;
+                        Layout.ContentWidth += child.Layout.CalculatedWidth;
                     }
                     else
                     {
-                        ContentHeight = MathF.Max(ContentHeight, child.CalculatedHeight);
+                        Layout.ContentHeight = MathF.Max(Layout.ContentHeight, child.Layout.CalculatedHeight);
                     }
                     break;
                 
@@ -66,11 +61,11 @@ public class Rect : IUiElement
                     
                     if (width)
                     {
-                        ContentWidth = MathF.Max(ContentWidth, child.CalculatedWidth);
+                        Layout.ContentWidth = MathF.Max(Layout.ContentWidth, child.Layout.CalculatedWidth);
                     }
                     else
                     {
-                        ContentHeight += child.CalculatedHeight;
+                        Layout.ContentHeight += child.Layout.CalculatedHeight;
                     }
                     break;
             }
@@ -79,43 +74,43 @@ public class Rect : IUiElement
         // Add Gap to Content Size
         if (width)
         {
-            if (Direction == UiDirection.LeftToRight)
-                ContentWidth += (_children.Count - 1) * Gap;
+            if (Settings.Direction == UiDirection.LeftToRight)
+                Layout.ContentWidth += (_children.Count - 1) * Settings.Gap;
         }
         else
         {
-            if (Direction == UiDirection.TopToBottom)
-                ContentHeight += (_children.Count - 1) * Gap;
+            if (Settings.Direction == UiDirection.TopToBottom)
+                Layout.ContentHeight += (_children.Count - 1) * Settings.Gap;
         }
 
         // Set Calculated Size based off type.
         if (width)
         {
-            switch (Width.SizeType)
+            switch (Settings.Width.SizeType)
             {
                 case UiSizeType.Fixed:
-                    CalculatedWidth = Width.Value;
+                    Layout.CalculatedWidth = Settings.Width.Value;
                     break;
                 case UiSizeType.Fit or UiSizeType.Grow:
-                    CalculatedWidth = MathF.Max(ContentWidth + PaddingLeft + PaddingRight, Width.MinValue);
+                    Layout.CalculatedWidth = MathF.Max(Layout.ContentWidth + Settings.Padding.TotalHorizontal, Settings.Width.MinValue);
                     break;
                 default:
-                    CalculatedWidth = 0;
+                    Layout.CalculatedWidth = 0;
                     break;
             }
         }
         else
         {
-            switch (Height.SizeType)
+            switch (Settings.Height.SizeType)
             {
                 case UiSizeType.Fixed:
-                    CalculatedHeight = Height.Value;
+                    Layout.CalculatedHeight = Settings.Height.Value;
                     break;
                 case UiSizeType.Fit or UiSizeType.Grow:
-                    CalculatedHeight = MathF.Max(ContentHeight + PaddingTop + PaddingBottom, Height.MinValue);
+                    Layout.CalculatedHeight = MathF.Max(Layout.ContentHeight + Settings.Padding.TotalVertical, Settings.Height.MinValue);
                     break;
                 default:
-                    CalculatedHeight = 0;
+                    Layout.CalculatedHeight = 0;
                     break;
             }
         }
@@ -127,33 +122,33 @@ public class Rect : IUiElement
         {
             if (width)
             {
-                if (child.Width.SizeType == UiSizeType.Percentage)
+                if (child.Settings.Width.SizeType == UiSizeType.Percentage)
                 {
-                    if (Direction == UiDirection.LeftToRight)
+                    if (Settings.Direction == UiDirection.LeftToRight)
                     {
-                        child.CalculatedWidth = CalculatedInnerWidth * child.Width.Value;
-                        ContentWidth += child.CalculatedWidth;
+                        child.Layout.CalculatedWidth = (Layout.CalculatedWidth - Settings.Padding.TotalHorizontal) * child.Settings.Width.Value;
+                        Layout.ContentWidth += child.Layout.CalculatedWidth;
                     }
                     else
                     {
-                        child.CalculatedWidth = CalculatedInnerWidth * child.Width.Value;
-                        ContentWidth = MathF.Max(ContentWidth, child.CalculatedWidth);
+                        child.Layout.CalculatedWidth = (Layout.CalculatedWidth - Settings.Padding.TotalHorizontal) * child.Settings.Width.Value;
+                        Layout.ContentWidth = MathF.Max(Layout.ContentWidth, child.Layout.CalculatedWidth);
                     }
                 }
             }
             else
             {
-                if (child.Height.SizeType == UiSizeType.Percentage)
+                if (child.Settings.Height.SizeType == UiSizeType.Percentage)
                 {
-                    if (Direction == UiDirection.LeftToRight)
+                    if (Settings.Direction == UiDirection.LeftToRight)
                     {
-                        child.CalculatedHeight = CalculatedInnerHeight * child.Height.Value;
-                        ContentHeight = MathF.Max(ContentHeight, child.CalculatedHeight);
+                        child.Layout.CalculatedHeight = (Layout.CalculatedHeight - Settings.Padding.TotalVertical) * child.Settings.Height.Value;
+                        Layout.ContentHeight = MathF.Max(Layout.ContentHeight, child.Layout.CalculatedHeight);
                     }
                     else
                     {
-                        child.CalculatedHeight = CalculatedInnerHeight * child.Height.Value;
-                        ContentHeight += child.CalculatedHeight;
+                        child.Layout.CalculatedHeight = (Layout.CalculatedHeight - Settings.Padding.TotalVertical) * child.Settings.Height.Value;
+                        Layout.ContentHeight += child.Layout.CalculatedHeight;
                     }
                 }
             }
@@ -169,8 +164,8 @@ public class Rect : IUiElement
     public void GrowOrShrink(bool width)
     {
         float remainder = width ? 
-            CalculatedInnerWidth - ContentWidth : 
-            CalculatedInnerHeight - ContentHeight;
+            Layout.CalculatedWidth - Settings.Padding.TotalHorizontal - Layout.ContentWidth : 
+            Layout.CalculatedHeight - Settings.Padding.TotalVertical - Layout.ContentHeight;
 
         int childGrowCount = 0;
 
@@ -182,22 +177,22 @@ public class Rect : IUiElement
         {
             if (width)
             {
-                if (child.Width.SizeType == UiSizeType.Grow)
+                if (child.Settings.Width.SizeType == UiSizeType.Grow)
                 {
                     childGrowCount++;
                 }
             }
             else
             {
-                if (child.Height.SizeType == UiSizeType.Grow)
+                if (child.Settings.Height.SizeType == UiSizeType.Grow)
                 {
                     childGrowCount++;
                 }
             }
         }
 
-        bool fillPass = (width && Direction == UiDirection.TopToBottom) ||
-                        (!width && Direction == UiDirection.LeftToRight);
+        bool fillPass = (width && Settings.Direction == UiDirection.TopToBottom) ||
+                        (!width && Settings.Direction == UiDirection.LeftToRight);
 
         while (remainder > 0 || fillPass)
         {
@@ -210,47 +205,47 @@ public class Rect : IUiElement
             {
                 if (width)
                 {
-                    if (child.Width.SizeType == UiSizeType.Grow)
+                    if (child.Settings.Width.SizeType == UiSizeType.Grow)
                     {
-                        if (Direction == UiDirection.LeftToRight)
+                        if (Settings.Direction == UiDirection.LeftToRight)
                         {
-                            if (child.CalculatedWidth + growValue > child.Width.MaxValue)
+                            if (child.Layout.CalculatedWidth + growValue > child.Settings.Width.MaxValue)
                             {
-                                remainder -= child.Width.MaxValue - child.CalculatedWidth;
-                                child.CalculatedWidth = child.Width.MaxValue;
+                                remainder -= child.Settings.Width.MaxValue - child.Layout.CalculatedWidth;
+                                child.Layout.CalculatedWidth = child.Settings.Width.MaxValue;
                             }
                             else
                             {
-                                child.CalculatedWidth += growValue;
+                                child.Layout.CalculatedWidth += growValue;
                                 remainder -= growValue;
                             }
                         }
                         else
                         {
-                            child.CalculatedWidth +=
-                                CalculatedInnerWidth - child.CalculatedWidth;
+                            child.Layout.CalculatedWidth +=
+                                Layout.CalculatedWidth - Settings.Padding.TotalHorizontal - child.Layout.CalculatedWidth;
                         }
                     }
                 }
                 else
                 {
-                    if (child.Height.SizeType == UiSizeType.Grow)
+                    if (child.Settings.Height.SizeType == UiSizeType.Grow)
                     {
-                        if (Direction == UiDirection.LeftToRight)
+                        if (Settings.Direction == UiDirection.LeftToRight)
                         {
-                            child.CalculatedHeight +=
-                                CalculatedInnerHeight - child.CalculatedHeight;
+                            child.Layout.CalculatedHeight +=
+                                Layout.CalculatedHeight - Settings.Padding.TotalVertical - child.Layout.CalculatedHeight;
                         }
                         else
                         {
-                            if (child.CalculatedHeight + growValue > child.Height.MaxValue)
+                            if (child.Layout.CalculatedHeight + growValue > child.Settings.Height.MaxValue)
                             {
-                                remainder -= child.Height.MaxValue - child.CalculatedHeight;
-                                child.CalculatedHeight = child.Height.MaxValue;
+                                remainder -= child.Settings.Height.MaxValue - child.Layout.CalculatedHeight;
+                                child.Layout.CalculatedHeight = child.Settings.Height.MaxValue;
                             }
                             else
                             {
-                                child.CalculatedHeight += growValue;
+                                child.Layout.CalculatedHeight += growValue;
                                 remainder -= growValue;
                             }
                         }
@@ -271,15 +266,15 @@ public class Rect : IUiElement
     /// <param name="position">The position of the element.</param>
     public void CalculatePositions(Vector2 position)
     {
-        CalulatedPosition = position;
+        Layout.CalulatedPosition = position;
         
         // Get Start Position and Size Without Padding
         Vector2 childStartPosition = new Vector2(
-            position.x + PaddingLeft, 
-            position.y + PaddingTop);
+            position.x + Settings.Padding.Left, 
+            position.y + Settings.Padding.Top);
         Vector2 sizeWithoutPadding = new Vector2(
-            CalculatedWidth - PaddingLeft - PaddingRight, 
-            CalculatedHeight - PaddingTop - PaddingBottom);
+            Layout.CalculatedWidth - Settings.Padding.TotalHorizontal, 
+            Layout.CalculatedHeight - Settings.Padding.TotalVertical);
 
         Vector2 childOffset = Vector2.Zero;
 
@@ -288,11 +283,11 @@ public class Rect : IUiElement
             // Get Alignment Offset
             Vector2 alignmentOffset = Vector2.Zero;
 
-            float horizontalRemainder = Direction == UiDirection.LeftToRight
-                ? sizeWithoutPadding.x - ContentWidth
-                : sizeWithoutPadding.x - child.CalculatedWidth;
+            float horizontalRemainder = Settings.Direction == UiDirection.LeftToRight
+                ? sizeWithoutPadding.x - Layout.ContentWidth
+                : sizeWithoutPadding.x - child.Layout.CalculatedWidth;
 
-            switch (Alignment.Horizontal)
+            switch (Settings.Alignment.Horizontal)
             {
                 case UiAlignmentHorizontal.Center:
                     alignmentOffset.x = horizontalRemainder / 2;
@@ -302,11 +297,11 @@ public class Rect : IUiElement
                     break;
             }
             
-            float verticalRemainder = Direction == UiDirection.TopToBottom
-                ? sizeWithoutPadding.y - ContentHeight
-                : sizeWithoutPadding.y - child.CalculatedHeight;
+            float verticalRemainder = Settings.Direction == UiDirection.TopToBottom
+                ? sizeWithoutPadding.y - Layout.ContentHeight
+                : sizeWithoutPadding.y - child.Layout.CalculatedHeight;
 
-            switch (Alignment.Vertical)
+            switch (Settings.Alignment.Vertical)
             {
                 case UiAlignmentVertical.Center:
                     alignmentOffset.y = verticalRemainder / 2;
@@ -321,19 +316,19 @@ public class Rect : IUiElement
 
             
             // Offset next child.
-            switch (Direction)
+            switch (Settings.Direction)
             {
                 case UiDirection.LeftToRight:
-                    childOffset.x += child.CalculatedWidth + Gap;
+                    childOffset.x += child.Layout.CalculatedWidth + Settings.Gap;
                     break; 
                 case UiDirection.TopToBottom:
-                    childOffset.y += child.CalculatedHeight + Gap;
+                    childOffset.y += child.Layout.CalculatedHeight + Settings.Gap;
                     break;
             }
         }
     }
 
-    public void Render(ImRenderPass renderPass, Vector2 renderSize)
+    public virtual void Render(ImRenderPass renderPass, Vector2 renderSize, float scale)
     {
         if (!Assets.TryGetShader("builtin", "ui-rect", out var shader))
         {
@@ -358,16 +353,20 @@ public class Rect : IUiElement
         
         UIRectData data = new UIRectData()
         {
-            Position = new AlignedVector3(CalulatedPosition),
-            Size = new Vector2(CalculatedWidth, CalculatedHeight),
-            Color = Color,
-            BorderRadius = new Vector4(),
-            BorderColor = new Vector4(),
+            Position = new AlignedVector3(Layout.CalulatedPosition * scale),
+            Size = new Vector2(Layout.CalculatedWidth * scale, Layout.CalculatedHeight * scale),
+            Color = Settings.Color,
+            BorderRadius = new Vector4(
+                Settings.BorderRadius.BottomLeft * scale, 
+                Settings.BorderRadius.TopLeft * scale, 
+                Settings.BorderRadius.BottomRight * scale, 
+                Settings.BorderRadius.TopRight * scale),
+            BorderColor = Settings.BorderColor,
             ScreenSize = renderSize,
-            BorderSize = 0f
+            BorderSize = Settings.BorderSize * scale,
         };
         
-        if (Color.a != 0)
+        if (Settings.Color.a != 0)
         {
             renderPass.SetUniforms(data);
             renderPass.Bind(shader);
@@ -376,14 +375,91 @@ public class Rect : IUiElement
 
         foreach (var child in _children)
         {
-            child.Render(renderPass, renderSize);
+            child.Render(renderPass, renderSize, scale);
         }
     }
 
-    public Rect Add(Rect child)
+    public bool PropagateUpdate(Window window, bool propagateEvents)
+    {
+        Settings = _default?.Invoke() ?? default;
+        
+        for (int i = _children.Count - 1; i >= 0; i--)
+        {
+            propagateEvents = _children[i].PropagateUpdate(window, propagateEvents);
+        }
+        
+        if (propagateEvents)
+        {
+            propagateEvents = !ProcessEvents(window);
+        }
+
+        return propagateEvents;
+    }
+    
+    public bool ProcessEvents(Window window)
+    {
+        Vector2 b = new Vector2(Layout.CalulatedPosition.x + Layout.CalculatedWidth, Layout.CalulatedPosition.y + Layout.CalculatedHeight);
+        Vector2 mousePos = window.WindowInput.MouseData.Position;
+        
+        UiSettings settings = Settings;
+
+        bool captured = false;
+
+        if (MathF.Min(Layout.CalulatedPosition.x, b.x) < mousePos.x && MathF.Min(Layout.CalulatedPosition.y, b.y) < mousePos.y &&
+            MathF.Max(Layout.CalulatedPosition.x, b.x) > mousePos.x && MathF.Max(Layout.CalulatedPosition.y, b.y) > mousePos.y)
+        {
+            if (window.WindowInput.MouseData.IsLeftPressed && _onClickEvent is not null)
+            {
+                _onClickEvent.Invoke(ref settings);
+            }
+            else if (window.WindowInput.MouseData.IsLeftDown && _onHoldEvent is not null)
+            {
+                _onHoldEvent.Invoke(ref settings);
+            }
+            else if (_onHoverEvent is not null)
+            {
+                _onHoverEvent.Invoke(ref settings);
+            }
+
+            captured = true;
+        }
+
+        if (!settings.Equals(Settings))
+        {
+            Settings = settings;
+        }
+
+        return captured;
+    }
+    
+    public Rect Default(Func<UiSettings> defaultSettings)
+    {
+        _default += defaultSettings;
+        return this;
+    }
+
+    public Rect OnHover(ActionRef<UiSettings> hover)
+    {
+        _onHoverEvent += hover;
+        return this;
+    }
+
+    public Rect OnClick(ActionRef<UiSettings> click)
+    {
+        _onClickEvent += click;
+        return this;
+    }
+    
+    public Rect OnHold(ActionRef<UiSettings> hold)
+    {
+        _onHoldEvent += hold;
+        return this;
+    }
+
+    public Rect Add(IUiElement child)
     {
         _children.Add(child);
-        child._parent = this;
+        child.Parent = this;
         return this;
     }
 }

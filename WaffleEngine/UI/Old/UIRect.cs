@@ -22,7 +22,6 @@ public class UIRect
 
     //public UISettings DefaultSettings;
     public UISettings Settings;
-    private UISettings _newSettings;
 
     public delegate void ActionRef<T>(ref T item);
 
