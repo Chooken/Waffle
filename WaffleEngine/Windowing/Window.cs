@@ -15,6 +15,8 @@ public abstract class Window : IDisposable
     
     public bool Resizeable { get; protected set; }
 
+    public Action<Vector2> OnWindowResized;
+
     public abstract uint GetId();
         
     public abstract void SetSize(int width, int height);

@@ -1,48 +1,45 @@
 using WaffleEngine;
-using WaffleEngine.UI.Old;
+using WaffleEngine.UI;
 
 namespace OurStory.Editor;
 
 public class ToolPanel
 {
-    public UIRect Panel = new UIRect()
-        .Default(() => new UISettings()
+    public Rect Panel = new Rect()
+        .Default(() => new RectSettings()
         {
-            Width = UISize.PercentageWidth(100),
+            Width = Ui.Grow,
             Color = Color.RGBA255(22, 22, 22, 255),
-            PaddingX = UISize.Pixels(8),
-            PaddingY = UISize.Pixels(8),
-            Gap = UISize.Pixels(4),
-            BorderRadius = new UIBorderRadius(8, 8, 8, 8, UISizeType.Pixels),
+            Padding = 8,
+            Gap = 4,
+            BorderRadius = 8,
         });
 
     public Action<ICanvasTool> OnToolSelected;
 
     public ToolPanel()
     {
-        Panel.AddUIElement(ToolButton(new PenTool(), "Pen"));
-        Panel.AddUIElement(ToolButton(new ShadeTool(), "Shade"));
+        Panel.Add(ToolButton(new PenTool(), "Pen"));
+        Panel.Add(ToolButton(new ShadeTool(), "Shade"));
     }
-    
-    public UIRect ToolButton(ICanvasTool tool, string name) =>
-        new UIRect()
-            .Default(() => new UISettings()
+
+    public Rect ToolButton(ICanvasTool tool, string name) =>
+        new Rect()
+            .Default(() => new RectSettings()
             {
-                PaddingX = UISize.Pixels(8),
-                PaddingY = UISize.Pixels(4),
+                Padding = (8, 4),
                 Color = Color.RGBA255(40, 40, 40, 255),
-                BorderRadius = new UIBorderRadius(4, 4, 4, 4, UISizeType.Pixels),
+                BorderRadius = 4,
             })
-            .OnClick((ref UISettings settings) =>
+            .OnClick((ref RectSettings settings) =>
             {
                 OnToolSelected?.Invoke(tool);
             })
-            .OnHold((ref UISettings settings) =>
+            .OnHold((ref RectSettings settings) =>
             {
                 settings.Color = Color.RGBA255(30, 30, 30, 255);
-            })
-            .AddUIElement(new UIText()
-                .SetText(name));
+            });
+            //.Add(new UIText(name)); Add Text
 
-    public static implicit operator UIRect(ToolPanel toolPanel) => toolPanel.Panel;
+    public static implicit operator Rect(ToolPanel toolPanel) => toolPanel.Panel;
 }

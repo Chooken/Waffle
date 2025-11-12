@@ -21,6 +21,22 @@ public struct UiAlignment
             Vertical == other.Vertical &&
             Horizontal == other.Horizontal;
     }
+    
+    public static implicit operator UiAlignment(UiAlignmentVertical value) => new UiAlignment()
+    {
+        Vertical = value,
+    };
+    
+    public static implicit operator UiAlignment(UiAlignmentHorizontal value) => new UiAlignment()
+    {
+        Horizontal = value,
+    };
+    
+    public static implicit operator UiAlignment((UiAlignmentVertical vertical, UiAlignmentHorizontal horizontal) value) => new UiAlignment()
+    {
+        Vertical = value.vertical,
+        Horizontal = value.horizontal,
+    };
 }
 
 public enum UiAlignmentVertical

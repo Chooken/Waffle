@@ -186,7 +186,7 @@ public struct Flex : ILayout
 
         while (remainder > 0 || fillPass)
         {
-            if (element.Children.Count == 0)
+            if (childGrowCount == 0 || element.Children.Count == 0)
                 break;
             
             float growValue = remainder / childGrowCount;
@@ -237,6 +237,24 @@ public struct Flex : ILayout
 
             if (fillPass)
                 break;
+        }
+
+        // Recalculate Content Size.
+        
+        float contentSize = 0;
+
+        foreach (var child in element.Children)
+        {
+            contentSize += width ? child.Bounds.CalculatedWidth : child.Bounds.CalculatedHeight;
+        }
+
+        if (width)
+        {
+            element.Bounds.ContentWidth = contentSize;
+        }
+        else
+        {
+            element.Bounds.ContentHeight = contentSize;
         }
     }
     

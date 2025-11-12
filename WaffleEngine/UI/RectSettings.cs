@@ -42,11 +42,7 @@ public struct RectSettings()
     /// </summary>
     public Color BorderColor;
     /// <summary>
-    /// The background color of the element.
-    /// </summary>
-    public Color BackgroundColor;
-    /// <summary>
-    /// The foreground color of the element.
+    /// The color of the rect.
     /// </summary>
     public Color Color;
     
@@ -72,8 +68,7 @@ public struct RectSettings()
             Alignment == other.Alignment &&
             Color == other.Color &&
             BorderColor == other.BorderColor &&
-            BorderSize == other.BorderSize &&
-            BackgroundColor == other.BackgroundColor;
+            BorderSize == other.BorderSize;
     }
 
     public void MoveTowards(RectSettings other)

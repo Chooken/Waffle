@@ -1,15 +1,15 @@
 using WaffleEngine;
-using WaffleEngine.UI.Old;
+using WaffleEngine.UI;
 
 namespace OurStory.Editor;
 
 public class ColorPanel
 {
     public Color SelectedColor { get; private set; }
-    public UIRect Panel;
+    public Rect Panel;
     public Action<Color> OnColorSelected;
 
-    public static UIRect Create()
+    public static Rect Create()
     {
         ColorPanel colorPanel = new ColorPanel();
         return colorPanel.Panel;
@@ -17,14 +17,13 @@ public class ColorPanel
 
     public ColorPanel()
     {
-        Panel = new UIRect()
-            .Default(() => new UISettings()
+        Panel = new Rect()
+            .Default(() => new RectSettings()
             {
                 Color = Color.RGBA255(22, 22, 22, 255),
-                ChildDirection = UIDirection.Down,
-                PaddingX = UISize.Pixels(20),
-                PaddingY = UISize.Pixels(20),
-                BorderRadius = new UIBorderRadius(20, 20, 20, 20, UISizeType.Pixels)
+                Direction = UiDirection.TopToBottom,
+                Padding = 20,
+                BorderRadius = 20,
             });
 
         int rows = 17;
@@ -32,60 +31,60 @@ public class ColorPanel
         
         for (int y = 0; y < rows - 1; y++)
         {
-            var rect = new UIRect()
-                .Default(() => new UISettings()
+            var rect = new Rect()
+                .Default(() => new RectSettings()
                 {
-                    Gap = UISize.Pixels(4),
-                    PaddingY = UISize.Pixels(2),
+                    Gap = 4,
+                    Padding = (0, 4),
                 });
             
             for (int x = 0; x < columns; x++)
             {
                 OklabColor color = OklabColor.FromLCH((1f - (float)x / columns) * 0.7f + 0.3f, (1f - (float)x / columns) * 0.125f, (float)y / rows * Single.Pi * 2);
                 
-                rect.AddUIElement(ColorToggle(color));
+                rect.Add(ColorToggle(color));
             }
 
-            Panel.AddUIElement(rect);
+            Panel.Add(rect);
         }
         
-        var finalRect = new UIRect()
-            .Default(() => new UISettings()
+        var finalRect = new Rect()
+            .Default(() => new RectSettings()
             {
-                Gap = UISize.Pixels(4),
-                PaddingY = UISize.Pixels(2),
+                Gap = 4,
+                Padding = (0, 4),
             });
 
-        finalRect.AddUIElement(ColorToggle(new Color(1, 1, 1, 1)));
-        finalRect.AddUIElement(ColorToggle(new Color(0, 0, 0, 1)));
-        finalRect.AddUIElement(ColorToggle(new Color(0, 0, 0, 0)));
+        finalRect.Add(ColorToggle(new Color(1, 1, 1, 1)));
+        finalRect.Add(ColorToggle(new Color(0, 0, 0, 1)));
+        finalRect.Add(ColorToggle(new Color(0, 0, 0, 0)));
 
-        Panel.AddUIElement(finalRect);
+        Panel.Add(finalRect);
     }
     
-    public UIRect ColorToggle(Color color) =>
-        new UIRect()
-            .Default(() => new UISettings()
+    public Rect ColorToggle(Color color) =>
+        new Rect()
+            .Default(() => new RectSettings()
             {
-                Width = UISize.Pixels(18),
-                Height = UISize.Pixels(18),
+                Width = Ui.Fixed(18),
+                Height = Ui.Fixed(18),
                 Color = color.WithAlphaOne(),
                 BorderColor = new Color(1,1,1,1),
-                BorderSize = UISize.Pixels(SelectedColor == color ? 4 : 0),
+                BorderSize = SelectedColor == color ? 4 : 0,
             })
-            .OnHover((ref UISettings settings) =>
+            .OnHover((ref RectSettings settings) =>
             {
                 if (SelectedColor == color)
                     return;
                 
                 settings.BorderColor = new Color(0, 0, 0, 1);
-                settings.BorderSize = UISize.Pixels(4);
+                settings.BorderSize = 4;
             })
-            .OnClick((ref UISettings settings) =>
+            .OnClick((ref RectSettings settings) =>
             {
                 SelectedColor = color;
-                OnColorSelected?.Invoke(color);
+                OnColorSelected.Invoke(color);
             });
 
-    public static implicit operator UIRect(ColorPanel panel) => panel.Panel;
+    public static implicit operator Rect(ColorPanel panel) => panel.Panel;
 }

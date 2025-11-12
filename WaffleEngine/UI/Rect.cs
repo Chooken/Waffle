@@ -1,13 +1,12 @@
 using System.Data;
 using WaffleEngine.Rendering;
 using WaffleEngine.Rendering.Immediate;
-using WaffleEngine.UI.Old;
 
 namespace WaffleEngine.UI;
 
 public class Rect : UiElement
 {
-    private RectSettings _rectSettings;
+    protected RectSettings RectSettings;
     private RectSettings _newRectSettings;
     
     public delegate void ActionRef<T>(ref T item);
@@ -16,13 +15,24 @@ public class Rect : UiElement
     private ActionRef<RectSettings>? _onHoverEvent;
     private ActionRef<RectSettings>? _onClickEvent;
     private ActionRef<RectSettings>? _onHoldEvent;
+    
+    public struct UIRectData
+    {
+        public AlignedVector3 Position;
+        public Vector2 Size;
+        public Vector4 Color;
+        public Vector4 BorderRadius;
+        public Vector4 BorderColor;
+        public Vector2 ScreenSize;
+        public float BorderSize;
+    }
 
     public override void Update()
     {
-        if (_newRectSettings != _rectSettings)
+        if (_newRectSettings != RectSettings)
         {
-            _rectSettings.MoveTowards(_newRectSettings);
-            Settings = _rectSettings.ToUiSettings();
+            RectSettings.MoveTowards(_newRectSettings);
+            Settings = RectSettings.ToUiSettings();
         }
 
         _newRectSettings = _default?.Invoke() ?? default;
@@ -70,27 +80,22 @@ public class Rect : UiElement
         {
             Position = new AlignedVector3(Bounds.CalulatedPosition * scale),
             Size = new Vector2(Bounds.CalculatedWidth * scale, Bounds.CalculatedHeight * scale),
-            Color = _rectSettings.Color,
+            Color = RectSettings.Color,
             BorderRadius = new Vector4(
-                _rectSettings.BorderRadius.BottomLeft * scale, 
-                _rectSettings.BorderRadius.TopLeft * scale, 
-                _rectSettings.BorderRadius.BottomRight * scale, 
-                _rectSettings.BorderRadius.TopRight * scale),
-            BorderColor = _rectSettings.BorderColor,
+                RectSettings.BorderRadius.BottomLeft * scale, 
+                RectSettings.BorderRadius.TopLeft * scale, 
+                RectSettings.BorderRadius.BottomRight * scale, 
+                RectSettings.BorderRadius.TopRight * scale),
+            BorderColor = RectSettings.BorderColor,
             ScreenSize = renderSize,
-            BorderSize = _rectSettings.BorderSize * scale,
+            BorderSize = RectSettings.BorderSize * scale,
         };
         
-        if (_rectSettings.Color.a != 0)
+        if (RectSettings.Color.a != 0)
         {
             renderPass.SetUniforms(data);
             renderPass.Bind(shader);
             renderPass.DrawPrimatives(6, 1, 0, 0);
-        }
-
-        foreach (var child in Children)
-        {
-            child.Render(renderPass, renderSize, scale);
         }
     }
     

@@ -16,6 +16,16 @@ public abstract class UiElement
     /// </summary>
     public ILayout Layout = Ui.Flex;
 
+    public void PropagateRender(ImRenderPass renderPass, Vector2 renderSize, float scale)
+    {
+        Render(renderPass, renderSize, scale);
+        
+        foreach (var child in Children)
+        {
+            child.PropagateRender(renderPass, renderSize, scale);
+        }
+    }
+
     public abstract void Render(ImRenderPass renderPass, Vector2 renderSize, float scale);
     
     public bool PropagateUpdate(Window window, bool propagateEvents)

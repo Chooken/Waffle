@@ -1,22 +1,21 @@
 using WaffleEngine;
 using WaffleEngine.Rendering;
 using WaffleEngine.Rendering.Immediate;
-using WaffleEngine.UI.Old;
+using WaffleEngine.UI;
 
 namespace OurStory.Editor;
 
 public class TextureEditor
 {
     public Window EditorWindow;
-    public Texture Texture;
 
     private GpuTexture Canvas;
     private Shader? CanvasBlitShader;
     
     private GpuTexture _swapchainTexture = new GpuTexture();
-    
-    private UIToplevel _ui;
-    private Vector2 _cursorPosition = Vector2.Zero;
+    private GpuTexture _uiTexture;
+
+    private UiElement Root;
 
     private ToolPanel _toolPanel = new ToolPanel();
     private ColorPanel _colorPanel = new ColorPanel();
@@ -29,6 +28,8 @@ public class TextureEditor
             "Texture Window Failed to Open."
         );
 
+        _uiTexture = new GpuTexture(EditorWindow);
+
         _canvasPanel = new CanvasPanel(EditorWindow, 16, 16);
         _canvasPanel.CanvasTool = new PenTool();
         _colorPanel.OnColorSelected += color =>
@@ -40,26 +41,27 @@ public class TextureEditor
             _canvasPanel.CanvasTool = tool;
         };
 
-        _ui = new UIToplevel((WindowSdl)EditorWindow);
-        _ui.Root = new UIRect()
-            .Default(() => new UISettings()
+        EditorWindow.OnWindowResized += OnWindowResized;
+
+        Root = new Rect()
+            .Default(() => new RectSettings()
             {
-                Grow = true,
-                ChildDirection = UIDirection.Down,
-                PaddingX = UISize.Pixels(8),
-                PaddingY = UISize.Pixels(8),
-                Gap = UISize.Pixels(8),
+                Width = Ui.Fixed(EditorWindow.Width / EditorWindow.GetDisplayScale()),
+                Height = Ui.Fixed(EditorWindow.Height / EditorWindow.GetDisplayScale()),
+                Direction = UiDirection.TopToBottom,
+                Padding = 8,
+                Gap = 8,
             })
-            .AddUIElement(_toolPanel)
-            .AddUIElement(new UIRect()
-                .Default(() => new UISettings()
+            .Add(_toolPanel)
+            .Add(new Rect()
+                .Default(() => new RectSettings()
                 {
-                    Grow = true,
-                    Width = UISize.PercentageWidth(100),
-                    Gap = UISize.Pixels(8),
+                    Width = Ui.Grow,
+                    Height = Ui.Grow,
+                    Gap = 8,
                 })
-                .AddUIElement(_colorPanel)
-                .AddUIElement(_canvasPanel)
+                .Add(_colorPanel)
+                .Add(_canvasPanel)
             );
     }
 
@@ -68,7 +70,7 @@ public class TextureEditor
         if (!EditorWindow.IsOpen())
             return;
         
-        _ui.Update();
+        Root.PropagateUpdate(EditorWindow, true);
     }
 
     public void Render()
@@ -81,8 +83,19 @@ public class TextureEditor
 
         _canvasPanel.RenderCanvas(ref queue);
         
-        GpuTexture _uiTexture = _ui.Render(queue);
+        Ui.RenderToTexture(Root, queue, EditorWindow.GetDisplayScale(), in _uiTexture);
+        
         queue.AddBlitPass(_uiTexture, _swapchainTexture, true);
         queue.Submit();
+    }
+    
+    private void OnWindowResized(Vector2 size)
+    {
+        _uiTexture.Resize((uint)size.x, (uint)size.y);
+    }
+
+    public void Close()
+    {
+        EditorWindow.OnWindowResized -= OnWindowResized;
     }
 }

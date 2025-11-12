@@ -138,6 +138,8 @@ public sealed class WindowSdl : Window
                 window.Width = sdlEvent.Window.Data1;
                 window.Height = sdlEvent.Window.Data2;
                 
+                window.OnWindowResized.Invoke(new Vector2(window.Width, window.Height));
+                
                 // I'm pretty sure I shouldn't be doing this but idk how to fix it otherwise.
                 SceneManager.UpdateScenes();
                 
