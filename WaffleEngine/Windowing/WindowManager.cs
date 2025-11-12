@@ -18,13 +18,11 @@ public static class WindowManager
 
     public static int WindowCount => _windows.Count;
 
-    public static IEnumerable<Window> Windows => _windows.Values;
-
     internal static void UpdateWindowInput()
     {
-        foreach (var window in Windows)
+        foreach (var window in _windows.Keys)
         {
-            window.WindowInput.Update();
+            _windows[window].WindowInput.Update();
         }
     }
 

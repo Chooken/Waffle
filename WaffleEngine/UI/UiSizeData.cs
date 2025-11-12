@@ -26,6 +26,25 @@ public struct UiSizeData
         MaxValue = value;
         return this;
     }
+    
+    public static bool operator ==(UiSizeData left, UiSizeData right)
+    {
+        return left.Equals(right);
+    }
+    
+    public static bool operator !=(UiSizeData left, UiSizeData right)
+    {
+        return !left.Equals(right);
+    }
+    
+    public bool Equals(UiSizeData other)
+    {
+        return
+            Value == other.Value &&
+            SizeType == other.SizeType &&
+            MinValue == other.MinValue &&
+            MaxValue == other.MaxValue;
+    }
 }
 
 public struct Range()

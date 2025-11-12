@@ -14,8 +14,8 @@ public sealed unsafe class Shader : IRenderBindable, IDisposable
 
     public IntPtr VertexHandle { get; private set; }
     public IntPtr FragmentHandle { get; private set; }
-    
-    public Pipeline? Pipeline { get; private set; }
+
+    public Pipeline Pipeline { get; private set; } = new Pipeline();
 
     public Shader(
         IntPtr vertexHandle,
@@ -37,20 +37,14 @@ public sealed unsafe class Shader : IRenderBindable, IDisposable
 
     private void Build()
     {
-        if (!Pipeline.TryBuild(PipelineSettings.Default, this, out Pipeline? pipeline))
+        if (!Pipeline.TryBuild(PipelineSettings.Default, this))
             WLog.Error("Failed to Build Pipeline");
-
-        Pipeline = pipeline;
     }
 
     public void SetPipeline(PipelineSettings settings)
     {
-        if (!Pipeline.TryBuild(settings, this, out Pipeline? pipeline))
+        if (!Pipeline.TryBuild(settings, this))
             WLog.Error("Failed to Build Pipeline");
-        
-        Pipeline?.Dispose();
-
-        Pipeline = pipeline;
     }
     
     public void ReleaseGpuShaders()
@@ -66,8 +60,8 @@ public sealed unsafe class Shader : IRenderBindable, IDisposable
             SDL.ReleaseGPUShader(Device.Handle, FragmentHandle);
             FragmentHandle = IntPtr.Zero;
         }
-        
-        Pipeline?.Dispose();
+
+        Pipeline.Dispose();
     }
 
     public void Dispose()
@@ -77,7 +71,7 @@ public sealed unsafe class Shader : IRenderBindable, IDisposable
 
     public void Bind(ImRenderPass pass, uint _ = 0)
     {
-        if (Pipeline is null)
+        if (Pipeline.Handle == IntPtr.Zero)
         {
             WLog.Error("Unable to Bind Shader as pipeline is not created.");
             return;

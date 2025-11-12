@@ -1,6 +1,6 @@
 namespace WaffleEngine.UI;
 
-public struct UiLayout
+public struct UiBounds
 {
     public float ContentWidth;
     public float ContentHeight;

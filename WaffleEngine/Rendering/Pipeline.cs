@@ -9,9 +9,12 @@ public sealed unsafe class Pipeline : IDisposable
 {
     internal IntPtr Handle;
 
-    public static bool TryBuild(PipelineSettings pipelineSettings, Shader shader, [NotNullWhen(true)] out Pipeline? pipeline)
+    public bool TryBuild(PipelineSettings pipelineSettings, Shader shader)
     {
-        pipeline = null;
+        if (Handle != IntPtr.Zero)
+        {
+            Dispose();
+        }
         
         SDL.GPUColorTargetDescription colorTargetDescription = new SDL.GPUColorTargetDescription();
         colorTargetDescription.Format = (SDL.GPUTextureFormat)pipelineSettings.ColorTargetFormat;
@@ -39,12 +42,14 @@ public sealed unsafe class Pipeline : IDisposable
         pipelineInfo.VertexShader = shader.VertexHandle;
         pipelineInfo.FragmentShader = shader.FragmentHandle;
         pipelineInfo.RasterizerState.FillMode = (SDL.GPUFillMode) pipelineSettings.FillMode;
-
-        pipeline = new();
-
+        
         if (pipelineSettings.VertexAttributes is null || pipelineSettings.VertexAttributes.Count == 0)
         {
-            pipeline.Handle = SDL.CreateGPUGraphicsPipeline(Device.Handle, pipelineInfo);
+            Handle = SDL.CreateGPUGraphicsPipeline(Device.Handle, pipelineInfo);
+            
+            if (Handle == IntPtr.Zero)
+                return false;
+            
             return true;
         }
 
@@ -78,7 +83,10 @@ public sealed unsafe class Pipeline : IDisposable
         pipelineInfo.VertexInputState.NumVertexBuffers = 1;
         pipelineInfo.VertexInputState.VertexBufferDescriptions = (IntPtr)(&vertexBufferDescription);
         
-        pipeline.Handle = SDL.CreateGPUGraphicsPipeline(Device.Handle, pipelineInfo);
+        Handle = SDL.CreateGPUGraphicsPipeline(Device.Handle, pipelineInfo);
+        
+        if (Handle == IntPtr.Zero)
+            return false;
 
         return true;
     }
@@ -90,27 +98,26 @@ public sealed unsafe class Pipeline : IDisposable
 
     public void Dispose()
     {
-        SDL.ReleaseGPUGraphicsPipeline(Device.Handle, Handle);
+        if (Handle != IntPtr.Zero)
+        {
+            SDL.ReleaseGPUGraphicsPipeline(Device.Handle, Handle);
+        }
     }
 }
 
-public struct PipelineSettings()
+public struct PipelineSettings
 {
-    public BlendOp ColorBlendOp = BlendOp.Add;
-    public BlendOp AlphaBlendOp = BlendOp.Add;
-    public BlendFactor SrcColorBlendFactor = BlendFactor.SrcAlpha;
-    public BlendFactor SrcAlphaBlendFactor = BlendFactor.SrcAlpha;
-    public BlendFactor DstColorBlendFactor = BlendFactor.OneMinusSrcAlpha;
-    public BlendFactor DstAlphaBlendFactor = BlendFactor.OneMinusSrcAlpha;
-    public List<VertexAttributeType>? VertexAttributes = new List<VertexAttributeType>()
-    {
-        VertexAttributeType.Float3,
-        VertexAttributeType.Float2,
-    };
-    public TextureFormat ColorTargetFormat = TextureFormat.B8G8R8A8Unorm;
-    public PrimitiveType PrimitiveType = PrimitiveType.TriangleList;
-    public FillMode FillMode = FillMode.Fill;
-    public VertexInputRate VertexInputRate = VertexInputRate.Vertex;
+    public BlendOp ColorBlendOp;
+    public BlendOp AlphaBlendOp;
+    public BlendFactor SrcColorBlendFactor;
+    public BlendFactor SrcAlphaBlendFactor;
+    public BlendFactor DstColorBlendFactor;
+    public BlendFactor DstAlphaBlendFactor;
+    public List<VertexAttributeType>? VertexAttributes;
+    public TextureFormat ColorTargetFormat;
+    public PrimitiveType PrimitiveType;
+    public FillMode FillMode;
+    public VertexInputRate VertexInputRate;
 
     public static PipelineSettings Default => new PipelineSettings
     {

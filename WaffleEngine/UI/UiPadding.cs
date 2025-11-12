@@ -37,4 +37,23 @@ public struct UiPadding
         Top = value.top,
         Bottom = value.bottom
     };
+    
+    public static bool operator ==(UiPadding left, UiPadding right)
+    {
+        return left.Equals(right);
+    }
+    
+    public static bool operator !=(UiPadding left, UiPadding right)
+    {
+        return !left.Equals(right);
+    }
+    
+    public bool Equals(UiPadding other)
+    {
+        return
+            Left == other.Left &&
+            Right == other.Right &&
+            Top == other.Top &&
+            Bottom == other.Bottom;
+    }
 }

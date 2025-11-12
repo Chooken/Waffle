@@ -27,7 +27,7 @@ public class GameScene : IScene
 
     private TextureEditor editor;
 
-    private Rect Root;
+    private UiElement Root;
     
     public bool OnSceneLoaded()
     {
@@ -56,6 +56,7 @@ public class GameScene : IScene
                 Color = Color.RGBA255(50, 50, 50, 255),
                 Padding = 16,
                 Gap = 16,
+                BorderRadius = 16,
             }).Add(
                 new Rect()
                 .Default(() => new UiSettings()
@@ -63,6 +64,7 @@ public class GameScene : IScene
                     Color = Color.RGBA255(255, 0, 0, 255),
                     Width = Ui.Fixed(100),
                     Height = Ui.Fixed(200),
+                    BorderRadius = 8,
                 })
                 .OnHover((ref UiSettings settings) =>
                 {
@@ -75,6 +77,7 @@ public class GameScene : IScene
                     Color = Color.RGBA255(0, 255, 0, 255),
                     Width = Ui.Grow.Min(50).Max(300),
                     Height = Ui.Grow,
+                    BorderRadius = 8,
                 })
             ).Add(
                 new Rect()
@@ -83,6 +86,7 @@ public class GameScene : IScene
                     Color = Color.RGBA255(0, 0, 255, 255),
                     Width = Ui.Grow,
                     Height = Ui.Percentage(75),
+                    BorderRadius = 8,
                 })
             );
         
@@ -197,13 +201,13 @@ public class GameScene : IScene
 
         var renderPass = queue.AddRenderPass(bgColorTargetSettings);
 
-        Root.CalculateFitSize(true);
-        Root.CalculatePercentages(true);
-        Root.GrowOrShrink(true);
-        Root.CalculateFitSize(false);
-        Root.CalculatePercentages(false);
-        Root.GrowOrShrink(false);
-        Root.CalculatePositions(Vector2.Zero);
+        Root.Layout.CalculateFitSize(Root, true);
+        Root.Layout.CalculatePercentages(Root, true);
+        Root.Layout.GrowChildren(Root, true);
+        Root.Layout.CalculateFitSize(Root, false);
+        Root.Layout.CalculatePercentages(Root, false);
+        Root.Layout.GrowChildren(Root, false);
+        Root.Layout.CalculatePositions(Root, Vector2.Zero);
         Root.Render(renderPass, new Vector2(_uiTexture.Width, _uiTexture.Height), _window.GetDisplayScale());
             
         renderPass.End();

@@ -23,4 +23,23 @@ public struct UiBorderRadius
         BottomLeft = value.bottomleft,
         BottomRight = value.bottomright,
     };
+    
+    public static bool operator ==(UiBorderRadius left, UiBorderRadius right)
+    {
+        return left.Equals(right);
+    }
+    
+    public static bool operator !=(UiBorderRadius left, UiBorderRadius right)
+    {
+        return !left.Equals(right);
+    }
+    
+    public bool Equals(UiBorderRadius other)
+    {
+        return
+            TopLeft == other.TopLeft &&
+            TopRight == other.TopRight &&
+            BottomLeft == other.BottomLeft &&
+            BottomRight == other.BottomRight;
+    }
 }
