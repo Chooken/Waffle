@@ -1,3 +1,4 @@
+using System.Data;
 using WaffleEngine.Rendering;
 using WaffleEngine.Rendering.Immediate;
 using WaffleEngine.UI.Old;
@@ -6,6 +7,42 @@ namespace WaffleEngine.UI;
 
 public class Rect : UiElement
 {
+    private RectSettings _rectSettings;
+    private RectSettings _newRectSettings;
+    
+    public delegate void ActionRef<T>(ref T item);
+    
+    private Func<RectSettings>? _default;
+    private ActionRef<RectSettings>? _onHoverEvent;
+    private ActionRef<RectSettings>? _onClickEvent;
+    private ActionRef<RectSettings>? _onHoldEvent;
+
+    public override void Update()
+    {
+        if (_newRectSettings != _rectSettings)
+        {
+            _rectSettings.MoveTowards(_newRectSettings);
+            Settings = _rectSettings.ToUiSettings();
+        }
+
+        _newRectSettings = _default?.Invoke() ?? default;
+    }
+    
+    public override void OnHover()
+    {
+        _onHoverEvent?.Invoke(ref _newRectSettings);
+    }
+
+    public override void OnClick()
+    {
+        _onClickEvent?.Invoke(ref _newRectSettings);
+    }
+
+    public override void OnHold()
+    {
+        _onHoldEvent?.Invoke(ref _newRectSettings);
+    }
+
     public override void Render(ImRenderPass renderPass, Vector2 renderSize, float scale)
     {
         if (!Assets.TryGetShader("builtin", "ui-rect", out var shader))
@@ -33,18 +70,18 @@ public class Rect : UiElement
         {
             Position = new AlignedVector3(Bounds.CalulatedPosition * scale),
             Size = new Vector2(Bounds.CalculatedWidth * scale, Bounds.CalculatedHeight * scale),
-            Color = Settings.Color,
+            Color = _rectSettings.Color,
             BorderRadius = new Vector4(
-                Settings.BorderRadius.BottomLeft * scale, 
-                Settings.BorderRadius.TopLeft * scale, 
-                Settings.BorderRadius.BottomRight * scale, 
-                Settings.BorderRadius.TopRight * scale),
-            BorderColor = Settings.BorderColor,
+                _rectSettings.BorderRadius.BottomLeft * scale, 
+                _rectSettings.BorderRadius.TopLeft * scale, 
+                _rectSettings.BorderRadius.BottomRight * scale, 
+                _rectSettings.BorderRadius.TopRight * scale),
+            BorderColor = _rectSettings.BorderColor,
             ScreenSize = renderSize,
-            BorderSize = Settings.BorderSize * scale,
+            BorderSize = _rectSettings.BorderSize * scale,
         };
         
-        if (Settings.Color.a != 0)
+        if (_rectSettings.Color.a != 0)
         {
             renderPass.SetUniforms(data);
             renderPass.Bind(shader);
@@ -55,5 +92,36 @@ public class Rect : UiElement
         {
             child.Render(renderPass, renderSize, scale);
         }
+    }
+    
+    public Rect Default(Func<RectSettings> defaultSettings)
+    {
+        _default += defaultSettings;
+        return this;
+    }
+
+    public Rect OnHover(ActionRef<RectSettings> hover)
+    {
+        _onHoverEvent += hover;
+        return this;
+    }
+
+    public Rect OnClick(ActionRef<RectSettings> click)
+    {
+        _onClickEvent += click;
+        return this;
+    }
+    
+    public Rect OnHold(ActionRef<RectSettings> hold)
+    {
+        _onHoldEvent += hold;
+        return this;
+    }
+
+    public Rect Add(UiElement child)
+    {
+        Children.Add(child);
+        child.Parent = this;
+        return this;
     }
 }

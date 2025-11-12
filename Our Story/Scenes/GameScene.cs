@@ -50,7 +50,7 @@ public class GameScene : IScene
 
         Root = 
             new Rect()
-            .Default(() => new UiSettings()
+            .Default(() => new RectSettings()
             {
                 Width = Ui.Fixed(800),
                 Color = Color.RGBA255(50, 50, 50, 255),
@@ -59,33 +59,33 @@ public class GameScene : IScene
                 BorderRadius = 16,
             }).Add(
                 new Rect()
-                .Default(() => new UiSettings()
+                .Default(() => new RectSettings()
                 {
                     Color = Color.RGBA255(255, 0, 0, 255),
                     Width = Ui.Fixed(100),
                     Height = Ui.Fixed(200),
                     BorderRadius = 8,
                 })
-                .OnHover((ref UiSettings settings) =>
+                .OnHover((ref RectSettings settings) =>
                 {
                     settings.Color = Color.RGBA255(255, 255, 0, 255);
                 })
             ).Add(
                 new Rect()
-                .Default(() => new UiSettings()
+                .Default(() => new RectSettings()
                 {
                     Color = Color.RGBA255(0, 255, 0, 255),
-                    Width = Ui.Grow.Min(50).Max(300),
+                    Width = Ui.Grow.Min(50).Max(200),
                     Height = Ui.Grow,
                     BorderRadius = 8,
                 })
             ).Add(
                 new Rect()
-                .Default(() => new UiSettings()
+                .Default(() => new RectSettings()
                 {
                     Color = Color.RGBA255(0, 0, 255, 255),
                     Width = Ui.Grow,
-                    Height = Ui.Percentage(75),
+                    Height = Ui.RatioOfX(1),
                     BorderRadius = 8,
                 })
             );

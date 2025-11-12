@@ -7,11 +7,6 @@ public static partial class Ui
 
 public struct Flex : ILayout
 {
-    /// <summary>
-    /// Calculates the fit size of the element.
-    /// </summary>
-    /// <param name="element">The Element to calculate.</param>
-    /// <param name="width">Is the Width or Height calculated.</param>
     public void CalculateFitSize(UiElement element, bool width)
     {
         if (width)
@@ -77,7 +72,12 @@ public struct Flex : ILayout
                     element.Bounds.CalculatedWidth = element.Settings.Width.Value;
                     break;
                 case UiSizeType.Fit or UiSizeType.Grow:
-                    element.Bounds.CalculatedWidth = MathF.Max(element.Bounds.ContentWidth + element.Settings.Padding.TotalHorizontal, element.Settings.Width.MinValue);
+                    element.Bounds.CalculatedWidth = 
+                        element.Settings.Width.ComputeValue(element.Bounds.ContentWidth + element.Settings.Padding.TotalHorizontal);
+                    break;
+                case UiSizeType.RatioOfX:
+                    element.Bounds.CalculatedWidth = 
+                        element.Settings.Width.ComputeValue(element.Bounds.ContentWidth + element.Settings.Padding.TotalHorizontal) * element.Settings.Width.Value;
                     break;
                 default:
                     element.Bounds.CalculatedWidth = 0;
@@ -86,26 +86,22 @@ public struct Flex : ILayout
         }
         else
         {
-            if (element.Settings.AspectRatio > 0)
+            switch (element.Settings.Height.SizeType)
             {
-                element.Bounds.CalculatedHeight = element.Bounds.CalculatedWidth * element.Settings.AspectRatio;
-            }
-            else
-            {
-                switch (element.Settings.Height.SizeType)
-                {
-                    case UiSizeType.Fixed:
-                        element.Bounds.CalculatedHeight = element.Settings.Height.Value;
-                        break;
-                    case UiSizeType.Fit or UiSizeType.Grow:
-                        element.Bounds.CalculatedHeight =
-                            MathF.Max(element.Bounds.ContentHeight + element.Settings.Padding.TotalVertical,
-                                element.Settings.Height.MinValue);
-                        break;
-                    default:
-                        element.Bounds.CalculatedHeight = 0;
-                        break;
-                }
+                case UiSizeType.Fixed:
+                    element.Bounds.CalculatedHeight = element.Settings.Height.Value;
+                    break;
+                case UiSizeType.Fit or UiSizeType.Grow:
+                    element.Bounds.CalculatedHeight =
+                        element.Settings.Height.ComputeValue(element.Bounds.ContentHeight + element.Settings.Padding.TotalVertical);
+                    break;
+                case UiSizeType.RatioOfX:
+                    // Not sure if I should make this manipulated by min, max and step.
+                    element.Bounds.CalculatedHeight = element.Bounds.CalculatedWidth * element.Settings.Height.Value;
+                    break;
+                default:
+                    element.Bounds.CalculatedHeight = 0;
+                    break;
             }
         }
     }
@@ -128,6 +124,8 @@ public struct Flex : ILayout
                         child.Bounds.CalculatedWidth = (element.Bounds.CalculatedWidth - element.Settings.Padding.TotalHorizontal) * child.Settings.Width.Value;
                         element.Bounds.ContentWidth = MathF.Max(element.Bounds.ContentWidth, child.Bounds.CalculatedWidth);
                     }
+
+                    child.Bounds.CalculatedWidth = child.Settings.Width.ComputeValue(child.Bounds.CalculatedWidth);
                 }
             }
             else
@@ -144,6 +142,8 @@ public struct Flex : ILayout
                         child.Bounds.CalculatedHeight = (element.Bounds.CalculatedHeight - element.Settings.Padding.TotalVertical) * child.Settings.Height.Value;
                         element.Bounds.ContentHeight += child.Bounds.CalculatedHeight;
                     }
+                    
+                    child.Bounds.CalculatedHeight = child.Settings.Height.ComputeValue(child.Bounds.CalculatedHeight);
                 }
             }
             
@@ -151,10 +151,6 @@ public struct Flex : ILayout
         }
     }
     
-    /// <summary>
-    /// Grows the children to fill the remainder.
-    /// </summary>
-    /// <param name="width">Is the Width or Height calculated.</param>
     public void GrowChildren(UiElement element, bool width)
     {
         float remainder = width ? 
@@ -203,21 +199,16 @@ public struct Flex : ILayout
                     {
                         if (element.Settings.Direction == UiDirection.LeftToRight)
                         {
-                            if (child.Bounds.CalculatedWidth + growValue > child.Settings.Width.MaxValue)
-                            {
-                                remainder -= child.Settings.Width.MaxValue - child.Bounds.CalculatedWidth;
-                                child.Bounds.CalculatedWidth = child.Settings.Width.MaxValue;
-                            }
-                            else
-                            {
-                                child.Bounds.CalculatedWidth += growValue;
-                                remainder -= growValue;
-                            }
+                            (float value, float overflow) =
+                                child.Settings.Width.GetRemainder(child.Bounds.CalculatedWidth + growValue);
+
+                            child.Bounds.CalculatedWidth = value;
+                            remainder -= growValue - overflow;
                         }
                         else
                         {
                             child.Bounds.CalculatedWidth +=
-                                element.Bounds.CalculatedWidth - element.Settings.Padding.TotalHorizontal - child.Bounds.CalculatedWidth;
+                                child.Settings.Width.ComputeValue(element.Bounds.CalculatedWidth - element.Settings.Padding.TotalHorizontal - child.Bounds.CalculatedWidth);
                         }
                     }
                 }
@@ -228,20 +219,15 @@ public struct Flex : ILayout
                         if (element.Settings.Direction == UiDirection.LeftToRight)
                         {
                             child.Bounds.CalculatedHeight +=
-                                element.Bounds.CalculatedHeight - element.Settings.Padding.TotalVertical - child.Bounds.CalculatedHeight;
+                                child.Settings.Height.ComputeValue(element.Bounds.CalculatedHeight - element.Settings.Padding.TotalVertical - child.Bounds.CalculatedHeight);
                         }
                         else
                         {
-                            if (child.Bounds.CalculatedHeight + growValue > child.Settings.Height.MaxValue)
-                            {
-                                remainder -= child.Settings.Height.MaxValue - child.Bounds.CalculatedHeight;
-                                child.Bounds.CalculatedHeight = child.Settings.Height.MaxValue;
-                            }
-                            else
-                            {
-                                child.Bounds.CalculatedHeight += growValue;
-                                remainder -= growValue;
-                            }
+                            (float value, float overflow) =
+                                child.Settings.Height.GetRemainder(child.Bounds.CalculatedHeight + growValue);
+
+                            child.Bounds.CalculatedHeight = value;
+                            remainder -= growValue - overflow;
                         }
                     }
                 }
@@ -254,10 +240,6 @@ public struct Flex : ILayout
         }
     }
     
-    /// <summary>
-    /// Sets the Rects Position and Calculates Child Positions.
-    /// </summary>
-    /// <param name="position">The position of the element.</param>
     public void CalculatePositions(UiElement element, Vector2 position)
     {
         element.Bounds.CalulatedPosition = position;

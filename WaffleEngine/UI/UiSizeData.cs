@@ -6,6 +6,7 @@ public enum UiSizeType
     Grow,
     Percentage,
     Fixed,
+    RatioOfX,
 }
 
 public struct UiSizeData
@@ -14,6 +15,7 @@ public struct UiSizeData
     public UiSizeType SizeType;
     public float MinValue;
     public float MaxValue;
+    public float StepValue;
 
     public UiSizeData Min(float value)
     {
@@ -25,6 +27,44 @@ public struct UiSizeData
     {
         MaxValue = value;
         return this;
+    }
+
+    public UiSizeData Step(float step)
+    {
+        StepValue = step;
+        return this;
+    }
+
+    public (float value, float remainder) GetRemainder(float value)
+    {
+        var newValue = ComputeValue(value);
+
+        return (newValue, value - newValue);
+    }
+
+    public float ComputeValue(float value)
+    {
+        if (value > MaxValue)
+        {
+            value = MaxValue;
+        }
+
+        if (StepValue > 0)
+        {
+            value = MathF.Floor(value / StepValue) * StepValue;
+        }
+        
+        if (value < MinValue)
+        {
+            value = MinValue;
+
+            if (StepValue > 0)
+            {
+                value = MathF.Ceiling(value / StepValue) * StepValue;
+            }
+        }
+
+        return value;
     }
     
     public static bool operator ==(UiSizeData left, UiSizeData right)
@@ -43,7 +83,8 @@ public struct UiSizeData
             Value == other.Value &&
             SizeType == other.SizeType &&
             MinValue == other.MinValue &&
-            MaxValue == other.MaxValue;
+            MaxValue == other.MaxValue &&
+            StepValue == other.StepValue;
     }
 }
 
@@ -83,6 +124,14 @@ public static partial class Ui
     {
         Value = value,
         SizeType = UiSizeType.Fixed,
+        MinValue = float.MinValue,
+        MaxValue = float.MaxValue,
+    };
+
+    public static UiSizeData RatioOfX(float value) => new UiSizeData
+    {
+        Value = value,
+        SizeType = UiSizeType.RatioOfX,
         MinValue = float.MinValue,
         MaxValue = float.MaxValue,
     };
