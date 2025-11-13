@@ -15,7 +15,7 @@ public abstract class Window : IDisposable
     
     public bool Resizeable { get; protected set; }
 
-    public Action<Vector2> OnWindowResized;
+    public Action<Vector2>? OnWindowResized;
 
     public abstract uint GetId();
         
@@ -34,4 +34,8 @@ public abstract class Window : IDisposable
     public abstract void Dispose();
 
     public abstract bool IsOpen();
+
+    public abstract void SetMinimumSize(int width, int height);
+    
+    public abstract void SetMaximumSize(int width, int height);
 }

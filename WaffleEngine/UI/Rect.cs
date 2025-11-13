@@ -102,6 +102,9 @@ public class Rect : UiElement
     public Rect Default(Func<RectSettings> defaultSettings)
     {
         _default += defaultSettings;
+        RectSettings = _default.Invoke();
+        _newRectSettings = RectSettings;
+        Settings = RectSettings.ToUiSettings();
         return this;
     }
 

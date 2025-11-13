@@ -1,3 +1,4 @@
+using System.Reflection.Metadata;
 using System.Runtime.CompilerServices;
 using SDL3;
 using WaffleEngine.Rendering;
@@ -124,6 +125,22 @@ public sealed class WindowSdl : Window
         return true;
     }
 
+    public override void SetMinimumSize(int width, int height)
+    {
+        if (!SDL.SetWindowMinimumSize(WindowPtr, width, height))
+        {
+            WLog.Error($"Failed to set minimum window size: {SDL.GetError()}");
+        }
+    }
+
+    public override void SetMaximumSize(int width, int height)
+    {
+        if (!SDL.SetWindowMaximumSize(WindowPtr, width, height))
+        {
+            WLog.Error($"Failed to set maximum window size: {SDL.GetError()}");
+        }
+    }
+    
     private static unsafe bool HandleWindowResize(IntPtr userdata, ref SDL.Event sdlEvent)
     {
         switch ((SDL.EventType)sdlEvent.Type)

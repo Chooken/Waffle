@@ -13,9 +13,7 @@ public class TextureEditor
     private Shader? CanvasBlitShader;
     
     private GpuTexture _swapchainTexture = new GpuTexture();
-    private GpuTexture _uiTexture;
-
-    private UiElement Root;
+    private UiRenderer _ui;
 
     private ToolPanel _toolPanel = new ToolPanel();
     private ColorPanel _colorPanel = new ColorPanel();
@@ -32,8 +30,6 @@ public class TextureEditor
             WindowManager.TryOpenWindow("Texture Editor", "texture_editor", 800, 600, out EditorWindow),
             "Texture Window Failed to Open."
         );
-
-        _uiTexture = new GpuTexture(EditorWindow);
 
         _canvasPanel = new CanvasPanel(EditorWindow, 16, 16);
         _canvasPanel.CanvasTool = new PenTool();
@@ -53,13 +49,12 @@ public class TextureEditor
         _toolPanel.ButtonColor = ElementColor;
         _toolPanel.ButtonClickColor = ElementPressColor;
 
-        EditorWindow.OnWindowResized += OnWindowResized;
-
-        Root = new Rect()
+        _ui = new UiRenderer(EditorWindow);
+        _ui.Root = new Rect()
             .Default(() => new RectSettings()
             {
-                Width = Ui.Fixed(EditorWindow.Width / EditorWindow.GetDisplayScale()),
-                Height = Ui.Fixed(EditorWindow.Height / EditorWindow.GetDisplayScale()),
+                Width = Ui.Grow,
+                Height = Ui.Grow,
                 Direction = UiDirection.TopToBottom,
                 Padding = 8,
                 Gap = 8,
@@ -75,6 +70,8 @@ public class TextureEditor
                 .Add(_colorPanel)
                 .Add(_canvasPanel)
             );
+        
+        _ui.SetEnforceWindowSize(true);
     }
 
     public void Update()
@@ -82,7 +79,7 @@ public class TextureEditor
         if (!EditorWindow.IsOpen())
             return;
         
-        Root.PropagateUpdate(EditorWindow, true);
+        _ui.UpdateUi();
     }
 
     public void Render()
@@ -94,20 +91,15 @@ public class TextureEditor
         queue.TryGetSwapchainTexture(EditorWindow, ref _swapchainTexture);
 
         _canvasPanel.RenderCanvas(ref queue);
+
+        var uiTexture = _ui.Render(queue);
         
-        Ui.RenderToTexture(Root, queue, EditorWindow.GetDisplayScale(), in _uiTexture);
-        
-        queue.AddBlitPass(_uiTexture, _swapchainTexture, true);
+        queue.AddBlitPass(uiTexture, _swapchainTexture, true);
         queue.Submit();
-    }
-    
-    private void OnWindowResized(Vector2 size)
-    {
-        _uiTexture.Resize((uint)size.x, (uint)size.y);
     }
 
     public void Close()
     {
-        EditorWindow.OnWindowResized -= OnWindowResized;
+        _ui.Dispose();
     }
 }
