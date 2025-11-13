@@ -5,20 +5,26 @@ namespace OurStory.Editor;
 
 public class ToolPanel
 {
-    public Rect Panel = new Rect()
-        .Default(() => new RectSettings()
-        {
-            Width = Ui.Grow,
-            Color = Color.RGBA255(22, 22, 22, 255),
-            Padding = 8,
-            Gap = 4,
-            BorderRadius = 8,
-        });
+    public Rect Panel;
 
     public Action<ICanvasTool> OnToolSelected;
 
+    public Color BackgroundColor;
+    public Color ButtonColor;
+    public Color ButtonClickColor;
+
     public ToolPanel()
     {
+        Panel = new Rect()
+            .Default(() => new RectSettings()
+            {
+                Width = Ui.Grow,
+                Color = BackgroundColor,
+                Padding = 8,
+                Gap = 4,
+                BorderRadius = 8,
+            });
+        
         Panel.Add(ToolButton(new PenTool(), "Pen"));
         Panel.Add(ToolButton(new ShadeTool(), "Shade"));
     }
@@ -28,7 +34,7 @@ public class ToolPanel
             .Default(() => new RectSettings()
             {
                 Padding = (8, 4),
-                Color = Color.RGBA255(40, 40, 40, 255),
+                Color = ButtonColor,
                 BorderRadius = 4,
             })
             .OnClick((ref RectSettings settings) =>
@@ -37,7 +43,7 @@ public class ToolPanel
             })
             .OnHold((ref RectSettings settings) =>
             {
-                settings.Color = Color.RGBA255(30, 30, 30, 255);
+                settings.Color = ButtonClickColor;
             });
             //.Add(new UIText(name)); Add Text
 

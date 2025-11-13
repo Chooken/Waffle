@@ -14,6 +14,8 @@ public class CanvasPanel
     public Vector2 CursorPosition;
     public Shader CanvasBlitShader;
     public ICanvasTool? CanvasTool;
+
+    public Color BorderColor;
     
     public CanvasPanel(Window window, uint width, uint height)
     {
@@ -25,8 +27,6 @@ public class CanvasPanel
                 Width = Ui.Grow,
                 Height = Ui.Grow,
                 Alignment = (UiAlignmentVertical.Center, UiAlignmentHorizontal.Center),
-                Color = Color.RGBA255(255,0,0,255),
-                BorderRadius = 20,
             })
             .Add(CanvasRect
                 .Default(() =>
@@ -39,7 +39,7 @@ public class CanvasPanel
                         Height = Ui.Grow,
                         BorderRadius = 40,
                         BorderSize = 4,
-                        BorderColor = Color.RGBA255(22, 22, 22, 255),
+                        BorderColor = BorderColor,
                     };
                 })
                 .OnHover((ref RectSettings settings) =>

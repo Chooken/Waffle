@@ -21,6 +21,11 @@ public class TextureEditor
     private ColorPanel _colorPanel = new ColorPanel();
     private CanvasPanel _canvasPanel;
     
+    public static Color BackgroundColor = Color.RGBA255(20, 20, 20, 255);
+    public static Color PanelColor = Color.RGBA255(30, 30, 30, 255);
+    public static Color ElementColor = Color.RGBA255(40, 40, 40, 255);
+    public static Color ElementPressColor = Color.RGBA255(25, 25, 25, 255);
+    
     public void Start()
     {
         Assert.True(
@@ -32,14 +37,21 @@ public class TextureEditor
 
         _canvasPanel = new CanvasPanel(EditorWindow, 16, 16);
         _canvasPanel.CanvasTool = new PenTool();
+        _canvasPanel.BorderColor = PanelColor;
+        
         _colorPanel.OnColorSelected += color =>
         {
             _canvasPanel.CursorColor = color;
         };
+        _colorPanel.BackgoundColor = PanelColor;
+        
         _toolPanel.OnToolSelected += tool =>
         {
             _canvasPanel.CanvasTool = tool;
         };
+        _toolPanel.BackgroundColor = PanelColor;
+        _toolPanel.ButtonColor = ElementColor;
+        _toolPanel.ButtonClickColor = ElementPressColor;
 
         EditorWindow.OnWindowResized += OnWindowResized;
 

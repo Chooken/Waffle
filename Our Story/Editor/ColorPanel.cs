@@ -8,6 +8,7 @@ public class ColorPanel
     public Color SelectedColor { get; private set; }
     public Rect Panel;
     public Action<Color> OnColorSelected;
+    public Color BackgoundColor;
 
     public static Rect Create()
     {
@@ -20,7 +21,8 @@ public class ColorPanel
         Panel = new Rect()
             .Default(() => new RectSettings()
             {
-                Color = Color.RGBA255(22, 22, 22, 255),
+                Height = Ui.Grow,
+                Color = BackgoundColor,
                 Direction = UiDirection.TopToBottom,
                 Padding = 20,
                 BorderRadius = 20,

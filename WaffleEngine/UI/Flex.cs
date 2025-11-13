@@ -55,12 +55,12 @@ public struct Flex : ILayout
         if (width)
         {
             if (element.Settings.Direction == UiDirection.LeftToRight)
-                element.Bounds.ContentWidth += (element.Children.Count - 1) * element.Settings.Gap;
+                element.Bounds.ContentWidth += MathF.Max((element.Children.Count - 1) * element.Settings.Gap, 0);
         }
         else
         {
             if (element.Settings.Direction == UiDirection.TopToBottom)
-                element.Bounds.ContentHeight += (element.Children.Count - 1) * element.Settings.Gap;
+                element.Bounds.ContentHeight += MathF.Max((element.Children.Count - 1) * element.Settings.Gap, 0);
         }
 
         // Set Calculated Size based off type.
@@ -149,6 +149,8 @@ public struct Flex : ILayout
             
             child.Layout.CalculatePercentages(child, width);
         }
+        
+        RecalculateContentSize(element, width);
     }
     
     public void GrowChildren(UiElement element, bool width)
@@ -158,10 +160,6 @@ public struct Flex : ILayout
             element.Bounds.CalculatedHeight - element.Settings.Padding.TotalVertical - element.Bounds.ContentHeight;
 
         int childGrowCount = 0;
-
-        // Implement Shrink Later
-        if (remainder < 0)
-            return;
         
         foreach (var child in element.Children)
         {
@@ -184,31 +182,76 @@ public struct Flex : ILayout
         bool fillPass = (width && element.Settings.Direction == UiDirection.TopToBottom) ||
                         (!width && element.Settings.Direction == UiDirection.LeftToRight);
 
-        while (remainder > 0 || fillPass)
+        if (remainder > 0)
         {
-            if (childGrowCount == 0 || element.Children.Count == 0)
-                break;
-            
-            float growValue = remainder / childGrowCount;
-            
+            while (remainder > 0 || fillPass)
+            {
+                if (childGrowCount == 0 || element.Children.Count == 0)
+                    break;
+
+                float growValue = remainder / childGrowCount;
+
+                foreach (var child in element.Children)
+                {
+                    if (width)
+                    {
+                        if (child.Settings.Width.SizeType == UiSizeType.Grow)
+                        {
+                            if (element.Settings.Direction == UiDirection.LeftToRight)
+                            {
+                                (float value, float overflow) =
+                                    child.Settings.Width.GetRemainder(child.Bounds.CalculatedWidth + growValue);
+
+                                child.Bounds.CalculatedWidth = value;
+                                remainder -= growValue - overflow;
+                            }
+                            else
+                            {
+                                child.Bounds.CalculatedWidth =
+                                    child.Settings.Width.ComputeValue(element.Bounds.CalculatedWidth -
+                                                                      element.Settings.Padding.TotalHorizontal);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (child.Settings.Height.SizeType == UiSizeType.Grow)
+                        {
+                            if (element.Settings.Direction == UiDirection.LeftToRight)
+                            {
+                                child.Bounds.CalculatedHeight =
+                                    child.Settings.Height.ComputeValue(element.Bounds.CalculatedHeight -
+                                                                       element.Settings.Padding.TotalVertical);
+                            }
+                            else
+                            {
+                                (float value, float overflow) =
+                                    child.Settings.Height.GetRemainder(child.Bounds.CalculatedHeight + growValue);
+
+                                child.Bounds.CalculatedHeight = value;
+                                remainder -= growValue - overflow;
+                            }
+                        }
+                    }
+                }
+
+                if (fillPass)
+                    break;
+            }
+        }
+        else
+        {
             foreach (var child in element.Children)
             {
                 if (width)
                 {
                     if (child.Settings.Width.SizeType == UiSizeType.Grow)
                     {
-                        if (element.Settings.Direction == UiDirection.LeftToRight)
+                        if (element.Settings.Direction == UiDirection.TopToBottom)
                         {
-                            (float value, float overflow) =
-                                child.Settings.Width.GetRemainder(child.Bounds.CalculatedWidth + growValue);
-
-                            child.Bounds.CalculatedWidth = value;
-                            remainder -= growValue - overflow;
-                        }
-                        else
-                        {
-                            child.Bounds.CalculatedWidth +=
-                                child.Settings.Width.ComputeValue(element.Bounds.CalculatedWidth - element.Settings.Padding.TotalHorizontal - child.Bounds.CalculatedWidth);
+                            child.Bounds.CalculatedWidth =
+                                child.Settings.Width.ComputeValue(element.Bounds.CalculatedWidth -
+                                                                  element.Settings.Padding.TotalHorizontal);
                         }
                     }
                 }
@@ -218,44 +261,21 @@ public struct Flex : ILayout
                     {
                         if (element.Settings.Direction == UiDirection.LeftToRight)
                         {
-                            child.Bounds.CalculatedHeight +=
-                                child.Settings.Height.ComputeValue(element.Bounds.CalculatedHeight - element.Settings.Padding.TotalVertical - child.Bounds.CalculatedHeight);
-                        }
-                        else
-                        {
-                            (float value, float overflow) =
-                                child.Settings.Height.GetRemainder(child.Bounds.CalculatedHeight + growValue);
-
-                            child.Bounds.CalculatedHeight = value;
-                            remainder -= growValue - overflow;
+                            child.Bounds.CalculatedHeight =
+                                child.Settings.Height.ComputeValue(element.Bounds.CalculatedHeight -
+                                                                   element.Settings.Padding.TotalVertical);
                         }
                     }
                 }
-
-                child.Layout.GrowChildren(child, width);
             }
-
-            if (fillPass)
-                break;
         }
-
-        // Recalculate Content Size.
-        
-        float contentSize = 0;
 
         foreach (var child in element.Children)
         {
-            contentSize += width ? child.Bounds.CalculatedWidth : child.Bounds.CalculatedHeight;
+            child.Layout.GrowChildren(child, width);
         }
-
-        if (width)
-        {
-            element.Bounds.ContentWidth = contentSize;
-        }
-        else
-        {
-            element.Bounds.ContentHeight = contentSize;
-        }
+        
+        RecalculateContentSize(element, width);
     }
     
     public void CalculatePositions(UiElement element, Vector2 position)
@@ -318,6 +338,48 @@ public struct Flex : ILayout
                     childOffset.y += child.Bounds.CalculatedHeight + element.Settings.Gap;
                     break;
             }
+        }
+    }
+
+    private void RecalculateContentSize(UiElement element, bool width)
+    {
+        float contentSize = 0;
+
+        foreach (var child in element.Children)
+        {
+            if (element.Settings.Direction == UiDirection.LeftToRight)
+            {
+                contentSize = width ? 
+                    contentSize + child.Bounds.CalculatedWidth : 
+                    MathF.Max(contentSize, child.Bounds.CalculatedHeight);
+            }
+            else
+            {
+                contentSize = width ? 
+                    MathF.Max(contentSize, child.Bounds.CalculatedWidth) : 
+                    contentSize + child.Bounds.CalculatedHeight;
+            }
+        }
+        
+        // Add Gap to Content Size
+        if (width)
+        {
+            if (element.Settings.Direction == UiDirection.LeftToRight)
+                contentSize += MathF.Max((element.Children.Count - 1) * element.Settings.Gap, 0);
+        }
+        else
+        {
+            if (element.Settings.Direction == UiDirection.TopToBottom)
+                contentSize += MathF.Max((element.Children.Count - 1) * element.Settings.Gap, 0);
+        }
+
+        if (width)
+        {
+            element.Bounds.ContentWidth = contentSize;
+        }
+        else
+        {
+            element.Bounds.ContentHeight = contentSize;
         }
     }
 }
