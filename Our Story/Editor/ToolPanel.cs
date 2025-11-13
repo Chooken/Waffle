@@ -1,4 +1,5 @@
 using WaffleEngine;
+using WaffleEngine.Text;
 using WaffleEngine.UI;
 
 namespace OurStory.Editor;
@@ -9,12 +10,15 @@ public class ToolPanel
 
     public Action<ICanvasTool> OnToolSelected;
 
+    public Font TextFont;
     public Color BackgroundColor;
     public Color ButtonColor;
     public Color ButtonClickColor;
 
-    public ToolPanel()
+    public ToolPanel(Font font)
     {
+        TextFont = font;
+        
         Panel = new Rect()
             .Default(() => new RectSettings()
             {
@@ -44,8 +48,8 @@ public class ToolPanel
             .OnHold((ref RectSettings settings) =>
             {
                 settings.Color = ButtonClickColor;
-            });
-            //.Add(new UIText(name)); Add Text
+            })
+            .Add(new Text(name, TextFont));
 
     public static implicit operator Rect(ToolPanel toolPanel) => toolPanel.Panel;
 }

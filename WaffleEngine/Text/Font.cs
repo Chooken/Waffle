@@ -24,5 +24,15 @@ public class Font
         TTF.SetFontWrapAlignment(Handle, TTF.HorizontalAlignment.Center);
     }
 
+    public void SetFontSize(float size)
+    {
+        TTF.SetFontSize(Handle, size);
+    }
+
+    public Font Copy()
+    {
+        return new Font(TTF.CopyFont(Handle));
+    }
+
     public static implicit operator IntPtr(Font font) => font.Handle;
 }

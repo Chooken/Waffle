@@ -7,4 +7,5 @@ public struct UiBounds
     public float CalculatedWidth;
     public float CalculatedHeight;
     public Vector2 CalculatedPosition;
+    public float Scale;
 }

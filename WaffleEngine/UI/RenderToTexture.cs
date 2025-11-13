@@ -16,7 +16,7 @@ public static partial class Ui
         };
 
         var renderPass = queue.AddRenderPass(bgColorTargetSettings);
-
+        
         root.Layout.CalculateFitSize(root, true);
         root.Layout.CalculatePercentages(root, true);
         root.Layout.GrowChildren(root, true);
@@ -25,7 +25,7 @@ public static partial class Ui
         root.Layout.GrowChildren(root, false);
         root.Layout.CalculatePositions(root, Vector2.Zero);
         root.PropagateRender(renderPass, new Vector2(texture.Width / scale, texture.Height / scale));
-        root.PropagateScale(scale);
+        root.ColapseScale();
             
         renderPass.End();
     }

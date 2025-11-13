@@ -46,6 +46,7 @@ public class UiRenderer
 
     public void UpdateUi()
     {
+        _windowRoot.PropagateScale(_window.GetDisplayScale());
         _windowRoot.PropagateUpdate(_window, true);
     }
 
@@ -70,6 +71,8 @@ public class UiRenderer
     {
         if (value && _root is not null)
         {
+            _root.PropagateScale(_window.GetDisplayScale());
+            _root.PropagateUpdate(_window, false);
             _root.Layout.CalculateFitSize(_root, true);
             _root.Layout.CalculateFitSize(_root, false);
             _window.SetMinimumSize((int)_root.Bounds.CalculatedWidth, (int)_root.Bounds.CalculatedHeight);

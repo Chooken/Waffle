@@ -65,19 +65,22 @@ public class Rect : UiElement
         _newRectSettings = _default?.Invoke() ?? default;
     }
     
-    public override void OnHover()
+    public override bool OnHover()
     {
         _onHoverEvent?.Invoke(ref _newRectSettings);
+        return true;
     }
 
-    public override void OnClick()
+    public override bool OnClick()
     {
         _onClickEvent?.Invoke(ref _newRectSettings);
+        return true;
     }
 
-    public override void OnHold()
+    public override bool OnHold()
     {
         _onHoldEvent?.Invoke(ref _newRectSettings);
+        return true;
     }
 
     public override void Render(ImRenderPass renderPass, Vector2 renderSize)

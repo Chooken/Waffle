@@ -34,7 +34,7 @@ public static class FontLoader
         }
         
         var font = new Font(TTF.OpenFontIO(SDL.IOFromFile(path, "r"), true, pointSize));
-
+        
         if (font.Handle == IntPtr.Zero)
         {
             WLog.Error("Font failed to load.");

@@ -1,6 +1,7 @@
 using WaffleEngine;
 using WaffleEngine.Rendering;
 using WaffleEngine.Rendering.Immediate;
+using WaffleEngine.Text;
 using WaffleEngine.UI;
 
 namespace OurStory.Editor;
@@ -15,7 +16,7 @@ public class TextureEditor
     private GpuTexture _swapchainTexture = new GpuTexture();
     private UiRenderer _ui;
 
-    private ToolPanel _toolPanel = new ToolPanel();
+    private ToolPanel _toolPanel;
     private ColorPanel _colorPanel = new ColorPanel();
     private CanvasPanel _canvasPanel;
     
@@ -28,8 +29,11 @@ public class TextureEditor
     {
         Assert.True(
             WindowManager.TryOpenWindow("Texture Editor", "texture_editor", 800, 600, out EditorWindow),
-            "Texture Window Failed to Open."
-        );
+            "Texture Window Failed to Open.");
+        
+        Assert.True(
+            FontLoader.TryGetFont("builtin/fonts/Nunito-Regular.ttf", 16, out Font font), 
+            "Failed to load font.");
 
         _canvasPanel = new CanvasPanel(EditorWindow, 16, 16);
         _canvasPanel.CanvasTool = new PenTool();
@@ -40,7 +44,8 @@ public class TextureEditor
             _canvasPanel.CursorColor = color;
         };
         _colorPanel.BackgoundColor = PanelColor;
-        
+
+        _toolPanel = new ToolPanel(font);
         _toolPanel.OnToolSelected += tool =>
         {
             _canvasPanel.CanvasTool = tool;
