@@ -1,40 +1,23 @@
-using WaffleEngine;
 using WaffleEngine.Rendering;
 using WaffleEngine.Rendering.Immediate;
-using WaffleEngine.UI;
 
-namespace OurStory;
+namespace WaffleEngine.UI;
 
-public struct UICrtData
+public class Image(GpuTexture texture) : Rect
 {
-    public AlignedVector3 Position;
-    public Vector2 Size;
-    public Vector4 Color;
-    public Vector4 BorderRadius;
-    public Vector4 BorderColor;
-    public Vector2 ScreenSize;
-    public Vector2 RefRes;
-    public float ChromaticAberration;
-    public float BorderSize;
-}
-
-public class RectCrt(GpuTexture texture, Vector2 resolution, float chromaticAberration) : Rect
-{
-    public Vector2 Resolution = resolution;
-    public float ChromaticAberration = chromaticAberration;
-    public GpuTexture Texture = texture;
-
-    private static Shader? _shader;
-
+    private Shader? _shader;
+    
     public override void Render(ImRenderPass renderPass, Vector2 renderSize)
     {
         if (_shader is null)
         {
-            if (!SetupCrtShader())
+            if (!SetupShader())
+            {
                 return;
+            }
         }
-
-        UICrtData data = new UICrtData()
+        
+        UIRectData data = new UIRectData()
         {
             Position = new AlignedVector3(Bounds.CalculatedPosition),
             Size = new Vector2(Bounds.CalculatedWidth, Bounds.CalculatedHeight),
@@ -46,22 +29,21 @@ public class RectCrt(GpuTexture texture, Vector2 resolution, float chromaticAber
                 RectSettings.BorderRadius.TopRight),
             BorderColor = RectSettings.BorderColor,
             ScreenSize = renderSize,
-            RefRes = Resolution,
-            ChromaticAberration = ChromaticAberration,
-            BorderSize = RectSettings.BorderSize
+            BorderSize = RectSettings.BorderSize,
         };
-
-        renderPass.SetUniforms(data);
-
-        renderPass.Bind(_shader);
-        renderPass.Bind(Texture);
-
-        renderPass.DrawPrimatives(6, 1, 0, 0);
+        
+        if (texture.Handle != IntPtr.Zero)
+        {
+            renderPass.SetUniforms(data);
+            renderPass.Bind(_shader);
+            renderPass.Bind(texture);
+            renderPass.DrawPrimatives(6, 1, 0, 0);
+        }
     }
-
-    private bool SetupCrtShader()
+    
+    private bool SetupShader()
     {
-        if (!Assets.TryGetShader("Core", "crt", out _shader))
+        if (!Assets.TryGetShader("builtin", "ui-rect-texture", out _shader))
         {
             Log.Error("Shader not found");
             return false;

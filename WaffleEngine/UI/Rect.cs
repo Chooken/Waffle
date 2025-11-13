@@ -30,13 +30,13 @@ public class Rect : UiElement
     
     private bool SetupShader()
     {
-        if (!Assets.TryGetShader("Core", "crt", out _shader))
+        if (!Assets.TryGetShader("builtin", "ui-rect", out _shader))
         {
             Log.Error("Shader not found");
             return false;
         }
         
-        _shader.SetPipeline(new PipelineSettings()
+        _shader.SetPipeline(new PipelineSettings
         {
             ColorBlendOp = BlendOp.Add,
             AlphaBlendOp = BlendOp.Add,
@@ -84,32 +84,11 @@ public class Rect : UiElement
     {
         if (_shader is null)
         {
-            if (SetupShader())
+            if (!SetupShader())
             {
                 return;
             }
         }
-        
-        if (!Assets.TryGetShader("builtin", "ui-rect", out var shader))
-        {
-            WLog.Error("Shader not found");
-            return;
-        }
-        
-        shader.SetPipeline(new PipelineSettings
-        {
-            ColorBlendOp = BlendOp.Add,
-            AlphaBlendOp = BlendOp.Add,
-            SrcColorBlendFactor = BlendFactor.SrcAlpha,
-            DstColorBlendFactor = BlendFactor.OneMinusSrcAlpha,
-            SrcAlphaBlendFactor = BlendFactor.SrcAlpha,
-            DstAlphaBlendFactor = BlendFactor.One,
-            ColorTargetFormat = TextureFormat.B8G8R8A8Unorm,
-            PrimitiveType = PrimitiveType.TriangleList,
-            FillMode = FillMode.Fill,
-            VertexInputRate = VertexInputRate.Vertex,
-            VertexAttributes = null,
-        });
         
         UIRectData data = new UIRectData()
         {
@@ -129,7 +108,7 @@ public class Rect : UiElement
         if (RectSettings.Color.a != 0)
         {
             renderPass.SetUniforms(data);
-            renderPass.Bind(shader);
+            renderPass.Bind(_shader);
             renderPass.DrawPrimatives(6, 1, 0, 0);
         }
     }
