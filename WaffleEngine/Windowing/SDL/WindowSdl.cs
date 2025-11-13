@@ -91,6 +91,8 @@ public sealed class WindowSdl : Window
         SDL.SetWindowTitle(WindowPtr, title);
     }
 
+    public override float GetDensity() => SDL.GetWindowPixelDensity(WindowPtr);
+    
     public override float GetDisplayScale() => SDL.GetWindowDisplayScale(WindowPtr);
 
     public override TextureFormat GetSwapchainTextureFormat()

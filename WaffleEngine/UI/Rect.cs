@@ -52,7 +52,7 @@ public class Rect : UiElement
         _onHoldEvent?.Invoke(ref _newRectSettings);
     }
 
-    public override void Render(ImRenderPass renderPass, Vector2 renderSize, float scale)
+    public override void Render(ImRenderPass renderPass, Vector2 renderSize)
     {
         if (!Assets.TryGetShader("builtin", "ui-rect", out var shader))
         {
@@ -77,17 +77,17 @@ public class Rect : UiElement
         
         UIRectData data = new UIRectData()
         {
-            Position = new AlignedVector3(Bounds.CalulatedPosition * scale),
-            Size = new Vector2(Bounds.CalculatedWidth * scale, Bounds.CalculatedHeight * scale),
+            Position = new AlignedVector3(Bounds.CalculatedPosition),
+            Size = new Vector2(Bounds.CalculatedWidth, Bounds.CalculatedHeight),
             Color = RectSettings.Color,
             BorderRadius = new Vector4(
-                RectSettings.BorderRadius.BottomLeft * scale, 
-                RectSettings.BorderRadius.TopLeft * scale, 
-                RectSettings.BorderRadius.BottomRight * scale, 
-                RectSettings.BorderRadius.TopRight * scale),
+                RectSettings.BorderRadius.BottomLeft, 
+                RectSettings.BorderRadius.TopLeft, 
+                RectSettings.BorderRadius.BottomRight, 
+                RectSettings.BorderRadius.TopRight),
             BorderColor = RectSettings.BorderColor,
             ScreenSize = renderSize,
-            BorderSize = RectSettings.BorderSize * scale,
+            BorderSize = RectSettings.BorderSize,
         };
         
         if (RectSettings.Color.a != 0)

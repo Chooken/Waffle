@@ -280,7 +280,7 @@ public struct Flex : ILayout
     
     public void CalculatePositions(UiElement element, Vector2 position)
     {
-        element.Bounds.CalulatedPosition = position;
+        element.Bounds.CalculatedPosition = position;
         
         // Get Start Position and Size Without Padding
         Vector2 childStartPosition = new Vector2(

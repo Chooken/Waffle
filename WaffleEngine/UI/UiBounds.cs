@@ -6,5 +6,5 @@ public struct UiBounds
     public float ContentHeight;
     public float CalculatedWidth;
     public float CalculatedHeight;
-    public Vector2 CalulatedPosition;
+    public Vector2 CalculatedPosition;
 }

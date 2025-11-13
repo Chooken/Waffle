@@ -19,9 +19,5 @@
         <Content Include="Assets/**" CopyToOutputDirectory="Always"  />
         <Content Include="runtimes/**" CopyToOutputDirectory="Always" />
     </ItemGroup>
-    
-    <ItemGroup>
-      <ClCompile Include="Assets\builtin\shaders\sprite.hlsl" />
-    </ItemGroup>
 
 </Project>

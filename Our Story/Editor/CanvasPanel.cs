@@ -63,7 +63,7 @@ public class CanvasPanel
     private void CalculateCursorPosition(Window window)
     {
         Vector2 position = window.WindowInput.MouseData.Position;
-        Vector3 uiPos = CanvasRect.Bounds.CalulatedPosition;
+        Vector3 uiPos = CanvasRect.Bounds.CalculatedPosition;
         Vector2 uiSize = new Vector2(CanvasRect.Bounds.CalculatedWidth, CanvasRect.Bounds.CalculatedHeight);
 
         CursorPosition = new Vector2(

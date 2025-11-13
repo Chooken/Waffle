@@ -25,6 +25,8 @@ public abstract class Window : IDisposable
 
     public abstract void SetTitle(string title);
 
+    public abstract float GetDensity();
+
     public abstract float GetDisplayScale();
 
     public abstract bool TryGetSwapchainTexture(ImQueue queue, ref GpuTexture texture);

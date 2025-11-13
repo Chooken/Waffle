@@ -24,7 +24,8 @@ public static partial class Ui
         root.Layout.CalculatePercentages(root, false);
         root.Layout.GrowChildren(root, false);
         root.Layout.CalculatePositions(root, Vector2.Zero);
-        root.PropagateRender(renderPass, new Vector2(texture.Width, texture.Height), scale);
+        root.PropagateRender(renderPass, new Vector2(texture.Width / scale, texture.Height / scale));
+        root.PropagateScale(scale);
             
         renderPass.End();
     }

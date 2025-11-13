@@ -16,17 +16,31 @@ public abstract class UiElement
     /// </summary>
     public ILayout Layout = Ui.Flex;
 
-    public void PropagateRender(ImRenderPass renderPass, Vector2 renderSize, float scale)
+    public void PropagateScale(float scale)
     {
-        Render(renderPass, renderSize, scale);
+        Bounds.CalculatedWidth *= scale;
+        Bounds.CalculatedHeight *= scale;
+        Bounds.CalculatedPosition *= scale;
+        Bounds.ContentWidth *= scale;
+        Bounds.ContentHeight *= scale;
         
         foreach (var child in Children)
         {
-            child.PropagateRender(renderPass, renderSize, scale);
+            child.PropagateScale(scale);
         }
     }
 
-    public abstract void Render(ImRenderPass renderPass, Vector2 renderSize, float scale);
+    public void PropagateRender(ImRenderPass renderPass, Vector2 renderSize)
+    {
+        Render(renderPass, renderSize);
+        
+        foreach (var child in Children)
+        {
+            child.PropagateRender(renderPass, renderSize);
+        }
+    }
+
+    public abstract void Render(ImRenderPass renderPass, Vector2 renderSize);
     
     public bool PropagateUpdate(Window window, bool propagateEvents)
     {
@@ -47,15 +61,15 @@ public abstract class UiElement
     
     public bool ProcessEvents(Window window)
     {
-        Vector2 b = new Vector2(Bounds.CalulatedPosition.x + Bounds.CalculatedWidth, Bounds.CalulatedPosition.y + Bounds.CalculatedHeight);
+        Vector2 b = new Vector2(Bounds.CalculatedPosition.x + Bounds.CalculatedWidth, Bounds.CalculatedPosition.y + Bounds.CalculatedHeight);
         Vector2 mousePos = window.WindowInput.MouseData.Position;
         
         UiSettings settings = Settings;
 
         bool captured = false;
 
-        if (MathF.Min(Bounds.CalulatedPosition.x, b.x) < mousePos.x && MathF.Min(Bounds.CalulatedPosition.y, b.y) < mousePos.y &&
-            MathF.Max(Bounds.CalulatedPosition.x, b.x) > mousePos.x && MathF.Max(Bounds.CalulatedPosition.y, b.y) > mousePos.y)
+        if (MathF.Min(Bounds.CalculatedPosition.x, b.x) < mousePos.x && MathF.Min(Bounds.CalculatedPosition.y, b.y) < mousePos.y &&
+            MathF.Max(Bounds.CalculatedPosition.x, b.x) > mousePos.x && MathF.Max(Bounds.CalculatedPosition.y, b.y) > mousePos.y)
         {
             if (window.WindowInput.MouseData.IsLeftPressed)
             {
