@@ -7,6 +7,8 @@ public class Rect : UiElement
 {
     protected RectSettings RectSettings;
     private RectSettings _newRectSettings;
+
+    private Shader? _shader;
     
     public delegate void ActionRef<T>(ref T item);
     
@@ -24,6 +26,32 @@ public class Rect : UiElement
         public Vector4 BorderColor;
         public Vector2 ScreenSize;
         public float BorderSize;
+    }
+    
+    private bool SetupShader()
+    {
+        if (!Assets.TryGetShader("Core", "crt", out _shader))
+        {
+            Log.Error("Shader not found");
+            return false;
+        }
+        
+        _shader.SetPipeline(new PipelineSettings()
+        {
+            ColorBlendOp = BlendOp.Add,
+            AlphaBlendOp = BlendOp.Add,
+            SrcColorBlendFactor = BlendFactor.SrcAlpha,
+            DstColorBlendFactor = BlendFactor.OneMinusSrcAlpha,
+            SrcAlphaBlendFactor = BlendFactor.SrcAlpha,
+            DstAlphaBlendFactor = BlendFactor.One,
+            ColorTargetFormat = TextureFormat.B8G8R8A8Unorm,
+            PrimitiveType = PrimitiveType.TriangleList,
+            FillMode = FillMode.Fill,
+            VertexInputRate = VertexInputRate.Vertex,
+            VertexAttributes = null,
+        });
+
+        return true;
     }
 
     public override void Update()
@@ -54,6 +82,14 @@ public class Rect : UiElement
 
     public override void Render(ImRenderPass renderPass, Vector2 renderSize)
     {
+        if (_shader is null)
+        {
+            if (SetupShader())
+            {
+                return;
+            }
+        }
+        
         if (!Assets.TryGetShader("builtin", "ui-rect", out var shader))
         {
             WLog.Error("Shader not found");

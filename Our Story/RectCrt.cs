@@ -24,13 +24,13 @@ public class RectCrt(GpuTexture texture, Vector2 resolution, float chromaticAber
     public float ChromaticAberration = chromaticAberration;
     public GpuTexture Texture = texture;
 
-    private static Material? _crtMaterial;
+    private static Shader? _shader;
 
     public override void Render(ImRenderPass renderPass, Vector2 renderSize)
     {
-        if (_crtMaterial is null)
+        if (_shader is null)
         {
-            if (!SetupCrtMaterials())
+            if (!SetupCrtShader())
                 return;
         }
 
@@ -53,21 +53,21 @@ public class RectCrt(GpuTexture texture, Vector2 resolution, float chromaticAber
 
         renderPass.SetUniforms(data);
 
-        renderPass.Bind(_crtMaterial);
+        renderPass.Bind(_shader);
         renderPass.Bind(Texture);
 
         renderPass.DrawPrimatives(6, 1, 0, 0);
     }
 
-    private bool SetupCrtMaterials()
+    private bool SetupCrtShader()
     {
-        if (!Assets.TryGetShader("Core", "crt", out var _crtShader))
+        if (!Assets.TryGetShader("Core", "crt", out _shader))
         {
             Log.Error("Shader not found");
             return false;
         }
         
-        _crtShader.SetPipeline(new PipelineSettings()
+        _shader.SetPipeline(new PipelineSettings()
         {
             ColorBlendOp = BlendOp.Add,
             AlphaBlendOp = BlendOp.Add,
@@ -81,8 +81,6 @@ public class RectCrt(GpuTexture texture, Vector2 resolution, float chromaticAber
             VertexInputRate = VertexInputRate.Vertex,
             VertexAttributes = null,
         });
-
-         _crtMaterial = new Material(_crtShader);
 
         return true;
     }
