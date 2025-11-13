@@ -28,7 +28,7 @@ namespace SDL3;
 
 public static partial class SDL
 {
-    private const string SDLLibrary = "SDL3.0";
+    private const string SDLLibrary = "SDL3";
     
     
     /// <summary>

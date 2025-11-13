@@ -56,7 +56,7 @@ public class UiRenderer
             return _uiTexture;
         }
         
-        Ui.RenderToTexture(_windowRoot, queue, _window.GetDisplayScale(), in _uiTexture);
+        Ui.RenderToTexture(_windowRoot, queue, 1f, in _uiTexture);
 
         return _uiTexture;
     }

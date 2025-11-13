@@ -25,5 +25,5 @@ namespace SDL3;
 
 public partial class ShaderCross
 {
-    private const string ShaderCrossLibrary = "SDL3_shadercross.0.0.0";
+    private const string ShaderCrossLibrary = "SDL3_shadercross";
 }
