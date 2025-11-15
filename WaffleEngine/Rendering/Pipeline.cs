@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using SDL3;
+using VYaml.Parser;
 using WaffleEngine.Rendering.Immediate;
 
 namespace WaffleEngine.Rendering;
@@ -105,7 +106,7 @@ public sealed unsafe class Pipeline : IDisposable
     }
 }
 
-public struct PipelineSettings
+public struct PipelineSettings : IDeserializable<PipelineSettings>
 {
     public BlendOp ColorBlendOp;
     public BlendOp AlphaBlendOp;
@@ -127,16 +128,133 @@ public struct PipelineSettings
         SrcAlphaBlendFactor = BlendFactor.SrcAlpha,
         DstColorBlendFactor = BlendFactor.OneMinusSrcAlpha,
         DstAlphaBlendFactor = BlendFactor.OneMinusSrcAlpha,
-        VertexAttributes = new List<VertexAttributeType>()
-        {
-            VertexAttributeType.Float3,
-            VertexAttributeType.Float2,
-        },
         ColorTargetFormat = TextureFormat.B8G8R8A8Unorm,
         PrimitiveType = PrimitiveType.TriangleList,
         FillMode = FillMode.Fill,
         VertexInputRate = VertexInputRate.Vertex,
     };
+    
+    public static bool TryDeserialize(ref YamlParser parser, out PipelineSettings pipelineSettings)
+    {
+        pipelineSettings = PipelineSettings.Default;
+
+        // Read MappingStart.
+        if (parser.CurrentEventType != ParseEventType.MappingStart)
+        {
+            WLog.Error("Pipeline Settings deserializer didn't start with a mapping.");
+            return false;
+        }
+
+        parser.Read();
+        
+        while (parser.CurrentEventType != ParseEventType.MappingEnd)
+        {
+            if (!parser.TryReadScalarAsString(out string? key))
+            {
+                return false;
+            }
+
+            if (key == "VertexAttributes")
+            {
+                if (parser.CurrentEventType != ParseEventType.SequenceStart)
+                    return false;
+                
+                if (!parser.Read())
+                    return false;
+
+                while (parser.CurrentEventType != ParseEventType.SequenceEnd)
+                {
+                    if (parser.CurrentEventType != ParseEventType.Scalar)
+                    {
+                        parser.SkipCurrentNode();
+                        continue;
+                    }
+
+                    if (!parser.TryReadScalarAsString(out var vertexAttributeString))
+                        return false;
+                    
+                    if (!Enum.TryParse(vertexAttributeString, out VertexAttributeType vertexAttributeType))
+                        return false;
+
+                    if (pipelineSettings.VertexAttributes is null)
+                        pipelineSettings.VertexAttributes = new List<VertexAttributeType>();
+                    
+                    pipelineSettings.VertexAttributes.Add(vertexAttributeType);
+                }
+                
+                // Read the sequence end.
+                parser.Read();
+                continue;
+            }
+            
+            if (!parser.TryReadScalarAsString(out string? value))
+            {
+                return false;
+            }
+
+            switch (key)
+            {
+                case "ColorBlendOp":
+                    if (!Enum.TryParse(value, out BlendOp blendOp))
+                        return false;
+                    pipelineSettings.ColorBlendOp = blendOp;
+                    break;
+                case "AlphaBlendOp":
+                    if (!Enum.TryParse(value, out blendOp))
+                        return false;
+                    pipelineSettings.AlphaBlendOp = blendOp;
+                    break;
+                case "SrcColorBlendFactor":
+                    if (!Enum.TryParse(value, out BlendFactor blendFactor))
+                        return false;
+                    pipelineSettings.SrcColorBlendFactor = blendFactor;
+                    break;
+                case "SrcAlphaBlendFactor":
+                    if (!Enum.TryParse(value, out blendFactor))
+                        return false;
+                    pipelineSettings.SrcAlphaBlendFactor = blendFactor;
+                    break;
+                case "DstColorBlendFactor":
+                    if (!Enum.TryParse(value, out blendFactor))
+                        return false;
+                    pipelineSettings.DstColorBlendFactor = blendFactor;
+                    break;
+                case "DstAlphaBlendFactor":
+                    if (!Enum.TryParse(value, out blendFactor))
+                        return false;
+                    pipelineSettings.DstAlphaBlendFactor = blendFactor;
+                    break;
+                case "ColorTargetFormat":
+                    if (!Enum.TryParse(value, out TextureFormat textureFormat))
+                        return false;
+                    pipelineSettings.ColorTargetFormat = textureFormat;
+                    break;
+                case "PrimitiveType":
+                    if (!Enum.TryParse(value, out PrimitiveType primitiveType))
+                        return false;
+                    pipelineSettings.PrimitiveType = primitiveType;
+                    break;
+                case "FillMode":
+                    if (!Enum.TryParse(value, out FillMode fillMode))
+                        return false;
+                    pipelineSettings.FillMode = fillMode;
+                    break;
+                case "VertexInputRate":
+                    if (!Enum.TryParse(value, out VertexInputRate vertexInputRate))
+                        return false;
+                    pipelineSettings.VertexInputRate = vertexInputRate;
+                    break;
+                default:
+                    WLog.Error($"Unknown field: {key} while parsing pipeline.");
+                    return false;
+            }
+        }
+
+        // Read the mapping end.
+        parser.Read();
+        
+        return true;
+    }
 }
 
 public enum VertexInputRate

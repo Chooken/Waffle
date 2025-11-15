@@ -61,7 +61,7 @@ public static class Assets
                 continue;
             }
             
-            string path = $"Assets/{request.Item1}";
+            string path = $"{AppDomain.CurrentDomain.BaseDirectory}/Assets/{request.Item1}";
 
             if (!Directory.Exists(path))
             {
@@ -72,7 +72,8 @@ public static class Assets
             }
 
             var textures = Directory.EnumerateFiles(path, "*.png", SearchOption.AllDirectories);
-            var shaders = Directory.EnumerateFiles(path, "*.hlsl", SearchOption.AllDirectories);
+            // var shaders = Directory.EnumerateFiles(path, "*.hlsl", SearchOption.AllDirectories);
+            var shaders = Directory.EnumerateDirectories(path + "/shaders");
 
             AssetBundle bundle = new AssetBundle();
             
@@ -94,7 +95,7 @@ public static class Assets
             
             foreach (var shaderPath in shaders)
             {
-                string name = Path.GetFileNameWithoutExtension(shaderPath);
+                string? name = Path.GetFileName(shaderPath);
 
                 if (bundle.Shaders.ContainsKey(name))
                 {

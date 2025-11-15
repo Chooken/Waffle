@@ -20,6 +20,7 @@ public sealed unsafe class Shader : IRenderBindable, IDisposable
     public Shader(
         IntPtr vertexHandle,
         IntPtr fragmentHandle,
+        PipelineSettings settings,
         uint samplers, 
         uint uniformBuffers, 
         uint storageBuffers, 
@@ -32,12 +33,7 @@ public sealed unsafe class Shader : IRenderBindable, IDisposable
         StorageBuffers = (int) storageBuffers;
         StorageTextures = (int) storageTextures;
         
-        Build();
-    }
-
-    private void Build()
-    {
-        if (!Pipeline.TryBuild(PipelineSettings.Default, this))
+        if (!Pipeline.TryBuild(settings, this))
             WLog.Error("Failed to Build Pipeline");
     }
 

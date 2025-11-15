@@ -44,6 +44,8 @@ public static class Yaml
         byte[] source = File.ReadAllBytes(path);
 
         var parser = YamlParser.FromBytes(source);
+        
+        parser.SkipHeader();
 
         if (!T.TryDeserialize(ref parser, out obj))
         {

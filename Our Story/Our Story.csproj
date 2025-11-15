@@ -8,6 +8,14 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+      <PlatformTarget>ARM64</PlatformTarget>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+      <PlatformTarget>ARM64</PlatformTarget>
+    </PropertyGroup>
+
     <ItemGroup>
       <ProjectReference Include="..\WaffleEngine\WaffleEngine.csproj" />
     </ItemGroup>
@@ -22,8 +30,10 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ClCompile Include="Assets\Core\shaders\crt.hlsl" />
-      <ClCompile Include="Assets\Core\shaders\texture_canvas.hlsl" />
+      <ClCompile Include="Assets\Core\shaders\crt\frag.hlsl" />
+      <ClCompile Include="Assets\Core\shaders\crt\vert.hlsl" />
+      <ClCompile Include="Assets\Core\shaders\texture_canvas\frag.hlsl" />
+      <ClCompile Include="Assets\Core\shaders\texture_canvas\vert.hlsl" />
     </ItemGroup>
 
 </Project>

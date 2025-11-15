@@ -10,5 +10,5 @@ public interface ISerializable
 
 public interface IDeserializable<T>
 {
-    public static abstract bool TryDeserialize(ref YamlParser parser, out T obj);
+    public static abstract bool TryDeserialize(ref YamlParser parser, out T? obj);
 }

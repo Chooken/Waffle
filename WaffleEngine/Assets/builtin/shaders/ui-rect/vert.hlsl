@@ -22,7 +22,7 @@ static const float2 vertexPos[4] = {
     {1.0f, 1.0f}
 };
 
-VertexOutput vsMain(uint vertexID : SV_VertexID) {
+VertexOutput main(uint vertexID : SV_VertexID) {
     uint spriteIndex = vertexID / 6;
     uint vert = triangleIndices[vertexID % 6];
     
@@ -39,26 +39,4 @@ VertexOutput vsMain(uint vertexID : SV_VertexID) {
     output.UV = vertexPos[vert];
     
     return output;
-}
-
-float roundedBoxSDF(float2 uv, float2 halfSize, float4 corners) {
-
-    // Select radius based on quadrant (r.xy = right, r.zw = left)
-    corners.xy = (uv.x < 0.0) ? corners.xy : corners.zw;
-    corners.x  = (uv.y > 0.0) ? corners.x  : corners.y;
-    
-    float radius = min(corners.x, min(halfSize.x, halfSize.y));
-    
-    // Calculate SDF
-    float2 position = abs(uv) - halfSize + radius;
-    return length(max(position, 0.0)) + min(max(position.x, position.y), 0.0) - radius;
-}
-
-float4 fsMain(VertexOutput input) : SV_Target {
-
-    float alpha = roundedBoxSDF((input.UV - 0.5f) * Size, Size * 0.5f, BorderRadius);
-    
-    float4 color = lerp(Color, BorderColor, saturate(alpha + BorderSize) * saturate(BorderSize));
-
-    return float4(color.rgb, color.a * -alpha);
 }

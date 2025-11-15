@@ -9,7 +9,7 @@ struct VertexToFragment {
     float4 Position : SV_Position;
 };
 
-VertexToFragment vsMain(uint vertexID : SV_VertexID) {
+VertexToFragment main(uint vertexID : SV_VertexID) {
 
     VertexToFragment output;
     
@@ -17,16 +17,4 @@ VertexToFragment vsMain(uint vertexID : SV_VertexID) {
     output.Position = float4(output.UV * float2(2, -2) + float2(-1, 1), 0, 1);
     
     return output;
-}
-
-float4 fsMain(float2 uv : TEXCOORD0) : SV_Target0 {
-    float4 color;
-    float2 pixelPos = floor(uv * TextureSize);
-
-    if (pixelPos.x == CursorPosition.x && pixelPos.y == CursorPosition.y)
-    {
-        color = SelectedColor;
-    }
-    
-    return float4(color.rgb / color.a, color.a);
 }

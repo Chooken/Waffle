@@ -28,8 +28,11 @@ namespace SDL3;
 
 public static partial class SDL
 {
+    #if PLATFORM_WINDOWS
     private const string SDLLibrary = "SDL3";
-    
+    #elif PLATFORM_OSX
+    private const string SDLLibrary = "SDL3.0";
+    #endif
     
     /// <summary>
     /// Converts a pointer to a structure of type <typeparamref name="T"/>.

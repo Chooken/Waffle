@@ -147,17 +147,22 @@ public sealed class WindowSdl : Window
     {
         switch ((SDL.EventType)sdlEvent.Type)
         {
-            case SDL.EventType.WindowPixelSizeChanged:
-
+            case SDL.EventType.WindowExposed:
+                
                 if (!WindowManager.TryGetWindowWithId(sdlEvent.Window.WindowID, out var window))
                 {
                     return true;
                 }
+
+                SDL.GetWindowSizeInPixels(((WindowSdl)window).WindowPtr, out var width, out var height);
+
+                if (window.Width == width && window.Height == height)
+                    return true;
                 
-                window.Width = sdlEvent.Window.Data1;
-                window.Height = sdlEvent.Window.Data2;
+                window.Width = width;
+                window.Height = height;
                 
-                window.OnWindowResized.Invoke(new Vector2(window.Width, window.Height));
+                window.OnWindowResized?.Invoke(new Vector2(window.Width, window.Height));
                 
                 // I'm pretty sure I shouldn't be doing this but idk how to fix it otherwise.
                 SceneManager.UpdateScenes();

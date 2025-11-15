@@ -25,7 +25,7 @@ public static class FontLoader
         if (_font.ContainsKey($"{name}_{pointSize}"))
             return true;
 
-        string path = $"Assets/{name}";
+        string path = $"{AppDomain.CurrentDomain.BaseDirectory}/Assets/{name}";
         
         if (!File.Exists(path))
         {
@@ -51,7 +51,7 @@ public static class FontLoader
         if (_font.TryGetValue($"{name}_{pointSize}", out font))
             return true;
         
-        string path = $"Assets/{name}";
+        string path = $"{AppDomain.CurrentDomain.BaseDirectory}/Assets/{name}";
 
         if (!File.Exists(path))
         {

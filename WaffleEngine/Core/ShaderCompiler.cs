@@ -2,6 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using SDL3;
 using WaffleEngine.Native;
 using WaffleEngine.Rendering;
+using WaffleEngine.Serializer;
 
 namespace WaffleEngine;
 
@@ -21,30 +22,54 @@ public static class ShaderCompiler
     public static bool CompileRasterShader(string shaderPath, [NotNullWhen(true)] out Shader? shader)
     {
         shader = null;
+
+        if (!File.Exists(shaderPath + "/frag.hlsl"))
+        {
+            WLog.Error($"Shader failed to compile: No frag.hlsl found in {shaderPath}");
+            return false;
+        }
         
-        string source = File.ReadAllText(shaderPath);
+        if (!File.Exists(shaderPath + "/vert.hlsl"))
+        {
+            WLog.Error($"Shader failed to compile: No frag.hlsl found in {shaderPath}");
+            return false;
+        }
+
+        PipelineSettings settings = PipelineSettings.Default;
+        
+        if (File.Exists(shaderPath + "/pipeline.yaml"))
+        {
+            if (!Yaml.TryDeserialize(shaderPath + "/pipeline.yaml", out settings))
+            {
+                WLog.Error($"Failed to deserialize pipeline in: {shaderPath}");
+                return false;
+            }
+        }
+        
+        string vertSource = File.ReadAllText(shaderPath + "/vert.hlsl");
+        string fragSource = File.ReadAllText(shaderPath + "/frag.hlsl");
         
         var vertexInfo = new ShaderCross.HLSLInfo()
         {
             EnableDebug = true,
-            Entrypoint = "vsMain",
+            Entrypoint = "main",
             IncludeDir = null,
             Name = null,
             Props = 0,
             ShaderStage = ShaderCross.ShaderStage.Vertex,
-            Source = source,
+            Source = vertSource,
             Defines = IntPtr.Zero,
         };
         
         var fragmentInfo = new ShaderCross.HLSLInfo()
         {
             EnableDebug = true,
-            Entrypoint = "fsMain",
+            Entrypoint = "main",
             IncludeDir = null,
             Name = null,
             Props = 0,
             ShaderStage = ShaderCross.ShaderStage.Fragment,
-            Source = source,
+            Source = fragSource,
             Defines = IntPtr.Zero,
         };
 
@@ -112,10 +137,11 @@ public static class ShaderCompiler
         shader = new Shader(
             vertexShader, 
             fragmentShader,
+            settings,
             metadata.Value.NumSamplers, 
             metadata.Value.NumUniformBuffers, 
             metadata.Value.NumStorageBuffers, 
-            metadata.Value.NumStorageTextures);
+            metadata.Value.NumStorageTextures);;
 
         return true;
     }

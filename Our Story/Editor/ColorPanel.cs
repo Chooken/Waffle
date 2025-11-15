@@ -24,8 +24,8 @@ public class ColorPanel
                 Height = Ui.Grow,
                 Color = BackgoundColor,
                 Direction = UiDirection.TopToBottom,
-                Padding = 20,
-                BorderRadius = 20,
+                Padding = 8,
+                BorderRadius = 8,
             });
 
         int rows = 17;
@@ -37,7 +37,7 @@ public class ColorPanel
                 .Default(() => new RectSettings()
                 {
                     Gap = 4,
-                    Padding = (0, 4),
+                    Padding = new UiPadding() { Bottom = 4 },
                 });
             
             for (int x = 0; x < columns; x++)
@@ -54,7 +54,6 @@ public class ColorPanel
             .Default(() => new RectSettings()
             {
                 Gap = 4,
-                Padding = (0, 4),
             });
 
         finalRect.Add(ColorToggle(new Color(1, 1, 1, 1)));

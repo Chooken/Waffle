@@ -16,11 +16,9 @@ static const float2 vertexPos[4] = {
     {1.0f, 1.0f}
 };
 
-Texture2D<float4> Texture : register(t0, space0);
-SamplerState Sampler : register(s0, space0);
 StructuredBuffer<Sprite> SpriteBuffer : register(t1, space0);
 
-VertexOutput vsMain(uint vertexID : SV_VertexID, uint instanceID : SV_InstanceID) {
+VertexOutput main(uint vertexID : SV_VertexID, uint instanceID : SV_InstanceID) {
     
     uint vert = triangleIndices[vertexID % 6];
 
@@ -36,8 +34,4 @@ VertexOutput vsMain(uint vertexID : SV_VertexID, uint instanceID : SV_InstanceID
     output.UV = vertexPos[vert];
     
     return output;
-}
-
-float4 fsMain(float2 uv : TEXCOORD0) : SV_Target {
-    return Texture.Sample(Sampler, uv);
 }

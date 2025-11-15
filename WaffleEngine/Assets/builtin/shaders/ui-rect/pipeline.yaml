@@ -1,0 +1,10 @@
+ColorBlendOp: Add
+AlphaBlendOp: Add
+SrcColorBlendFactor: SrcAlpha
+DstColorBlendFactor: OneMinusSrcAlpha
+SrcAlphaBlendFactor: SrcAlpha
+DstAlphaBlendFactor: One
+ColorTargetFormat: B8G8R8A8Unorm
+PrimitiveType: TriangleList
+FillMode: Fill
+VertexInputRate: Vertex

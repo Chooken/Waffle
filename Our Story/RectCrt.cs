@@ -63,7 +63,7 @@ public class RectCrt(GpuTexture texture, Vector2 resolution, float chromaticAber
     {
         if (!Assets.TryGetShader("Core", "crt", out _shader))
         {
-            Log.Error("Shader not found");
+            //Log.Error("Shader not found");
             return false;
         }
         

@@ -13,10 +13,7 @@ struct VertexOutput {
     float4 Position : SV_Position;
 };
 
-Texture2D<float4> Texture : register(t0, space2);
-SamplerState Sampler : register(s0, space2);
-
-VertexOutput vsMain(VertexInput input) {
+VertexOutput main(VertexInput input) {
     VertexOutput output;
     output.Position = float4(
         (float)((int)(input.Position.x + Position.x)) / RenderSize.x * 2 - 1, 
@@ -24,8 +21,4 @@ VertexOutput vsMain(VertexInput input) {
         Position.z, 1);
     output.UV = input.UV;
     return output;
-}
-
-float4 fsMain(float2 uv : TEXCOORD0) : SV_Target {
-    return Texture.Sample(Sampler, uv);
 }

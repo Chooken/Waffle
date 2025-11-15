@@ -116,6 +116,15 @@ public class AtlasedText
                 WLog.Error("Shader not found: BuiltinShaders/textured-quad");
                 return;
             }
+            
+            _shader.SetPipeline(PipelineSettings.Default with
+            {
+                VertexAttributes = new List<VertexAttributeType>()
+                {
+                    VertexAttributeType.Float3,
+                    VertexAttributeType.Float2
+                }
+            });
         }
         
         if (_empty)

@@ -7,6 +7,18 @@
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
+    <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
+        <DefineConstants>PLATFORM_WINDOWS</DefineConstants>
+    </PropertyGroup>
+    
+    <PropertyGroup Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' ">
+        <DefineConstants>PLATFORM_LINUX</DefineConstants>
+    </PropertyGroup>
+    
+    <PropertyGroup Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' ">
+        <DefineConstants>PLATFORM_OSX</DefineConstants>
+    </PropertyGroup>
+
     <ItemGroup>
       <PackageReference Include="Arch" Version="2.1.0" />
       <PackageReference Include="SDL3-CS.Native.Image" Version="3.2.4" />
@@ -18,6 +30,19 @@
     <ItemGroup>
         <Content Include="Assets/**" CopyToOutputDirectory="Always"  />
         <Content Include="runtimes/**" CopyToOutputDirectory="Always" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <ClCompile Include="Assets\builtin\shaders\blit\frag.hlsl" />
+      <ClCompile Include="Assets\builtin\shaders\blit\vert.hlsl" />
+      <ClCompile Include="Assets\builtin\shaders\sprite\frag.hlsl" />
+      <ClCompile Include="Assets\builtin\shaders\sprite\vert.hlsl" />
+      <ClCompile Include="Assets\builtin\shaders\textured-quad\frag.hlsl" />
+      <ClCompile Include="Assets\builtin\shaders\textured-quad\vert.hlsl" />
+      <ClCompile Include="Assets\builtin\shaders\ui-rect-texture\frag.hlsl" />
+      <ClCompile Include="Assets\builtin\shaders\ui-rect-texture\vert.hlsl" />
+      <ClCompile Include="Assets\builtin\shaders\ui-rect\frag.hlsl" />
+      <ClCompile Include="Assets\builtin\shaders\ui-rect\vert.hlsl" />
     </ItemGroup>
 
 </Project>
