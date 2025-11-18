@@ -22,7 +22,7 @@ public class Canvas
     public Canvas(uint width, uint height)
     {
         Assert.True(
-            Assets.TryGetShader("Core", "texture_canvas", out _canvasBlitShader),
+            Assets.TryGetShader("Core", "ui-canvas", out _canvasBlitShader),
             "Canvas Blit Shader not found."
         );
         

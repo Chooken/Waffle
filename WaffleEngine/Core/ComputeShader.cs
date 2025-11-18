@@ -7,36 +7,6 @@ namespace WaffleEngine;
 public class ComputeShader : IComputeBindable
 {
     /// <summary>
-    /// The number of samplers defined in the shader.
-    /// </summary>
-    public uint Samplers;
-        
-    /// <summary>
-    /// The number of readonly storage textures defined in the shader. 
-    /// </summary>
-    public uint ReadOnlyStorageTextures;
-        
-    /// <summary>
-    /// The number of readonly storage buffers defined in the shader.
-    /// </summary>
-    public uint ReadOnlyStorageBuffers;
-        
-    /// <summary>
-    /// The number of read-write storage textures defined in the shader.
-    /// </summary>
-    public uint ReadWriteStorageTextures;
-        
-    /// <summary>
-    /// The number of read-write storage buffers defined in the shader.
-    /// </summary>
-    public uint ReadWriteStorageBuffers;
-        
-    /// <summary>
-    /// The number of uniform buffers defined in the shader.
-    /// </summary>
-    public uint UniformBuffers;
-        
-    /// <summary>
     /// The number of threads in the X dimension.
     /// </summary>
     public uint ThreadCountX;
@@ -56,23 +26,11 @@ public class ComputeShader : IComputeBindable
 
     public ComputeShader(
         IntPtr handle,
-        uint samplers, 
-        uint readOnlyStorageTextures,
-        uint readWriteStorageTextures,
-        uint uniformBuffers, 
-        uint readOnlyStorageBuffers, 
-        uint readWriteStorageBuffers,
         uint threadCountX,
         uint threadCountY,
         uint threadCountZ)
     {
         Handle = handle;
-        Samplers = samplers;
-        ReadOnlyStorageTextures = readOnlyStorageTextures;
-        ReadWriteStorageTextures = readWriteStorageTextures;
-        UniformBuffers = uniformBuffers;
-        ReadOnlyStorageBuffers = readOnlyStorageBuffers;
-        ReadWriteStorageBuffers = readWriteStorageBuffers;
         ThreadCountX = threadCountX;
         ThreadCountY = threadCountY;
         ThreadCountZ = threadCountZ;

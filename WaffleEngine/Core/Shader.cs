@@ -7,11 +7,6 @@ namespace WaffleEngine;
 
 public sealed unsafe class Shader : IRenderBindable, IDisposable
 {
-    public int Samplers { get; private set; }
-    public int UniformBuffers { get; private set; }
-    public int StorageBuffers { get; private set; }
-    public int StorageTextures { get; private set; }
-
     public IntPtr VertexHandle { get; private set; }
     public IntPtr FragmentHandle { get; private set; }
 
@@ -20,18 +15,10 @@ public sealed unsafe class Shader : IRenderBindable, IDisposable
     public Shader(
         IntPtr vertexHandle,
         IntPtr fragmentHandle,
-        PipelineSettings settings,
-        uint samplers, 
-        uint uniformBuffers, 
-        uint storageBuffers, 
-        uint storageTextures)
+        PipelineSettings settings)
     {
         VertexHandle = vertexHandle;
         FragmentHandle = fragmentHandle;
-        Samplers = (int) samplers;
-        UniformBuffers = (int) uniformBuffers;
-        StorageBuffers = (int) storageBuffers;
-        StorageTextures = (int) storageTextures;
         
         if (!Pipeline.TryBuild(settings, this))
             WLog.Error("Failed to Build Pipeline");

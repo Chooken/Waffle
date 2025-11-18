@@ -1,6 +1,9 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using VYaml.Parser;
+using WaffleEngine.Rendering;
+using WaffleEngine.Serializer;
 using ThreadState = System.Threading.ThreadState;
 
 namespace WaffleEngine;
@@ -70,53 +73,120 @@ public static class Assets
                 request.Item2.IsFinished = true;
                 continue;
             }
-
-            var textures = Directory.EnumerateFiles(path, "*.png", SearchOption.AllDirectories);
-            // var shaders = Directory.EnumerateFiles(path, "*.hlsl", SearchOption.AllDirectories);
-            var shaders = Directory.EnumerateDirectories(path + "/shaders");
-
+            
             AssetBundle bundle = new AssetBundle();
-            
-            foreach (var texturePath in textures)
-            {
-                string name = Path.GetFileNameWithoutExtension(texturePath);
 
-                if (bundle.Textures.ContainsKey(name))
-                {
-                    WLog.Warning($"Bundle \"{request.Item1}\" contains duplicate texture with name: {name}");
-                    continue;
-                }
-                
-                Texture texture = new Texture(texturePath);
-                bundle.Textures.Add(
-                    Path.GetFileNameWithoutExtension(texturePath), 
-                    texture);
-            }
-            
-            foreach (var shaderPath in shaders)
-            {
-                string? name = Path.GetFileName(shaderPath);
-
-                if (bundle.Shaders.ContainsKey(name))
-                {
-                    WLog.Warning($"Bundle \"{request.Item1}\" contains duplicate texture with name: {name}");
-                    continue;
-                }
-
-                if (!ShaderCompiler.CompileRasterShader(shaderPath, out var shader))
-                {
-                    continue;
-                }
-                
-                bundle.Shaders.Add(
-                    name,
-                    shader);
-            }
+            LoadTextureFiles(path, ref bundle);
+            LoadShaderFiles(path, ref bundle);
 
             _assetBundles.TryAdd(request.Item1, bundle);
 
             request.Item2.Failed = false;
             request.Item2.IsFinished = true;
+        }
+    }
+
+    private static void LoadTextureFiles(string path, ref AssetBundle bundle)
+    {
+        var textures = Directory.EnumerateFiles(path, "*.png", SearchOption.AllDirectories);
+            
+        foreach (var texturePath in textures)
+        {
+            string name = Path.GetFileNameWithoutExtension(texturePath);
+
+            if (bundle.Textures.ContainsKey(name))
+            {
+                WLog.Warning($"Bundle contains duplicate texture with name: {name}");
+                continue;
+            }
+                
+            Texture texture = new Texture(texturePath);
+            bundle.Textures.Add(
+                Path.GetFileNameWithoutExtension(texturePath), 
+                texture);
+        }
+    }
+
+    private static void LoadShaderFiles(string path, ref AssetBundle bundle)
+    {
+        var vertexShaders = Directory.EnumerateFiles(path, "*.vert.hlsl", SearchOption.AllDirectories);
+        var fragmentShaders = Directory.EnumerateFiles(path, "*.frag.hlsl", SearchOption.AllDirectories);
+        var shaders = Directory.EnumerateFiles(path, "*.shader.yaml", SearchOption.AllDirectories);
+
+        foreach (var vertexShaderPath in vertexShaders)
+        {
+            // Gets rid of .vert.hlsl and then gets the filename in the path.
+            string name = Path.GetFileName(vertexShaderPath[..^10]);
+
+            if (bundle.Shaders.ContainsKey(name))
+            {
+                WLog.Warning($"Bundle contains duplicate texture with name: {name}");
+                continue;
+            }
+
+            if (!ShaderCompiler.CompileVertexShader(vertexShaderPath, "main", out var vertexShader))
+            {
+                continue;
+            }
+                
+            bundle.VertexPrograms.Add(
+                name,
+                vertexShader);
+        }
+        
+        foreach (var fragmentShaderPath in fragmentShaders)
+        {
+            // Gets rid of .frag.hlsl and then gets the filename in the path.
+            string name = Path.GetFileName(fragmentShaderPath[..^10]);
+
+            if (bundle.Shaders.ContainsKey(name))
+            {
+                WLog.Warning($"Bundle contains duplicate texture with name: {name}");
+                continue;
+            }
+
+            if (!ShaderCompiler.CompileFragmentShader(fragmentShaderPath, "main", out var fragmentShader))
+            {
+                continue;
+            }
+                
+            bundle.FragmentPrograms.Add(
+                name,
+                fragmentShader);
+        }
+
+        foreach (var shaderPath in shaders)
+        {
+            // Gets rid of .shader.yaml and then gets the filename in the path.
+            string name = Path.GetFileName(shaderPath[..^12]);
+
+            if (bundle.Shaders.ContainsKey(name))
+            {
+                WLog.Warning($"Bundle contains duplicate texture with name: {name}");
+                continue;
+            }
+
+            if (!Yaml.TryDeserialize(shaderPath, out ShaderInfo shaderInfo))
+            {
+                WLog.Error($"Failed to deserialize: {shaderPath} as ShaderInfo");
+                continue;
+            }
+
+            if (!bundle.VertexPrograms.TryGetValue(shaderInfo.VertexName!, out var vertexProgram))
+            {
+                WLog.Error($"Failed to find vertex program: {shaderInfo.VertexName} for shader {name}");
+                continue;
+            }
+            
+            if (!bundle.FragmentPrograms.TryGetValue(shaderInfo.FragmentName!, out var fragmentProgram))
+            {
+                WLog.Error($"Failed to find fragment program: {shaderInfo.FragmentName} for shader {name}");
+                continue;
+            }
+
+            var shader = new Shader(vertexProgram.Handle, fragmentProgram.Handle, shaderInfo.PipelineSettings);
+            
+            bundle.Shaders.Add(name, shader);
         }
     }
 
@@ -209,6 +279,8 @@ public class AssetLoadRequest
 public struct AssetBundle()
 {
     public Dictionary<string, Texture> Textures = new ();
+    public Dictionary<string, ShaderCompiler.ShaderProgram> VertexPrograms = new();
+    public Dictionary<string, ShaderCompiler.ShaderProgram> FragmentPrograms = new();
     public Dictionary<string, Shader> Shaders = new ();
 
     public bool TryGetTexture(string textureName, [NotNullWhen(true)] out Texture? texture)
@@ -244,5 +316,68 @@ public struct AssetBundle()
         {
             shader.Dispose();
         }
+    }
+}
+
+public struct ShaderInfo : IDeserializable<ShaderInfo>
+{
+    public string? VertexName;
+    public string? FragmentName;
+    public PipelineSettings PipelineSettings;
+    
+    public static bool TryDeserialize(ref YamlParser parser, out ShaderInfo shaderInfo)
+    {
+        shaderInfo = new();
+        
+        if (parser.CurrentEventType != ParseEventType.MappingStart)
+        {
+            WLog.Error("ShaderInfo deserializer didn't start with a mapping.");
+            return false;
+        }
+
+        parser.Read();
+
+        while (parser.CurrentEventType != ParseEventType.MappingEnd)
+        {
+            if (!parser.TryReadScalarAsString(out var label))
+            {
+                return false;
+            }
+            
+            switch (label)
+            {
+                case "Vertex":
+                    if (!parser.TryReadScalarAsString(out var vertexName))
+                    {
+                        return false;
+                    }
+                    shaderInfo.VertexName = vertexName;
+                    break;
+                
+                case "Fragment":
+                    if (!parser.TryReadScalarAsString(out var fragmentName))
+                    {
+                        return false;
+                    }
+                    shaderInfo.FragmentName = fragmentName;
+                    break;
+                
+                case "Pipeline":
+                    if (!PipelineSettings.TryDeserialize(ref parser, out var pipelineSettings))
+                    {
+                        return false;
+                    }
+                    shaderInfo.PipelineSettings = pipelineSettings;
+                    break;
+                default:
+                    WLog.Error($"Shader Invalid Parameter: {label}");
+                    return false;
+            }
+        }
+        
+        // Read the mapping end.
+        parser.Read();
+
+        return true;
     }
 }

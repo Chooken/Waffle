@@ -33,16 +33,15 @@
     </ItemGroup>
     
     <ItemGroup>
-      <ClCompile Include="Assets\builtin\shaders\blit\frag.hlsl" />
-      <ClCompile Include="Assets\builtin\shaders\blit\vert.hlsl" />
-      <ClCompile Include="Assets\builtin\shaders\sprite\frag.hlsl" />
-      <ClCompile Include="Assets\builtin\shaders\sprite\vert.hlsl" />
-      <ClCompile Include="Assets\builtin\shaders\textured-quad\frag.hlsl" />
-      <ClCompile Include="Assets\builtin\shaders\textured-quad\vert.hlsl" />
-      <ClCompile Include="Assets\builtin\shaders\ui-rect-texture\frag.hlsl" />
-      <ClCompile Include="Assets\builtin\shaders\ui-rect-texture\vert.hlsl" />
-      <ClCompile Include="Assets\builtin\shaders\ui-rect\frag.hlsl" />
-      <ClCompile Include="Assets\builtin\shaders\ui-rect\vert.hlsl" />
+      <ClCompile Include="Assets\builtin\shaders\blit\blit.frag.hlsl" />
+      <ClCompile Include="Assets\builtin\shaders\blit\blit.vert.hlsl" />
+      <ClCompile Include="Assets\builtin\shaders\sprite\sprite.frag.hlsl" />
+      <ClCompile Include="Assets\builtin\shaders\sprite\sprite.vert.hlsl" />
+      <ClCompile Include="Assets\builtin\shaders\textured-quad\textured-quad.frag.hlsl" />
+      <ClCompile Include="Assets\builtin\shaders\textured-quad\textured-quad.vert.hlsl" />
+      <ClCompile Include="Assets\builtin\shaders\ui-rect-texture\ui-image.frag.hlsl" />
+      <ClCompile Include="Assets\builtin\shaders\ui-rect\ui-rect.frag.hlsl" />
+      <ClCompile Include="Assets\builtin\shaders\ui-rect\ui-rect.vert.hlsl" />
     </ItemGroup>
 
 </Project>

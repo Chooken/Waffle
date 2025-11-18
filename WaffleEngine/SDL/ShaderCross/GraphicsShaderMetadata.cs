@@ -22,6 +22,7 @@
 #endregion
 
 using System.Runtime.InteropServices;
+using WaffleEngine.Native;
 
 namespace SDL3;
 
@@ -53,7 +54,7 @@ public partial class ShaderCross
         /// <summary>
         /// The inputs defined in the shader.
         /// </summary>
-        public IntPtr Inputs;
+        public NativePtr<IOVarMetadata> Inputs;
         
         /// <summary>
         /// The number of outputs defined in the shader.
@@ -63,6 +64,6 @@ public partial class ShaderCross
         /// <summary>
         /// The outputs defined in the shader.
         /// </summary>
-        public IntPtr Outputs;
+        public NativePtr<IOVarMetadata> Outputs;
     }
 }

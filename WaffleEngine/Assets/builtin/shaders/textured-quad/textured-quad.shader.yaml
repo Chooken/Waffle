@@ -1,0 +1,16 @@
+Vertex: textured-quad
+Fragment: textured-quad
+Pipeline:
+  ColorBlendOp: Add
+  AlphaBlendOp: Add
+  SrcColorBlendFactor: SrcAlpha
+  DstColorBlendFactor: OneMinusSrcAlpha
+  SrcAlphaBlendFactor: SrcAlpha
+  DstAlphaBlendFactor: OneMinusSrcAlpha
+  ColorTargetFormat: B8G8R8A8Unorm
+  PrimitiveType: TriangleList
+  FillMode: Fill
+  VertexInputRate: Vertex
+  VertexAttributes:
+    - Float3
+    - Float2

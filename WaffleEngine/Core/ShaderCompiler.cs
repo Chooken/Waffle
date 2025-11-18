@@ -19,134 +19,92 @@ public static class ShaderCompiler
         return true;
     }
 
-    public static bool CompileRasterShader(string shaderPath, [NotNullWhen(true)] out Shader? shader)
+    public struct ShaderProgram
     {
-        shader = null;
+        public IntPtr Handle;
+    }
 
-        if (!File.Exists(shaderPath + "/frag.hlsl"))
+    public static bool CompileVertexShader(string shaderPath, string entrypoint, out ShaderProgram compiledShader)
+    {
+        compiledShader = new ();
+
+        if (!File.Exists(shaderPath))
         {
-            WLog.Error($"Shader failed to compile: No frag.hlsl found in {shaderPath}");
+            WLog.Error($"Shader failed to compile: file not found at {shaderPath}");
             return false;
         }
         
-        if (!File.Exists(shaderPath + "/vert.hlsl"))
+        string vertSource = File.ReadAllText(shaderPath);
+
+        return CompileHlslToShader(vertSource, entrypoint, ShaderCross.ShaderStage.Vertex, true, out compiledShader);
+    }
+    
+    public static bool CompileFragmentShader(string shaderPath, string entrypoint, out ShaderProgram compiledShader)
+    {
+        compiledShader = new ();
+
+        if (!File.Exists(shaderPath))
         {
-            WLog.Error($"Shader failed to compile: No frag.hlsl found in {shaderPath}");
+            WLog.Error($"Shader failed to compile: file not found at {shaderPath}");
             return false;
         }
+        
+        string vertSource = File.ReadAllText(shaderPath);
 
-        PipelineSettings settings = PipelineSettings.Default;
+        return CompileHlslToShader(vertSource, entrypoint, ShaderCross.ShaderStage.Fragment, true, out compiledShader);
+    }
+
+    private static bool CompileHlslToShader(string source, string entrypoint, ShaderCross.ShaderStage stage, bool debug, out ShaderProgram compiledShader)
+    {
+        compiledShader = new();
         
-        if (File.Exists(shaderPath + "/pipeline.yaml"))
+        var hlslInfo = new ShaderCross.HLSLInfo()
         {
-            if (!Yaml.TryDeserialize(shaderPath + "/pipeline.yaml", out settings))
-            {
-                WLog.Error($"Failed to deserialize pipeline in: {shaderPath}");
-                return false;
-            }
-        }
-        
-        string vertSource = File.ReadAllText(shaderPath + "/vert.hlsl");
-        string fragSource = File.ReadAllText(shaderPath + "/frag.hlsl");
-        
-        var vertexInfo = new ShaderCross.HLSLInfo()
-        {
-            EnableDebug = true,
-            Entrypoint = "main",
+            EnableDebug = debug,
+            Entrypoint = entrypoint,
             IncludeDir = null,
             Name = null,
             Props = 0,
-            ShaderStage = ShaderCross.ShaderStage.Vertex,
-            Source = vertSource,
+            ShaderStage = stage,
+            Source = source,
             Defines = IntPtr.Zero,
         };
         
-        var fragmentInfo = new ShaderCross.HLSLInfo()
-        {
-            EnableDebug = true,
-            Entrypoint = "main",
-            IncludeDir = null,
-            Name = null,
-            Props = 0,
-            ShaderStage = ShaderCross.ShaderStage.Fragment,
-            Source = fragSource,
-            Defines = IntPtr.Zero,
-        };
+        IntPtr spirv = ShaderCross.CompileSPIRVFromHLSL(in hlslInfo, out UIntPtr size);
 
-        IntPtr vertexSpriv = ShaderCross.CompileSPIRVFromHLSL(in vertexInfo, out UIntPtr vertexSize);
-
-        if (vertexSpriv == IntPtr.Zero)
+        if (spirv == IntPtr.Zero)
         {
-            WLog.Error(SDL.GetError());
-            return false;
-        }
-
-        var vertexSprivInfo = new ShaderCross.SPIRVInfo()
-        {
-            ByteCode = vertexSpriv,
-            ByteCodeSize = vertexSize,
-            Entrypoint = vertexInfo.Entrypoint,
-            Name = vertexInfo.Name,
-            Props = vertexInfo.Props,
-            ShaderStage = vertexInfo.ShaderStage,
-        };
-        
-        IntPtr fragmentSpriv = ShaderCross.CompileSPIRVFromHLSL(in fragmentInfo, out UIntPtr fragmentSize);
-
-        if (fragmentSpriv == IntPtr.Zero)
-        {
-            WLog.Error(SDL.GetError());
+            WLog.Error($"Failed to compile shader: {SDL.GetError()}");
             return false;
         }
         
-        var fragmentSprivInfo = new ShaderCross.SPIRVInfo()
+        NativePtr<ShaderCross.GraphicsShaderMetadata> metadata = ShaderCross.ReflectGraphicsSPIRV(spirv, size, 0);
+
+        if (metadata.IsNull)
         {
-            ByteCode = fragmentSpriv,
-            ByteCodeSize = fragmentSize,
-            Entrypoint = fragmentInfo.Entrypoint,
-            Name = fragmentInfo.Name,
-            Props = fragmentInfo.Props,
-            ShaderStage = fragmentInfo.ShaderStage
+            WLog.Error($"Failed shader reflection: {SDL.GetError()}");
+            return false;
+        }
+        
+        var spirvInfo = new ShaderCross.SPIRVInfo()
+        {
+            ByteCode = spirv,
+            ByteCodeSize = size,
+            Entrypoint = hlslInfo.Entrypoint,
+            Name = hlslInfo.Name,
+            Props = hlslInfo.Props,
+            ShaderStage = hlslInfo.ShaderStage,
         };
 
-        NativePtr<ShaderCross.GraphicsShaderMetadata> metadata = ShaderCross.ReflectGraphicsSPIRV(fragmentSpriv, fragmentSize, 0);
+        compiledShader.Handle = ShaderCross.CompileGraphicsShaderFromSPIRV(Device.Handle, in spirvInfo, metadata.Value, 0);
         
-        IntPtr vertexShader = ShaderCross.CompileGraphicsShaderFromSPIRV(Device.Handle, in vertexSprivInfo, in metadata.Value, 0);
-
-        if (vertexShader == IntPtr.Zero)
-        {
-            WLog.Error(SDL.GetError());
-            return false;
-        }
-
-        IntPtr fragmentShader = ShaderCross.CompileGraphicsShaderFromSPIRV(Device.Handle, in fragmentSprivInfo, in metadata.Value, 0);
-        if (fragmentShader == IntPtr.Zero)
-        {
-            WLog.Error(SDL.GetError());
-            return false;
-        }
-
         SDL.Free(metadata);
-        SDL.Free(vertexSpriv);
-        SDL.Free(fragmentSpriv);
+        SDL.Free(spirv);
         
-        string relPath = $"{Path.GetRelativePath(AppDomain.CurrentDomain.BaseDirectory, Path.GetDirectoryName(shaderPath) ?? string.Empty)}/{Path.GetFileNameWithoutExtension(shaderPath)}";
-        
-        WLog.Info($"Shader compiled: {relPath}");
-        
-        shader = new Shader(
-            vertexShader, 
-            fragmentShader,
-            settings,
-            metadata.Value.NumSamplers, 
-            metadata.Value.NumUniformBuffers, 
-            metadata.Value.NumStorageBuffers, 
-            metadata.Value.NumStorageTextures);;
-
         return true;
     }
 
-    public static bool CompileComputeShader(string shaderPath, [NotNullWhen(true)] out ComputeShader? shader)
+    public static bool CompileComputeShader(string shaderPath, string entrypoint, [NotNullWhen(true)] out ComputeShader? shader)
     {
         shader = null;
         
@@ -155,11 +113,11 @@ public static class ShaderCompiler
         var computeInfo = new ShaderCross.HLSLInfo()
         {
             EnableDebug = true,
-            Entrypoint = "main",
+            Entrypoint = entrypoint,
             IncludeDir = null,
             Name = null,
             Props = 0,
-            ShaderStage = ShaderCross.ShaderStage.Vertex,
+            ShaderStage = ShaderCross.ShaderStage.Compute,
             Source = source,
             Defines = IntPtr.Zero,
         };
@@ -193,24 +151,18 @@ public static class ShaderCompiler
             return false;
         }
         
-        SDL.Free(metadata);
-        SDL.Free(computeSpriv);
-        
         string relPath = $"{Path.GetRelativePath(AppDomain.CurrentDomain.BaseDirectory, Path.GetDirectoryName(shaderPath) ?? string.Empty)}/{Path.GetFileNameWithoutExtension(shaderPath)}";
         
         WLog.Info($"Shader compiled: {relPath}");
         
         shader = new ComputeShader(
             computeShader, 
-            metadata.Value.NumSamplers, 
-            metadata.Value.NumReadOnlyStorageTextures, 
-            metadata.Value.NumReadWriteStorageTextures, 
-            metadata.Value.NumUniformBuffers,
-            metadata.Value.NumReadOnlyStorageBuffers,
-            metadata.Value.NumReadwriteStorageBuffers,
             metadata.Value.ThreadCountX,
             metadata.Value.ThreadCountY,
             metadata.Value.ThreadCountZ);
+        
+        SDL.Free(metadata);
+        SDL.Free(computeSpriv);
 
         return true;
     }
