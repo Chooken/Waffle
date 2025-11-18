@@ -94,7 +94,7 @@ public class TextureEditor
         
         ImQueue queue = new ImQueue();
         queue.TryGetSwapchainTexture(EditorWindow, ref _swapchainTexture);
-
+        
         _canvasPanel.RenderCanvas(ref queue);
 
         var uiTexture = _ui.Render(queue);

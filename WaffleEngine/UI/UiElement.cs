@@ -26,7 +26,7 @@ public abstract class UiElement
         }
     }
 
-    public void ColapseScale()
+    public void CollapseScale()
     {
         Bounds.CalculatedWidth *= Bounds.Scale;
         Bounds.CalculatedHeight *= Bounds.Scale;
@@ -36,7 +36,7 @@ public abstract class UiElement
 
         foreach (var child in Children)
         {
-            child.ColapseScale();
+            child.CollapseScale();
         }
     }
 

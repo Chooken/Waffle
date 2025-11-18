@@ -38,8 +38,8 @@ public class UiRenderer
         _windowRoot = new Rect()
             .Default(() => new RectSettings()
             {
-                Width = Ui.Fixed(_window.Width / _window.GetDisplayScale()),
-                Height = Ui.Fixed(_window.Height / _window.GetDisplayScale()),
+                Width = Ui.Fixed(_window.PixelWidth / _window.GetDisplayScale()),
+                Height = Ui.Fixed(_window.PixelHeight / _window.GetDisplayScale()),
             });
         _uiTexture = new GpuTexture(_window);
     }
@@ -75,7 +75,8 @@ public class UiRenderer
             _root.PropagateUpdate(_window, false);
             _root.Layout.CalculateFitSize(_root, true);
             _root.Layout.CalculateFitSize(_root, false);
-            _window.SetMinimumSize((int)_root.Bounds.CalculatedWidth, (int)_root.Bounds.CalculatedHeight);
+            _root.CollapseScale();
+            _window.SetMinimumSize((int)(_root.Bounds.CalculatedWidth / _window.GetDensity()), (int)(_root.Bounds.CalculatedHeight / _window.GetDensity()));
         }
         else
         {

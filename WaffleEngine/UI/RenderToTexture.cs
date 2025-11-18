@@ -25,7 +25,7 @@ public static partial class Ui
         root.Layout.GrowChildren(root, false);
         root.Layout.CalculatePositions(root, Vector2.Zero);
         root.PropagateRender(renderPass, new Vector2(texture.Width / scale, texture.Height / scale));
-        root.ColapseScale();
+        root.CollapseScale();
             
         renderPass.End();
     }

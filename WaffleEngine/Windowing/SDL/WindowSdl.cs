@@ -10,7 +10,7 @@ public sealed class WindowSdl : Window
 {
     internal IntPtr WindowPtr;
 
-    public static bool TryCreate(string handle, string title, int width, int height, out Window? window)
+    public static bool TryCreate(string handle, string title, int pixelWidth, int pixelHeight, out Window? window)
     {
         window = null;
 
@@ -35,7 +35,7 @@ public sealed class WindowSdl : Window
 
         if (windowSdl.Resizeable) flags |= SDL.WindowFlags.Resizable;
         
-        windowSdl.WindowPtr = SDL.CreateWindow(title, width, height,
+        windowSdl.WindowPtr = SDL.CreateWindow(title, pixelWidth, pixelHeight,
             flags);
 
         if (windowSdl.WindowPtr == IntPtr.Zero)
@@ -53,13 +53,20 @@ public sealed class WindowSdl : Window
             SDL.GPUSwapchainComposition.SDR, 
             SDL.GPUPresentMode.VSync);
         
-        if (!SDL.GetWindowSizeInPixels(windowSdl.WindowPtr, out width, out height))
+        if (!SDL.GetWindowSizeInPixels(windowSdl.WindowPtr, out var width, out var height))
+        {
+            WLog.Info($"Failed to get window size");
+        }
+        
+        if (!SDL.GetWindowSizeInPixels(windowSdl.WindowPtr, out pixelWidth, out pixelHeight))
         {
             WLog.Info($"Failed to get window size");
         }
         
         windowSdl.Width = width;
         windowSdl.Height = height;
+        windowSdl.PixelWidth = pixelWidth;
+        windowSdl.PixelHeight = pixelHeight;
         window = windowSdl;
 
         unsafe
@@ -154,13 +161,16 @@ public sealed class WindowSdl : Window
                     return true;
                 }
 
-                SDL.GetWindowSizeInPixels(((WindowSdl)window).WindowPtr, out var width, out var height);
+                SDL.GetWindowSize(((WindowSdl)window).WindowPtr, out var width, out var height);
+                SDL.GetWindowSizeInPixels(((WindowSdl)window).WindowPtr, out var pixelWidth, out var pixelHeight);
 
                 if (window.Width == width && window.Height == height)
                     return true;
                 
                 window.Width = width;
                 window.Height = height;
+                window.PixelWidth = pixelWidth;
+                window.PixelHeight = pixelHeight;
                 
                 window.OnWindowResized?.Invoke(new Vector2(window.Width, window.Height));
                 

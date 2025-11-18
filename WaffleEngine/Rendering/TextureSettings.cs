@@ -27,8 +27,8 @@ public struct GpuTextureSettings
     
     public static GpuTextureSettings FromWindow(Window window, bool randomWrite = false) => new GpuTextureSettings()
     {
-        Width = (uint)window.Width,
-        Height = (uint)window.Height,
+        Width = (uint)window.PixelWidth,
+        Height = (uint)window.PixelHeight,
         Format = window.GetSwapchainTextureFormat(),
         ColorTarget = true,
         RandomWrites = randomWrite,

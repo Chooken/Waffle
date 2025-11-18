@@ -13,6 +13,10 @@ public abstract class Window : IDisposable
     
     public int Height { get; internal set; }
     
+    public int PixelWidth { get; internal set; }
+    
+    public int PixelHeight { get; internal set; }
+    
     public bool Resizeable { get; protected set; }
 
     public Action<Vector2>? OnWindowResized;
