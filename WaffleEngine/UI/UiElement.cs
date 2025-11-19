@@ -9,6 +9,7 @@ public abstract class UiElement
     public List<UiElement> Children = new();
     public UiBounds Bounds;
     public UiSettings Settings;
+    public Window Window;
     
     /// <summary>
     /// The layout system used for the children.
@@ -19,24 +20,15 @@ public abstract class UiElement
     public void PropagateScale(float scale)
     {
         Bounds.Scale = scale;
-        
-        foreach (var child in Children)
-        {
-            child.PropagateScale(scale);
-        }
-    }
-
-    public void CollapseScale()
-    {
         Bounds.CalculatedWidth *= Bounds.Scale;
         Bounds.CalculatedHeight *= Bounds.Scale;
         Bounds.CalculatedPosition *= Bounds.Scale;
         Bounds.ContentWidth *= Bounds.Scale;
         Bounds.ContentHeight *= Bounds.Scale;
-
+        
         foreach (var child in Children)
         {
-            child.CollapseScale();
+            child.PropagateScale(scale);
         }
     }
 
@@ -54,6 +46,8 @@ public abstract class UiElement
     
     public bool PropagateUpdate(Window window, bool propagateEvents)
     {
+        Window = window;
+        
         for (int i = Children.Count - 1; i >= 0; i--)
         {
             propagateEvents = Children[i].PropagateUpdate(window, propagateEvents);

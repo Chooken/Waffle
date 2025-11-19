@@ -18,18 +18,18 @@ public class Text : UiElement
     
     public override void Render(ImRenderPass renderPass, Vector2 renderSize)
     {
-        _atlasedText.Render(renderPass, Bounds.CalculatedPosition * Bounds.Scale, renderSize * Bounds.Scale);
+        _atlasedText.Render(renderPass, Bounds.CalculatedPosition * Bounds.Scale * Window.GetDensity(), renderSize * Bounds.Scale * Window.GetDensity());
     }
 
     public override void Update()
     {
-        if (_font.Size != _fontSize * Bounds.Scale)
-            _font.SetFontSize(_fontSize * Bounds.Scale);
+        if (_font.Size != _fontSize * Bounds.Scale * Window.GetDensity())
+            _font.SetFontSize(_fontSize * Bounds.Scale * Window.GetDensity());
         
         _atlasedText.Update();
         Vector2 size = _atlasedText.GetSize();
-        Settings.Width = Ui.Fixed(size.x / Bounds.Scale);
-        Settings.Height = Ui.Fixed(size.y / Bounds.Scale);
+        Settings.Width = Ui.Fixed(size.x / Bounds.Scale / Window.GetDensity());
+        Settings.Height = Ui.Fixed(size.y / Bounds.Scale / Window.GetDensity());
     }
 
     public override bool OnHover() { return false; }

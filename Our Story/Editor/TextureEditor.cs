@@ -54,7 +54,7 @@ public class TextureEditor
         _toolPanel.ButtonColor = ElementColor;
         _toolPanel.ButtonClickColor = ElementPressColor;
 
-        _ui = new UiRenderer(EditorWindow);
+        _ui = new UiRenderer(EditorWindow, EditorWindow.GetDisplayScale() / EditorWindow.GetDensity());
         _ui.Root = new Rect()
             .Default(() => new RectSettings()
             {

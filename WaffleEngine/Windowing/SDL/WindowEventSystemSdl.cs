@@ -62,13 +62,11 @@ internal sealed class WindowEventSystemSdl : IWindowEventSystem
 
         if (WindowManager.TryGetWindowWithId(sdlEvent.WindowID, out var window))
         {
-            float density = window.GetDensity();
-            
             window.WindowInput.UpdateMouseMotion(
-                sdlEvent.X * density, 
-                sdlEvent.Y * density, 
-                sdlEvent.XRel * density, 
-                sdlEvent.YRel * density);
+                sdlEvent.X, 
+                sdlEvent.Y, 
+                sdlEvent.XRel, 
+                sdlEvent.YRel);
         }
     }
     

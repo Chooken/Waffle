@@ -4,7 +4,7 @@ namespace OurStory.Editor;
 
 public class ShadeTool : ICanvasTool
 {
-    public void OnHover(Canvas canvas, Vector2 cursorPosition, Color color)
+    public void OnHover(Canvas canvas, Vector2 cursorPosition, ref Color color)
     {
         if (Input.Mouse.MouseWheelTicksDelta < 0)
         {
@@ -17,12 +17,12 @@ public class ShadeTool : ICanvasTool
         }
     }
 
-    public void OnClick(Canvas canvas, Vector2 cursorPosition, Color color)
+    public void OnClick(Canvas canvas, Vector2 cursorPosition, ref Color color)
     {
         
     }
 
-    public void OnHold(Canvas canvas, Vector2 cursorPosition, Color color)
+    public void OnHold(Canvas canvas, Vector2 cursorPosition, ref Color color)
     {
         
     }

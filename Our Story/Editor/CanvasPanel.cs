@@ -45,17 +45,17 @@ public class CanvasPanel
                 .OnHover((ref RectSettings settings) =>
                 {
                     CalculateCursorPosition(window);
-                    CanvasTool?.OnHover(Canvas, CursorPosition, CursorColor);
+                    CanvasTool?.OnHover(Canvas, CursorPosition, ref CursorColor);
                 })
                 .OnClick((ref RectSettings item) =>
                 {
                     CalculateCursorPosition(window);
-                    CanvasTool?.OnClick(Canvas, CursorPosition, CursorColor);
+                    CanvasTool?.OnClick(Canvas, CursorPosition, ref CursorColor);
                 })
                 .OnHold((ref RectSettings settings) =>
                 {
                     CalculateCursorPosition(window);
-                    CanvasTool?.OnHold(Canvas, CursorPosition, CursorColor);
+                    CanvasTool?.OnHold(Canvas, CursorPosition, ref CursorColor);
                 })
             );
     }

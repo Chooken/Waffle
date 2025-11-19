@@ -10,7 +10,7 @@ public sealed class WindowSdl : Window
 {
     internal IntPtr WindowPtr;
 
-    public static bool TryCreate(string handle, string title, int pixelWidth, int pixelHeight, out Window? window)
+    public static bool TryCreate(string handle, string title, int width, int height, out Window? window)
     {
         window = null;
 
@@ -35,7 +35,7 @@ public sealed class WindowSdl : Window
 
         if (windowSdl.Resizeable) flags |= SDL.WindowFlags.Resizable;
         
-        windowSdl.WindowPtr = SDL.CreateWindow(title, pixelWidth, pixelHeight,
+        windowSdl.WindowPtr = SDL.CreateWindow(title, width, height,
             flags);
 
         if (windowSdl.WindowPtr == IntPtr.Zero)
@@ -53,14 +53,14 @@ public sealed class WindowSdl : Window
             SDL.GPUSwapchainComposition.SDR, 
             SDL.GPUPresentMode.VSync);
         
-        if (!SDL.GetWindowSizeInPixels(windowSdl.WindowPtr, out var width, out var height))
+        if (!SDL.GetWindowSize(windowSdl.WindowPtr, out width, out height))
         {
             WLog.Info($"Failed to get window size");
         }
         
-        if (!SDL.GetWindowSizeInPixels(windowSdl.WindowPtr, out pixelWidth, out pixelHeight))
+        if (!SDL.GetWindowSizeInPixels(windowSdl.WindowPtr, out var pixelWidth, out var pixelHeight))
         {
-            WLog.Info($"Failed to get window size");
+            WLog.Info($"Failed to get window size in pixels");
         }
         
         windowSdl.Width = width;

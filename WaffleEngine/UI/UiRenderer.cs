@@ -30,23 +30,26 @@ public class UiRenderer
     private UiElement _windowRoot;
     private GpuTexture _uiTexture;
     private Window _window;
+
+    private float _scale;
     
-    public UiRenderer(Window window)
+    public UiRenderer(Window window, float scale = 1)
     {
         _window = window;
         _window.OnWindowResized += OnWindowResize;
         _windowRoot = new Rect()
             .Default(() => new RectSettings()
             {
-                Width = Ui.Fixed(_window.PixelWidth / _window.GetDisplayScale()),
-                Height = Ui.Fixed(_window.PixelHeight / _window.GetDisplayScale()),
+                Width = Ui.Fixed(_window.Width / _scale),
+                Height = Ui.Fixed(_window.Height / _scale),
             });
         _uiTexture = new GpuTexture(_window);
+        _scale = scale;
     }
 
     public void UpdateUi()
     {
-        _windowRoot.PropagateScale(_window.GetDisplayScale());
+        _windowRoot.PropagateScale(_scale);
         _windowRoot.PropagateUpdate(_window, true);
     }
 
@@ -57,31 +60,36 @@ public class UiRenderer
             return _uiTexture;
         }
         
-        Ui.RenderToTexture(_windowRoot, queue, _window.GetDisplayScale(), in _uiTexture);
+        Ui.RenderToTexture(_windowRoot, queue, _scale, in _uiTexture);
 
         return _uiTexture;
     }
 
     private void OnWindowResize(Vector2 size)
     {
-        _uiTexture.Resize((uint)size.x, (uint)size.y);
+        _uiTexture.Resize((uint)_window.PixelWidth, (uint)_window.PixelHeight);
     }
 
     public void SetEnforceWindowSize(bool value)
     {
         if (value && _root is not null)
         {
-            _root.PropagateScale(_window.GetDisplayScale());
+            _root.PropagateScale(_scale);
             _root.PropagateUpdate(_window, false);
             _root.Layout.CalculateFitSize(_root, true);
             _root.Layout.CalculateFitSize(_root, false);
-            _root.CollapseScale();
-            _window.SetMinimumSize((int)(_root.Bounds.CalculatedWidth / _window.GetDensity()), (int)(_root.Bounds.CalculatedHeight / _window.GetDensity()));
+            _root.PropagateScale(_scale);
+            _window.SetMinimumSize((int)(_root.Bounds.CalculatedWidth), (int)(_root.Bounds.CalculatedHeight));
         }
         else
         {
             _window.SetMinimumSize(0, 0);
         }
+    }
+
+    public void SetScale(float scale)
+    {
+        _scale = scale;
     }
 
     public void Dispose()
