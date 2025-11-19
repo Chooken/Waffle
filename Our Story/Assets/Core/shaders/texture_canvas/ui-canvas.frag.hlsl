@@ -10,7 +10,7 @@ struct VertexToFragment {
 };
 
 float4 main(float2 uv : TEXCOORD0) : SV_Target0 {
-    float4 color;
+    float4 color = float4(0,0,0,0);
     float2 pixelPos = floor(uv * TextureSize);
 
     if (pixelPos.x == CursorPosition.x && pixelPos.y == CursorPosition.y)
@@ -18,5 +18,5 @@ float4 main(float2 uv : TEXCOORD0) : SV_Target0 {
         color = SelectedColor;
     }
     
-    return float4(color.rgb / color.a, color.a);
+    return float4(color.rgb * color.a, color.a);
 }

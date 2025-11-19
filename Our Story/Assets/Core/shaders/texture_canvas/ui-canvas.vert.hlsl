@@ -1,9 +1,3 @@
-cbuffer Uniforms : register(b0, space1) {
-    float4 SelectedColor;
-    float2 CursorPosition;
-    float2 TextureSize;
-}
-
 struct VertexToFragment {
     float2 UV : TEXCOORD0;
     float4 Position : SV_Position;
