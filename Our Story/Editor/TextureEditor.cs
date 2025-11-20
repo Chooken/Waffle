@@ -1,3 +1,4 @@
+using SDL3;
 using WaffleEngine;
 using WaffleEngine.Rendering;
 using WaffleEngine.Rendering.Immediate;
@@ -14,11 +15,17 @@ public class TextureEditor
     private UiRenderer _ui;
     private Canvas _canvas = new Canvas(16, 16);
     
-    public static Color BackgroundColor = Color.RGBA255(20, 20, 20, 255);
-    public static Color PanelColor = Color.RGBA255(30, 30, 30, 255);
-    public static Color ElementColor = Color.RGBA255(40, 40, 40, 255);
-    public static Color ElementHighlight = Color.RGBA255(0, 255, 132, 255);
+    public static Color BackgroundColor = Color.RGBA255(25, 25, 25, 255);
+    public static Color PanelColor = Color.RGBA255(40, 40, 40, 255);
+    public static Color Highlight = Color.RGBA255(0, 255, 132, 255);
+
+    public static Color FontColor = Color.RGBA255(200, 200, 200, 255);
+    
+    public static Color ElementHighlight = Color.RGBA255(80, 80, 80, 255);
+    public static Color ElementShadow = Color.RGBA255(20, 20, 20, 255);
     public static Color ElementPressColor = Color.RGBA255(25, 25, 25, 255);
+
+    public static Font Font;
     
     public static CommandList CommandList = new CommandList();
     public static TextureEditorSharedState SharedState = new ();
@@ -30,7 +37,7 @@ public class TextureEditor
             "Texture Window Failed to Open.");
         
         Assert.True(
-            FontLoader.TryGetFont("builtin/fonts/Nunito-Regular.ttf", 16, out Font font), 
+            FontLoader.TryGetFont("builtin/fonts/Nunito-Regular.ttf", 16, out Font), 
             "Failed to load font.");
         
         
@@ -50,7 +57,7 @@ public class TextureEditor
                 Padding = 8,
                 Gap = 8,
             })
-            .Add(new ToolPanel(font))
+            .Add(new ToolPanel())
             .Add(new Rect()
                 .Default(() => new RectSettings()
                 {
@@ -83,7 +90,7 @@ public class TextureEditor
         
         _canvas.Render(ref queue);
 
-        var uiTexture = _ui.Render(queue);
+        var uiTexture = _ui.Render(queue, BackgroundColor);
         
         queue.AddBlitPass(uiTexture, _swapchainTexture, true);
         queue.Submit();

@@ -7,12 +7,12 @@ public class Text : UiElement
 {
     private AtlasedText _atlasedText;
     private Font _font;
-    private float _fontSize;
     private TextSettings _textSettings;
 
-    public struct TextSettings
+    public struct TextSettings()
     {
         public Color Color;
+        public float Size = 16;
     }
     
     private Func<TextSettings>? _default;
@@ -20,7 +20,6 @@ public class Text : UiElement
     public Text(string text, Font font)
     {
         _font = font.Copy();
-        _fontSize = _font.Size;
         _atlasedText = new AtlasedText(text, _font, new Color(0, 0, 0, 1));
     }
     
@@ -36,13 +35,14 @@ public class Text : UiElement
 
     public override void Update()
     {
-        if (_font.Size != _fontSize * Bounds.Scale * Window.GetDensity())
-            _font.SetFontSize(_fontSize * Bounds.Scale * Window.GetDensity());
-
         _textSettings = _default?.Invoke() ?? new TextSettings
         {
             Color = new Color(1,1,1,1),
+            Size = 16,
         };
+        
+        if (_font.Size != _textSettings.Size * Bounds.Scale * Window.GetDensity())
+            _font.SetFontSize(_textSettings.Size * Bounds.Scale * Window.GetDensity());
         
         _atlasedText.Update();
         Vector2 size = _atlasedText.GetSize();
@@ -51,11 +51,10 @@ public class Text : UiElement
     }
 
     public override bool OnHover() { return false; }
-
-    public override bool OnClick() { return false; }
-
+    public override bool OnMouseDown() { return false; }
     public override bool OnHold() { return false; }
-    
+    public override bool OnMouseUp() { return false; }
+
     public Text Default(Func<TextSettings> defaultSettings)
     {
         _default += defaultSettings;

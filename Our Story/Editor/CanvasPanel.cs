@@ -41,15 +41,19 @@ public class CanvasPanel : Rect
                 CalculateCursorPosition(window);
                 TextureEditor.SharedState.SelectedTool?.OnHover(Canvas, CursorPosition);
             })
-            .OnClick((ref RectSettings item) =>
+            .OnMouseDown((ref RectSettings item) =>
             {
                 CalculateCursorPosition(window);
-                TextureEditor.SharedState.SelectedTool?.OnClick(Canvas, CursorPosition);
+                TextureEditor.SharedState.SelectedTool?.OnMouseDown(Canvas, CursorPosition);
             })
             .OnHold((ref RectSettings settings) =>
             {
                 CalculateCursorPosition(window);
                 TextureEditor.SharedState.SelectedTool?.OnHold(Canvas, CursorPosition);
+            })
+            .OnMouseUp((ref RectSettings settings) =>
+            {
+                TextureEditor.SharedState.SelectedTool?.OnMouseUp(Canvas, CursorPosition);
             })
         );
     }

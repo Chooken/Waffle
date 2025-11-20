@@ -103,6 +103,7 @@ public class Canvas
             ImComputePass computePass = queue.AddComputePass(_readWriteTextureBindings);
             computePass.Bind(_canvasTempShader);
             computePass.Bind(_tempPixels);
+            computePass.SetUniforms(_tempPixels.Count);
             computePass.Dispatch(uint.Max(1, (uint)_tempPixels.Count / 64), 1, 1);
             computePass.End();
             

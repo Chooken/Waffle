@@ -1,0 +1,89 @@
+using WaffleEngine.UI;
+
+namespace OurStory.Editor;
+
+public class UndoButton : Rect
+{
+    public UndoButton()
+    {
+        Default(() => new RectSettings
+        {
+            Height = Ui.Grow,
+            Padding = (12, 6),
+            BorderRadius = 6,
+            Alignment = new UiAlignment
+            {
+                Vertical = UiAlignmentVertical.Center,
+                Horizontal = UiAlignmentHorizontal.Center,
+            },
+        });
+            
+        OnHover((ref RectSettings settings) =>
+        {
+            settings.Color = TextureEditor.PanelColor;
+        });
+        
+        OnMouseDown((ref RectSettings settings) =>
+        {
+            TextureEditor.CommandList.Undo();
+        });
+        
+        OnHold((ref RectSettings settings) =>
+        {
+            settings.Color = TextureEditor.ElementShadow;
+        });
+        
+        Add(new Rect()
+            .Default(() => new RectSettings
+            {
+                Width = Ui.Fixed(16),
+                Height = Ui.Fixed(16),
+                Color = TextureEditor.FontColor,
+                BorderRadius = (8, 2, 8, 2),
+            })
+        );
+    }
+}
+
+public class RedoButton : Rect
+{
+    public RedoButton()
+    {
+        Default(() => new RectSettings
+        {
+            Height = Ui.Grow,
+            Padding = (12, 6),
+            BorderRadius = 6,
+            Alignment = new UiAlignment
+            {
+                Vertical = UiAlignmentVertical.Center,
+                Horizontal = UiAlignmentHorizontal.Center,
+            },
+        });
+            
+        OnHover((ref RectSettings settings) =>
+        {
+            settings.Color = TextureEditor.PanelColor;
+        });
+        
+        OnMouseDown((ref RectSettings settings) =>
+        {
+            TextureEditor.CommandList.Redo();
+        });
+        
+        OnHold((ref RectSettings settings) =>
+        {
+            settings.Color = TextureEditor.ElementShadow;
+        });
+        
+        Add(new Rect()
+            .Default(() => new RectSettings
+            {
+                Width = Ui.Fixed(16),
+                Height = Ui.Fixed(16),
+                Color = TextureEditor.FontColor,
+                BorderRadius = (2, 8, 2, 8),
+            })
+        );
+    }
+}

@@ -60,6 +60,10 @@ public struct Color(float red, float green, float blue, float alpha = 1.0f)
             ? x * 12.92f
             : MathF.Pow(x, 1.0f/2.4f) * 1.055f - 0.055f;
     }
+
+    public static Color White => new Color(1, 1, 1, 1);
+    public static Color Black => new Color(0, 0, 0, 1);
+    public static Color Transparent => new Color(0, 0, 0, 0);
 }
 
 public struct OklabColor

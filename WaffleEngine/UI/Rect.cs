@@ -14,8 +14,9 @@ public class Rect : UiElement
     
     private Func<RectSettings>? _default;
     private ActionRef<RectSettings>? _onHoverEvent;
-    private ActionRef<RectSettings>? _onClickEvent;
+    private ActionRef<RectSettings>? _onMouseDownEvent;
     private ActionRef<RectSettings>? _onHoldEvent;
+    private ActionRef<RectSettings>? _onMouseUpEvent;
     
     public struct UIRectData
     {
@@ -52,19 +53,37 @@ public class Rect : UiElement
     
     public override bool OnHover()
     {
-        _onHoverEvent?.Invoke(ref _newRectSettings);
+        if (_onHoverEvent is null)
+            return false;
+        
+        _onHoverEvent.Invoke(ref _newRectSettings);
         return true;
     }
 
-    public override bool OnClick()
+    public override bool OnMouseDown()
     {
-        _onClickEvent?.Invoke(ref _newRectSettings);
+        if (_onMouseDownEvent is null)
+            return false;
+        
+        _onMouseDownEvent.Invoke(ref _newRectSettings);
         return true;
     }
 
     public override bool OnHold()
     {
-        _onHoldEvent?.Invoke(ref _newRectSettings);
+        if (_onHoldEvent is null)
+            return false;
+        
+        _onHoldEvent.Invoke(ref _newRectSettings);
+        return true;
+    }
+
+    public override bool OnMouseUp()
+    {
+        if (_onMouseUpEvent is null)
+            return false;
+        
+        _onMouseUpEvent.Invoke(ref _newRectSettings);
         return true;
     }
 
@@ -116,15 +135,21 @@ public class Rect : UiElement
         return this;
     }
 
-    public Rect OnClick(ActionRef<RectSettings> click)
+    public Rect OnMouseDown(ActionRef<RectSettings> click)
     {
-        _onClickEvent += click;
+        _onMouseDownEvent += click;
         return this;
     }
     
     public Rect OnHold(ActionRef<RectSettings> hold)
     {
         _onHoldEvent += hold;
+        return this;
+    }
+    
+    public Rect OnMouseUp(ActionRef<RectSettings> click)
+    {
+        _onMouseUpEvent += click;
         return this;
     }
 

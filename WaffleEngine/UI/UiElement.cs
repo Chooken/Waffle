@@ -17,6 +17,8 @@ public abstract class UiElement
     /// </summary>
     public ILayout Layout = Ui.Flex;
 
+    private bool _down = false;
+
     public void PropagateScale(float scale)
     {
         Bounds.Scale = scale;
@@ -75,18 +77,32 @@ public abstract class UiElement
         if (MathF.Min(Bounds.CalculatedPosition.x, b.x) < mousePos.x && MathF.Min(Bounds.CalculatedPosition.y, b.y) < mousePos.y &&
             MathF.Max(Bounds.CalculatedPosition.x, b.x) > mousePos.x && MathF.Max(Bounds.CalculatedPosition.y, b.y) > mousePos.y)
         {
+            captured = OnHover();
+            
             if (window.WindowInput.MouseData.IsLeftPressed)
             {
-                captured = OnClick();
+                _down = true;
+                captured = OnMouseDown() || captured;
             }
-            else if (window.WindowInput.MouseData.IsLeftDown)
+            
+            if (window.WindowInput.MouseData.IsLeftDown)
             {
-                captured = OnHold();
+                captured = OnHold() || captured;
             }
-            else
+
+            if (!window.WindowInput.MouseData.IsLeftDown && _down)
             {
-                captured = OnHover();
+                _down = false;
+                OnMouseUp();
             }
+        }
+        else
+        {
+            if (_down)
+            {
+                OnMouseUp();
+            }
+            _down = false;
         }
 
         if (!settings.Equals(Settings))
@@ -109,11 +125,17 @@ public abstract class UiElement
     /// Calls when the mouse clicked the element.
     /// </summary>
     /// <returns>True if the element captures the event.</returns>
-    public abstract bool OnClick();
+    public abstract bool OnMouseDown();
 
     /// <summary>
     /// Calls when the mouse holds the click down on the element.
     /// </summary>
     /// <returns>True if the element captures the event.</returns>
     public abstract bool OnHold();
+    
+    /// <summary>
+    /// Calls when the mouse stops clicking the element.
+    /// </summary>
+    /// <returns>True if the element captures the event.</returns>
+    public abstract bool OnMouseUp();
 }

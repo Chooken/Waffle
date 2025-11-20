@@ -53,14 +53,14 @@ public class UiRenderer
         _windowRoot.PropagateUpdate(_window, true);
     }
 
-    public GpuTexture Render(ImQueue queue)
+    public GpuTexture Render(ImQueue queue, Color clearColor)
     {
         if (Root is null)
         {
             return _uiTexture;
         }
         
-        Ui.RenderToTexture(_windowRoot, queue, _scale, in _uiTexture);
+        Ui.RenderToTexture(_windowRoot, queue, clearColor, in _uiTexture);
 
         return _uiTexture;
     }

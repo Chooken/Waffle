@@ -5,11 +5,11 @@ namespace WaffleEngine.UI;
 
 public static partial class Ui
 {
-    public static void RenderToTexture(UiElement root, ImQueue queue, float scale, in GpuTexture texture)
+    public static void RenderToTexture(UiElement root, ImQueue queue, Color clearColor, in GpuTexture texture)
     {
         ColorTargetSettings bgColorTargetSettings = new ColorTargetSettings
         {
-            ClearColor = Color.RGBA255(20, 20, 20, 255),
+            ClearColor = clearColor,
             GpuTexture = texture,
             LoadOperation = LoadOperation.Clear,
             StoreOperation = StoreOperation.Store,

@@ -6,10 +6,8 @@ public class CommandList
     private int _top = -1;
     private List<ICommand> _commands = new ();
 
-    public void Do(ICommand command)
+    public void Add(ICommand command)
     {
-        command.Do();
-        
         _current++;
         
         if (_commands.Count > _current)
@@ -22,6 +20,12 @@ public class CommandList
         }
 
         _top = _current;
+    }
+    
+    public void Do(ICommand command)
+    {
+        command.Do();
+        Add(command);
     }
 
     public void Undo()
