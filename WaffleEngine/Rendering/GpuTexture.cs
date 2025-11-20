@@ -92,7 +92,7 @@ public sealed class GpuTexture : IRenderBindable
 
         binding = new ReadWriteTextureBinding()
         {
-            Handle = Handle,
+            TextureHandle = Handle,
             Layer = 0,
             MipLevel = mipLevel,
         };
@@ -132,11 +132,38 @@ public sealed class GpuTexture : IRenderBindable
     }
 }
 
+/// <summary>
+/// A structure specifying parameters related to binding textures in a compute
+/// pass.
+/// </summary>
+/// <since>This struct is available since SDL 3.2.0</since>
+/// <seealso cref="BeginGPUComputePass"/>
 [StructLayout(LayoutKind.Sequential)]
 public struct ReadWriteTextureBinding
 {
-    public IntPtr Handle;
-    public uint Layer;
-    public uint MipLevel;
-    private byte padding;
+    /// <summary>
+    /// The texture to bind. Must have been created with <see cref="GPUTextureUsageFlags.ComputeStorageWrite"/> or <see cref="GPUTextureUsageFlags.ComputeStorageSimultaneousReadWrite"/>.
+    /// </summary>
+    public IntPtr TextureHandle;
+        
+    /// <summary>
+    /// The mip level index to bind.
+    /// </summary>
+    public UInt32 MipLevel;
+        
+    /// <summary>
+    /// The layer index to bind.
+    /// </summary>
+    public UInt32 Layer;
+        
+    /// <summary>
+    /// true cycles the texture if it is already bound.
+    /// </summary>
+    public Byte Cycle;
+        
+    private Byte _padding1;
+        
+    private Byte _padding2;
+        
+    private Byte _padding3;
 }

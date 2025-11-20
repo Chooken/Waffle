@@ -32,8 +32,6 @@
     <ItemGroup>
       <ClCompile Include="Assets\Core\shaders\crt\crt.frag.hlsl" />
       <ClCompile Include="Assets\Core\shaders\crt\crt.vert.hlsl" />
-      <ClCompile Include="Assets\Core\shaders\texture_canvas\ui-canvas.frag.hlsl" />
-      <ClCompile Include="Assets\Core\shaders\texture_canvas\ui-canvas.vert.hlsl" />
     </ItemGroup>
 
 </Project>

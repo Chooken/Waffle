@@ -112,7 +112,8 @@ public static class Assets
         var vertexShaders = Directory.EnumerateFiles(path, "*.vert.hlsl", SearchOption.AllDirectories);
         var fragmentShaders = Directory.EnumerateFiles(path, "*.frag.hlsl", SearchOption.AllDirectories);
         var shaders = Directory.EnumerateFiles(path, "*.shader.yaml", SearchOption.AllDirectories);
-
+        var compute = Directory.EnumerateFiles(path, "*.comp.hlsl", SearchOption.AllDirectories);
+        
         foreach (var vertexShaderPath in vertexShaders)
         {
             // Gets rid of .vert.hlsl and then gets the filename in the path.
@@ -188,6 +189,27 @@ public static class Assets
             
             bundle.Shaders.Add(name, shader);
         }
+        
+        foreach (var computeShaderPath in compute)
+        {
+            // Gets rid of .frag.hlsl and then gets the filename in the path.
+            string name = Path.GetFileName(computeShaderPath[..^10]);
+
+            if (bundle.Shaders.ContainsKey(name))
+            {
+                WLog.Warning($"Bundle contains duplicate texture with name: {name}");
+                continue;
+            }
+
+            if (!ShaderCompiler.CompileComputeShader(computeShaderPath, "main", out var computeShader))
+            {
+                continue;
+            }
+                
+            bundle.ComputeShaders.Add(
+                name,
+                computeShader);
+        }
     }
 
     public static void UnloadAssetBundle(string bundleName)
@@ -258,6 +280,24 @@ public static class Assets
         return true;
     }
     
+    public static bool TryGetComputeShader(string bundleName, string shaderName, [NotNullWhen(true)] out ComputeShader? shader)
+    {
+        shader = null;
+
+        if (!_assetBundles.TryGetValue(bundleName, out var bundle))
+        {
+            WLog.Error($"Asset Bundle not loaded: {bundleName}");
+            return false;
+        }
+
+        if (!bundle.TryGetComputeShader(shaderName, out shader))
+        {
+            return false;
+        }
+
+        return true;
+    }
+    
     public static bool TryGetBundle(string bundleName, out AssetBundle bundle)
     {
         if (!_assetBundles.TryGetValue(bundleName, out bundle))
@@ -279,9 +319,10 @@ public class AssetLoadRequest
 public struct AssetBundle()
 {
     public Dictionary<string, Texture> Textures = new ();
-    public Dictionary<string, ShaderCompiler.ShaderProgram> VertexPrograms = new();
-    public Dictionary<string, ShaderCompiler.ShaderProgram> FragmentPrograms = new();
+    public Dictionary<string, ShaderCompiler.ShaderProgram> VertexPrograms = new ();
+    public Dictionary<string, ShaderCompiler.ShaderProgram> FragmentPrograms = new ();
     public Dictionary<string, Shader> Shaders = new ();
+    public Dictionary<string, ComputeShader> ComputeShaders = new ();
 
     public bool TryGetTexture(string textureName, [NotNullWhen(true)] out Texture? texture)
     {
@@ -297,6 +338,17 @@ public struct AssetBundle()
     public bool TryGetShader(string shaderName, [NotNullWhen(true)] out Shader? shader)
     {
         if (!Shaders.TryGetValue(shaderName, out shader))
+        {
+            WLog.Error($"Shader by name \"{shaderName}\" not in bundle");
+            return false;
+        }
+
+        return true;
+    }
+    
+    public bool TryGetComputeShader(string shaderName, [NotNullWhen(true)] out ComputeShader? shader)
+    {
+        if (!ComputeShaders.TryGetValue(shaderName, out shader))
         {
             WLog.Error($"Shader by name \"{shaderName}\" not in bundle");
             return false;

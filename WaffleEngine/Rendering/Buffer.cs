@@ -46,7 +46,7 @@ public sealed class Buffer<T>: IRenderBindable, IComputeBindable, IGpuUploadable
     public Buffer(BufferUsage usage, int startSize = 16)
     {
         _data = new T[startSize];
-        _gpuBuffer = new RenderBuffer<T>(usage);
+        _gpuBuffer = new RenderBuffer<T>(usage, startSize);
         _count = 0;
     }
     

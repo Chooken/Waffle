@@ -5,25 +5,44 @@ namespace OurStory.Editor;
 
 public class PenTool : ICanvasTool
 {
-    public void OnHover(Canvas canvas, Vector2 cursorPosition, ref Color color)
+    public void OnHover(Canvas canvas, Vector2 cursorPosition)
     {
-        if (Input.Mouse.MouseWheelTicksDelta < 0)
+        Color color = TextureEditor.SharedState.SelectedColor;
+        ref float brightness = ref TextureEditor.SharedState.ColorBrightness;
+        
+        if (Input.Mouse.MouseWheelTicksDelta != 0)
         {
-            color.r = MathF.Max(color.r - 8f / 255, 0);
-            color.g = MathF.Max(color.g - 8f / 255, 0);
-            color.b = MathF.Max(color.b - 8f / 255, 0);
+            brightness = float.Clamp(brightness + (float)Input.Mouse.MouseWheelTicksDelta / 64, 0, 1);
         }
+
+        color.r *= brightness;
+        color.g *= brightness;
+        color.b *= brightness;
         
         canvas.SetTempPixel(color, cursorPosition);
     }
 
-    public void OnClick(Canvas canvas, Vector2 cursorPosition, ref Color color)
+    public void OnClick(Canvas canvas, Vector2 cursorPosition)
     {
         
     }
 
-    public void OnHold(Canvas canvas, Vector2 cursorPosition, ref Color color)
+    public void OnHold(Canvas canvas, Vector2 cursorPosition)
     {
-        canvas.SetPixel(color, (uint)cursorPosition.x, (uint)cursorPosition.y);
+        Color color = TextureEditor.SharedState.SelectedColor;
+        float brightness = TextureEditor.SharedState.ColorBrightness;
+        
+        color.r *= brightness;
+        color.g *= brightness;
+        color.b *= brightness;
+        
+        TextureEditor.CommandList.Do(
+            new CanvasDrawCommand(
+                canvas, 
+                color,
+                (uint)cursorPosition.x,
+                (uint)cursorPosition.y
+            )
+        );
     }
 }

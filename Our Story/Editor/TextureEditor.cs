@@ -9,21 +9,19 @@ namespace OurStory.Editor;
 public class TextureEditor
 {
     public Window EditorWindow;
-
-    private GpuTexture Canvas;
-    private Shader? CanvasBlitShader;
     
     private GpuTexture _swapchainTexture = new GpuTexture();
     private UiRenderer _ui;
-
-    private ToolPanel _toolPanel;
-    private ColorPanel _colorPanel = new ColorPanel();
-    private CanvasPanel _canvasPanel;
+    private Canvas _canvas = new Canvas(16, 16);
     
     public static Color BackgroundColor = Color.RGBA255(20, 20, 20, 255);
     public static Color PanelColor = Color.RGBA255(30, 30, 30, 255);
     public static Color ElementColor = Color.RGBA255(40, 40, 40, 255);
+    public static Color ElementHighlight = Color.RGBA255(0, 255, 132, 255);
     public static Color ElementPressColor = Color.RGBA255(25, 25, 25, 255);
+    
+    public static CommandList CommandList = new CommandList();
+    public static TextureEditorSharedState SharedState = new ();
     
     public void Start()
     {
@@ -34,25 +32,13 @@ public class TextureEditor
         Assert.True(
             FontLoader.TryGetFont("builtin/fonts/Nunito-Regular.ttf", 16, out Font font), 
             "Failed to load font.");
-
-        _canvasPanel = new CanvasPanel(EditorWindow, 16, 16);
-        _canvasPanel.CanvasTool = new PenTool();
-        _canvasPanel.BorderColor = PanelColor;
         
-        _colorPanel.OnColorSelected += color =>
-        {
-            _canvasPanel.CursorColor = color;
-        };
-        _colorPanel.BackgoundColor = PanelColor;
-
-        _toolPanel = new ToolPanel(font);
-        _toolPanel.OnToolSelected += tool =>
-        {
-            _canvasPanel.CanvasTool = tool;
-        };
-        _toolPanel.BackgroundColor = PanelColor;
-        _toolPanel.ButtonColor = ElementColor;
-        _toolPanel.ButtonClickColor = ElementPressColor;
+        
+        SharedState.SelectedColor = new Color(1, 1, 1, 1);
+        SharedState.ColorBrightness = 1;
+        SharedState.Tools.Add(typeof(PenTool), new PenTool());
+        SharedState.Tools.Add(typeof(EraserTool), new EraserTool());
+        SharedState.SelectedTool = SharedState.Tools[typeof(PenTool)];
 
         _ui = new UiRenderer(EditorWindow, EditorWindow.GetDisplayScale() / EditorWindow.GetDensity());
         _ui.Root = new Rect()
@@ -64,7 +50,7 @@ public class TextureEditor
                 Padding = 8,
                 Gap = 8,
             })
-            .Add(_toolPanel)
+            .Add(new ToolPanel(font))
             .Add(new Rect()
                 .Default(() => new RectSettings()
                 {
@@ -72,8 +58,8 @@ public class TextureEditor
                     Height = Ui.Grow,
                     Gap = 8,
                 })
-                .Add(_colorPanel)
-                .Add(_canvasPanel)
+                .Add(new ColorPanel())
+                .Add(new CanvasPanel(EditorWindow, _canvas))
             );
         
         _ui.SetEnforceWindowSize(true);
@@ -95,7 +81,7 @@ public class TextureEditor
         ImQueue queue = new ImQueue();
         queue.TryGetSwapchainTexture(EditorWindow, ref _swapchainTexture);
         
-        _canvasPanel.RenderCanvas(ref queue);
+        _canvas.Render(ref queue);
 
         var uiTexture = _ui.Render(queue);
         

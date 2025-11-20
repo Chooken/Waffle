@@ -1441,6 +1441,41 @@ public partial class SDL
     [LibraryImport(SDLLibrary, EntryPoint = "SDL_BeginGPUComputePass"), UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     public static partial IntPtr BeginGPUComputePass(IntPtr commandBuffer, GPUStorageTextureReadWriteBinding[] storageTextureBindings, uint numStorageTextureBindings, GPUStorageBufferReadWriteBinding[] storageBufferBindings, uint numStorageBufferBindings);
     
+    /// <code>extern SDL_DECLSPEC SDL_GPUComputePass *SDLCALL SDL_BeginGPUComputePass(SDL_GPUCommandBuffer *command_buffer, const SDL_GPUStorageTextureReadWriteBinding *storage_texture_bindings, Uint32 num_storage_texture_bindings, const SDL_GPUStorageBufferReadWriteBinding *storage_buffer_bindings, Uint32 num_storage_buffer_bindings);</code>
+    /// <summary>
+    /// <para>Begins a compute pass on a command buffer.</para>
+    /// <para>A compute pass is defined by a set of texture subresources and buffers that
+    /// may be written to by compute pipelines. These textures and buffers must
+    /// have been created with the <see cref="GPUTextureUsageFlags.ComputeStorageWrite"/> bit or the
+    /// <see cref="GPUTextureUsageFlags.ComputeStorageSimultaneousReadWrite"/> bit. If you do not create a texture
+    /// with <see cref="GPUTextureUsageFlags.ComputeStorageSimultaneousReadWrite"/>, you must not read from the
+    /// texture in the compute pass. All operations related to compute pipelines
+    /// must take place inside of a compute pass. You must not begin another
+    /// compute pass, or a render pass or copy pass before ending the compute pass.</para>
+    /// <para>A VERY IMPORTANT NOTE - Reads and writes in compute passes are NOT
+    /// implicitly synchronized. This means you may cause data races by both
+    /// reading and writing a resource region in a compute pass, or by writing
+    /// multiple times to a resource region. If your compute work depends on
+    /// reading the completed output from a previous dispatch, you MUST end the
+    /// current compute pass and begin a new one before you can safely access the
+    /// data. Otherwise you will receive unexpected results. Reading and writing a
+    /// texture in the same compute pass is only supported by specific texture
+    /// formats. Make sure you check the format support!</para>
+    /// </summary>
+    /// <param name="commandBuffer">a command buffer.</param>
+    /// <param name="storageTextureBindings">an array of writeable storage texture
+    /// binding structs.</param>
+    /// <param name="numStorageTextureBindings">the number of storage textures to bind
+    /// from the array.</param>
+    /// <param name="storageBufferBindings">an array of writeable storage buffer binding
+    /// structs.</param>
+    /// <param name="numStorageBufferBindings">the number of storage buffers to bind
+    /// from the array.</param>
+    /// <returns>a compute pass handle.</returns>
+    /// <since>This function is available since SDL 3.2.0</since>
+    /// <seealso cref="EndGPUComputePass"/>
+    [LibraryImport(SDLLibrary, EntryPoint = "SDL_BeginGPUComputePass"), UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    public static partial IntPtr BeginGPUComputePass(IntPtr commandBuffer, IntPtr storageTextureBindings, uint numStorageTextureBindings, IntPtr storageBufferBindings, uint numStorageBufferBindings);
     
     /// <code>extern SDL_DECLSPEC void SDLCALL SDL_BindGPUComputePipeline(SDL_GPUComputePass *compute_pass, SDL_GPUComputePipeline *compute_pipeline);</code>
     /// <summary>

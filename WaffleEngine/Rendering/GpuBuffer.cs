@@ -12,10 +12,11 @@ public sealed unsafe class RenderBuffer<T> : IRenderBindable, IComputeBindable w
     public BufferUsage Usage => _usage;
     public int Length => _gpuBufferSize;
 
-    public RenderBuffer(BufferUsage usage)
+    public RenderBuffer(BufferUsage usage, int startSize = 16)
     {
         _usage = usage;
-        _gpuBufferSize = 0;
+        _gpuBufferSize = startSize;
+        AllocateBuffer(startSize);
     }
 
     private void AllocateBuffer(int size)
@@ -102,13 +103,14 @@ public sealed unsafe class RenderBuffer<T> : IRenderBindable, IComputeBindable w
     
     public void Bind(ImComputePass computePass, uint slot)
     {
-        if (_usage.HasFlag(BufferUsage.ComputeStorageRead) || _usage.HasFlag(BufferUsage.ComputeStorageWrite))
+        if (_usage != BufferUsage.ComputeStorageRead)
         {
-            IntPtr ptr = _gpuBuffer;
-            
-            SDL.BindGPUComputeStorageBuffers(computePass.Handle, slot, (IntPtr)(&ptr), 1);
             return;
         }
+        
+        IntPtr ptr = _gpuBuffer;
+            
+        SDL.BindGPUComputeStorageBuffers(computePass.Handle, slot, (IntPtr)(&ptr), 1);
     }
 
     private void BindAsVertexBuffer(ImRenderPass renderPass, uint slot)

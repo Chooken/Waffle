@@ -5,59 +5,53 @@ using WaffleEngine.UI;
 
 namespace OurStory.Editor;
 
-public class CanvasPanel
+public class CanvasPanel : Rect
 {
-    public Rect PanelUI;
     public RectCrt CanvasRect;
     public Canvas Canvas;
-    public Color CursorColor;
     public Vector2 CursorPosition;
-    public Shader CanvasBlitShader;
-    public ICanvasTool? CanvasTool;
-
-    public Color BorderColor;
     
-    public CanvasPanel(Window window, uint width, uint height)
+    public CanvasPanel(Window window, Canvas canvas)
     {
-        Canvas = new Canvas(width, height);
-        CanvasRect = new RectCrt(Canvas.GetCanvas(), new Vector2(width, height), 0.0f);
-        PanelUI = new Rect()
-            .Default(() => new RectSettings()
+        Canvas = canvas;
+        CanvasRect = new RectCrt(Canvas.GetCanvas(), 0.0f);
+        
+        Default(() => new RectSettings()
+        {
+            Width = Ui.Grow,
+            Height = Ui.Grow,
+            Alignment = (UiAlignmentVertical.Center, UiAlignmentHorizontal.Center),
+        })
+        .Add(CanvasRect
+            .Default(() =>
             {
-                Width = Ui.Grow,
-                Height = Ui.Grow,
-                Alignment = (UiAlignmentVertical.Center, UiAlignmentHorizontal.Center),
+                CursorPosition = new Vector2(-1, -1);
+                
+                return new RectSettings()
+                {
+                    Width = Ui.Grow,
+                    Height = Ui.Grow,
+                    BorderRadius = 40,
+                    BorderSize = 4,
+                    BorderColor = TextureEditor.PanelColor,
+                };
             })
-            .Add(CanvasRect
-                .Default(() =>
-                {
-                    CursorPosition = new Vector2(-1, -1);
-                    
-                    return new RectSettings()
-                    {
-                        Width = Ui.Grow,
-                        Height = Ui.Grow,
-                        BorderRadius = 40,
-                        BorderSize = 4,
-                        BorderColor = BorderColor,
-                    };
-                })
-                .OnHover((ref RectSettings settings) =>
-                {
-                    CalculateCursorPosition(window);
-                    CanvasTool?.OnHover(Canvas, CursorPosition, ref CursorColor);
-                })
-                .OnClick((ref RectSettings item) =>
-                {
-                    CalculateCursorPosition(window);
-                    CanvasTool?.OnClick(Canvas, CursorPosition, ref CursorColor);
-                })
-                .OnHold((ref RectSettings settings) =>
-                {
-                    CalculateCursorPosition(window);
-                    CanvasTool?.OnHold(Canvas, CursorPosition, ref CursorColor);
-                })
-            );
+            .OnHover((ref RectSettings settings) =>
+            {
+                CalculateCursorPosition(window);
+                TextureEditor.SharedState.SelectedTool?.OnHover(Canvas, CursorPosition);
+            })
+            .OnClick((ref RectSettings item) =>
+            {
+                CalculateCursorPosition(window);
+                TextureEditor.SharedState.SelectedTool?.OnClick(Canvas, CursorPosition);
+            })
+            .OnHold((ref RectSettings settings) =>
+            {
+                CalculateCursorPosition(window);
+                TextureEditor.SharedState.SelectedTool?.OnHold(Canvas, CursorPosition);
+            })
+        );
     }
 
     private void CalculateCursorPosition(Window window)
@@ -67,14 +61,7 @@ public class CanvasPanel
         Vector2 uiSize = new Vector2(CanvasRect.Bounds.CalculatedWidth, CanvasRect.Bounds.CalculatedHeight);
 
         CursorPosition = new Vector2(
-            (int)((position.x - uiPos.x) / uiSize.x * CanvasRect.Resolution.x),
-            (int)((position.y - uiPos.y) / uiSize.y * CanvasRect.Resolution.y));
+            (int)((position.x - uiPos.x) / uiSize.x * CanvasRect.Texture.Width),
+            (int)((position.y - uiPos.y) / uiSize.y * CanvasRect.Texture.Height));
     }
-
-    public void RenderCanvas(ref ImQueue queue)
-    {
-        Canvas.Render(ref queue);
-    }
-
-    public static implicit operator Rect(CanvasPanel panel) => panel.PanelUI;
 }

@@ -4,52 +4,43 @@ using WaffleEngine.UI;
 
 namespace OurStory.Editor;
 
-public class ToolPanel
+public class ToolPanel : Rect
 {
-    public Rect Panel;
-
-    public Action<ICanvasTool> OnToolSelected;
-
-    public Font TextFont;
-    public Color BackgroundColor;
-    public Color ButtonColor;
-    public Color ButtonClickColor;
-
     public ToolPanel(Font font)
     {
-        TextFont = font;
-        
-        Panel = new Rect()
-            .Default(() => new RectSettings()
-            {
-                Width = Ui.Grow,
-                Color = BackgroundColor,
-                Padding = 8,
-                Gap = 4,
-                BorderRadius = 8,
-            });
-        
-        Panel.Add(ToolButton(new PenTool(), "Pen"));
-        Panel.Add(ToolButton(new ShadeTool(), "Shade"));
+        Default(() => new RectSettings()
+        {
+            Width = Ui.Grow,
+            Color = TextureEditor.PanelColor,
+            Padding = 8,
+            Gap = 4,
+            BorderRadius = 8,
+        });
+
+        foreach (var type in TextureEditor.SharedState.Tools.Keys)
+        {
+            Add(ToolButton(TextureEditor.SharedState.Tools[type], font, type.Name[..^4]));
+        }
     }
 
-    public Rect ToolButton(ICanvasTool tool, string name) =>
+    public Rect ToolButton(ICanvasTool tool, Font font, string name) =>
         new Rect()
             .Default(() => new RectSettings()
             {
                 Padding = (8, 4),
-                Color = ButtonColor,
+                Color = TextureEditor.ElementColor,
                 BorderRadius = 4,
+                BorderSize = TextureEditor.SharedState.SelectedTool == tool ? 4 : 0,
+                BorderColor = TextureEditor.ElementHighlight,
             })
             .OnClick((ref RectSettings settings) =>
             {
-                OnToolSelected?.Invoke(tool);
+                TextureEditor.SharedState.SelectedTool = tool;
             })
             .OnHold((ref RectSettings settings) =>
             {
-                settings.Color = ButtonClickColor;
+                settings.Color = TextureEditor.ElementPressColor;
             })
-            .Add(new Text(name, TextFont));
+            .Add(new Text(name, font));
 
-    public static implicit operator Rect(ToolPanel toolPanel) => toolPanel.Panel;
 }

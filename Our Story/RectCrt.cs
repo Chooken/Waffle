@@ -18,9 +18,8 @@ public struct UICrtData
     public float BorderSize;
 }
 
-public class RectCrt(GpuTexture texture, Vector2 resolution, float chromaticAberration) : Rect
+public class RectCrt(GpuTexture texture, float chromaticAberration) : Rect
 {
-    public Vector2 Resolution = resolution;
     public float ChromaticAberration = chromaticAberration;
     public GpuTexture Texture = texture;
 
@@ -46,7 +45,7 @@ public class RectCrt(GpuTexture texture, Vector2 resolution, float chromaticAber
                 RectSettings.BorderRadius.TopRight),
             BorderColor = RectSettings.BorderColor,
             ScreenSize = renderSize,
-            RefRes = Resolution,
+            RefRes = new Vector2(Texture.Width, Texture.Height),
             ChromaticAberration = ChromaticAberration,
             BorderSize = RectSettings.BorderSize
         };
@@ -66,21 +65,6 @@ public class RectCrt(GpuTexture texture, Vector2 resolution, float chromaticAber
             //Log.Error("Shader not found");
             return false;
         }
-        
-        _shader.SetPipeline(new PipelineSettings()
-        {
-            ColorBlendOp = BlendOp.Add,
-            AlphaBlendOp = BlendOp.Add,
-            SrcColorBlendFactor = BlendFactor.SrcAlpha,
-            DstColorBlendFactor = BlendFactor.OneMinusSrcAlpha,
-            SrcAlphaBlendFactor = BlendFactor.SrcAlpha,
-            DstAlphaBlendFactor = BlendFactor.One,
-            ColorTargetFormat = TextureFormat.B8G8R8A8Unorm,
-            PrimitiveType = PrimitiveType.TriangleList,
-            FillMode = FillMode.Fill,
-            VertexInputRate = VertexInputRate.Vertex,
-            VertexAttributes = null,
-        });
 
         return true;
     }

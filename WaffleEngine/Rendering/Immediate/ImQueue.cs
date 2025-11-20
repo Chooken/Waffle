@@ -23,6 +23,16 @@ public struct ImQueue()
         return new ImRenderPass(this, colorTargetSettings);
     }
 
+    public ImComputePass AddComputePass(ReadWriteTextureBinding[] textureBindings)
+    {
+        if (Handle == IntPtr.Zero)
+        {
+            WLog.Error("Command Queue wasn't created before calling AddRenderPass");
+        }
+
+        return new ImComputePass(this, textureBindings);
+    }
+
     public ImCopyPass AddCopyPass()
     {
         if (Handle == IntPtr.Zero)
@@ -71,21 +81,6 @@ public struct ImQueue()
             WLog.Error("The builtin blit shader isn't loaded.");
             return false;
         }
-    
-        shader.SetPipeline(new PipelineSettings()
-        {
-            ColorBlendOp = BlendOp.Add,
-            AlphaBlendOp = BlendOp.Add,
-            SrcColorBlendFactor = BlendFactor.SrcAlpha,
-            DstColorBlendFactor = BlendFactor.OneMinusSrcAlpha,
-            SrcAlphaBlendFactor = BlendFactor.SrcAlpha,
-            DstAlphaBlendFactor = BlendFactor.OneMinusSrcAlpha,
-            ColorTargetFormat = TextureFormat.B8G8R8A8Unorm,
-            PrimitiveType = PrimitiveType.TriangleList,
-            FillMode = FillMode.Fill,
-            VertexInputRate = VertexInputRate.Vertex,
-            VertexAttributes = null
-        });
     
         _blitMaterial = new Material(shader);
         return true;
@@ -231,10 +226,25 @@ public struct ImCopyPass(ImQueue queue)
     }
 }
 
-public struct ImComputePass(ImQueue queue, ReadWriteTextureBinding[] readWriteTextureBindings)
+public struct ImComputePass
 {
-    public IntPtr Handle { get; private set; } = SDL.BeginGPUComputePass(queue.Handle, Unsafe.BitCast<ReadWriteTextureBinding[], SDL.GPUStorageTextureReadWriteBinding[]>(readWriteTextureBindings), (uint)readWriteTextureBindings.Length, null, 0);
-    public ImQueue Queue { get; } = queue;
+    public IntPtr Handle { get; private set; }
+    public ImQueue Queue { get; }
+
+    public unsafe ImComputePass(ImQueue queue, ReadWriteTextureBinding[] readWriteTextureBindings)
+    {
+        fixed (ReadWriteTextureBinding* ptr = readWriteTextureBindings)
+        {
+            Handle = SDL.BeginGPUComputePass(
+                queue.Handle,
+                (IntPtr)ptr,
+                (uint)readWriteTextureBindings.Length,
+                IntPtr.Zero, 
+                0);
+        }
+
+        Queue = queue;
+    }
 
     public unsafe void SetUniforms<T>(T value)
     {
@@ -260,5 +270,6 @@ public struct ImComputePass(ImQueue queue, ReadWriteTextureBinding[] readWriteTe
     public void End()
     {
         SDL.EndGPUComputePass(Handle);
+        Handle = IntPtr.Zero;
     }
 }

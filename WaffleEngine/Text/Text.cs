@@ -107,30 +107,21 @@ public class AtlasedText
         queue.Submit();
     }
 
-    public unsafe void Render(ImRenderPass renderPass, Vector3 position, Vector2 renderSize)
+    public unsafe void Render(ImRenderPass renderPass, Vector3 position, Vector2 renderSize, Color color)
     {
         if (_shader is null)
         {
-            if (!Assets.TryGetShader("builtin", "textured-quad", out _shader))
+            if (!Assets.TryGetShader("builtin", "ui-text", out _shader))
             {
                 WLog.Error("Shader not found: BuiltinShaders/textured-quad");
                 return;
             }
-            
-            _shader.SetPipeline(PipelineSettings.Default with
-            {
-                VertexAttributes = new List<VertexAttributeType>()
-                {
-                    VertexAttributeType.Float3,
-                    VertexAttributeType.Float2
-                }
-            });
         }
         
         if (_empty)
             return;
         
-        renderPass.SetUniforms((new AlignedVector3(position), renderSize));
+        renderPass.SetUniforms((color, new AlignedVector3(position), renderSize));
         
         _shader.Bind(renderPass);
         renderPass.Bind(_vertexBuffer);

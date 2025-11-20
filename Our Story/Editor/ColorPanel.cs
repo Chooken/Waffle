@@ -3,30 +3,18 @@ using WaffleEngine.UI;
 
 namespace OurStory.Editor;
 
-public class ColorPanel
+public class ColorPanel : Rect
 {
-    public Color SelectedColor { get; private set; }
-    public Rect Panel;
-    public Action<Color> OnColorSelected;
-    public Color BackgoundColor;
-
-    public static Rect Create()
-    {
-        ColorPanel colorPanel = new ColorPanel();
-        return colorPanel.Panel;
-    }
-
     public ColorPanel()
     {
-        Panel = new Rect()
-            .Default(() => new RectSettings()
-            {
-                Height = Ui.Grow,
-                Color = BackgoundColor,
-                Direction = UiDirection.TopToBottom,
-                Padding = 8,
-                BorderRadius = 8,
-            });
+        Default(() => new RectSettings()
+        {
+            Height = Ui.Grow,
+            Color = TextureEditor.BackgroundColor,
+            Direction = UiDirection.TopToBottom,
+            Padding = 8,
+            BorderRadius = 8,
+        });
 
         int rows = 17;
         int columns = 7;
@@ -47,7 +35,7 @@ public class ColorPanel
                 rect.Add(ColorToggle(color));
             }
 
-            Panel.Add(rect);
+            Add(rect);
         }
         
         var finalRect = new Rect()
@@ -60,7 +48,7 @@ public class ColorPanel
         finalRect.Add(ColorToggle(new Color(0, 0, 0, 1)));
         finalRect.Add(ColorToggle(new Color(0, 0, 0, 0)));
 
-        Panel.Add(finalRect);
+        Add(finalRect);
     }
     
     public Rect ColorToggle(Color color) =>
@@ -71,11 +59,11 @@ public class ColorPanel
                 Height = Ui.Fixed(18),
                 Color = color.WithAlphaOne(),
                 BorderColor = new Color(1,1,1,1),
-                BorderSize = SelectedColor == color ? 4 : 0,
+                BorderSize = TextureEditor.SharedState.SelectedColor == color ? 4 : 0,
             })
             .OnHover((ref RectSettings settings) =>
             {
-                if (SelectedColor == color)
+                if (TextureEditor.SharedState.SelectedColor == color)
                     return;
                 
                 settings.BorderColor = new Color(0, 0, 0, 1);
@@ -83,9 +71,7 @@ public class ColorPanel
             })
             .OnClick((ref RectSettings settings) =>
             {
-                SelectedColor = color;
-                OnColorSelected.Invoke(color);
+                TextureEditor.SharedState.SelectedColor = color;
+                TextureEditor.SharedState.ColorBrightness = 1;
             });
-
-    public static implicit operator Rect(ColorPanel panel) => panel.Panel;
 }

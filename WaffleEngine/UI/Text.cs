@@ -8,6 +8,14 @@ public class Text : UiElement
     private AtlasedText _atlasedText;
     private Font _font;
     private float _fontSize;
+    private TextSettings _textSettings;
+
+    public struct TextSettings
+    {
+        public Color Color;
+    }
+    
+    private Func<TextSettings>? _default;
 
     public Text(string text, Font font)
     {
@@ -18,13 +26,23 @@ public class Text : UiElement
     
     public override void Render(ImRenderPass renderPass, Vector2 renderSize)
     {
-        _atlasedText.Render(renderPass, Bounds.CalculatedPosition * Bounds.Scale * Window.GetDensity(), renderSize * Bounds.Scale * Window.GetDensity());
+        _atlasedText.Render(
+            renderPass, 
+            Bounds.CalculatedPosition * Bounds.Scale * Window.GetDensity(), 
+            renderSize * Bounds.Scale * Window.GetDensity(),
+            _textSettings.Color
+            );
     }
 
     public override void Update()
     {
         if (_font.Size != _fontSize * Bounds.Scale * Window.GetDensity())
             _font.SetFontSize(_fontSize * Bounds.Scale * Window.GetDensity());
+
+        _textSettings = _default?.Invoke() ?? new TextSettings
+        {
+            Color = new Color(1,1,1,1),
+        };
         
         _atlasedText.Update();
         Vector2 size = _atlasedText.GetSize();
@@ -37,4 +55,11 @@ public class Text : UiElement
     public override bool OnClick() { return false; }
 
     public override bool OnHold() { return false; }
+    
+    public Text Default(Func<TextSettings> defaultSettings)
+    {
+        _default += defaultSettings;
+        _textSettings = _default.Invoke();
+        return this;
+    }
 }
