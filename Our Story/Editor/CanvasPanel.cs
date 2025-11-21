@@ -26,14 +26,16 @@ public class CanvasPanel : Rect
             .Default(() =>
             {
                 CursorPosition = new Vector2(-1, -1);
-                
+                CanvasRect.UseMinMax = TextureEditor.SharedState.UseMinMax;
                 return new RectSettings()
                 {
                     Width = Ui.Grow,
                     Height = Ui.Grow,
+                    AspectRatio = (float)canvas.Width / canvas.Height,
                     BorderRadius = 40,
                     BorderSize = 4,
                     BorderColor = TextureEditor.PanelColor,
+                    Color = TextureEditor.BackgroundColor,
                 };
             })
             .OnHover((ref RectSettings settings) =>

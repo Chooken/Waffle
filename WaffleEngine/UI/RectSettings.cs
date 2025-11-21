@@ -13,6 +13,10 @@ public struct RectSettings()
     /// </summary>
     public UiSizeData Height = Ui.Fit;
     /// <summary>
+    /// The aspect ratio of height in relation to width.
+    /// </summary>
+    public float AspectRatio = -1;
+    /// <summary>
     /// Padding around the children on the element.
     /// </summary>
     public UiPadding Padding;
@@ -45,6 +49,10 @@ public struct RectSettings()
     /// The color of the rect.
     /// </summary>
     public Color Color;
+    /// <summary>
+    /// The Cursor to show when captured.
+    /// </summary>
+    public Cursor Cursor;
     
     public static bool operator ==(RectSettings left, RectSettings right)
     {
@@ -61,6 +69,7 @@ public struct RectSettings()
         return
             Width == other.Width &&
             Height == other.Height &&
+            AspectRatio == other.AspectRatio &&
             Padding == other.Padding &&
             BorderRadius == other.BorderRadius &&
             Gap == other.Gap &&
@@ -68,7 +77,8 @@ public struct RectSettings()
             Alignment == other.Alignment &&
             Color == other.Color &&
             BorderColor == other.BorderColor &&
-            BorderSize == other.BorderSize;
+            BorderSize == other.BorderSize &&
+            Cursor == other.Cursor;
     }
 
     public void MoveTowards(RectSettings other)
@@ -80,9 +90,11 @@ public struct RectSettings()
     {
         Width = Width,
         Height = Height,
+        AspectRatio = AspectRatio,
         Alignment = Alignment,
         Direction = Direction,
         Gap = Gap,
         Padding = Padding,
+        Cursor = Cursor,
     };
 }

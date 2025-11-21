@@ -21,9 +21,9 @@ public class TextureEditor
 
     public static Color FontColor = Color.RGBA255(200, 200, 200, 255);
     
-    public static Color ElementHighlight = Color.RGBA255(80, 80, 80, 255);
+    public static Color ElementHighlight = Color.RGBA255(60, 60, 60, 255);
     public static Color ElementShadow = Color.RGBA255(20, 20, 20, 255);
-    public static Color ElementPressColor = Color.RGBA255(25, 25, 25, 255);
+    public static Color ElementPressColor = Color.RGBA255(80, 80, 80, 255);
 
     public static Font Font;
     
@@ -57,7 +57,7 @@ public class TextureEditor
                 Padding = 8,
                 Gap = 8,
             })
-            .Add(new ToolPanel())
+            .Add(new Topbar())
             .Add(new Rect()
                 .Default(() => new RectSettings()
                 {

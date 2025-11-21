@@ -58,6 +58,14 @@ public abstract class UiElement
         if (propagateEvents)
         {
             propagateEvents = !ProcessEvents(window);
+
+            if (!propagateEvents)
+            {
+                for (int i = Children.Count - 1; i >= 0; i--)
+                {
+                    propagateEvents = Children[i].PropagateUpdate(window, propagateEvents);
+                }
+            }
         }
         
         Update();
@@ -95,6 +103,8 @@ public abstract class UiElement
                 _down = false;
                 OnMouseUp();
             }
+
+            Mouse.SetCursor(Settings.Cursor);
         }
         else
         {

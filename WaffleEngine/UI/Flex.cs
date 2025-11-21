@@ -75,10 +75,6 @@ public struct Flex : ILayout
                     element.Bounds.CalculatedWidth = 
                         element.Settings.Width.ComputeValue(element.Bounds.ContentWidth + element.Settings.Padding.TotalHorizontal);
                     break;
-                case UiSizeType.RatioOfX:
-                    element.Bounds.CalculatedWidth = 
-                        element.Settings.Width.ComputeValue(element.Bounds.ContentWidth + element.Settings.Padding.TotalHorizontal) * element.Settings.Width.Value;
-                    break;
                 default:
                     element.Bounds.CalculatedWidth = 0;
                     break;
@@ -94,10 +90,6 @@ public struct Flex : ILayout
                 case UiSizeType.Fit or UiSizeType.Grow:
                     element.Bounds.CalculatedHeight =
                         element.Settings.Height.ComputeValue(element.Bounds.ContentHeight + element.Settings.Padding.TotalVertical);
-                    break;
-                case UiSizeType.RatioOfX:
-                    // Not sure if I should make this manipulated by min, max and step.
-                    element.Bounds.CalculatedHeight = element.Bounds.CalculatedWidth * element.Settings.Height.Value;
                     break;
                 default:
                     element.Bounds.CalculatedHeight = 0;
@@ -152,6 +144,30 @@ public struct Flex : ILayout
         
         RecalculateContentSize(element, width);
     }
+
+    public void ApplyContraints(UiElement element, bool width)
+    {
+        if (element.Settings.AspectRatio > 0)
+        {
+            if (width)
+            {
+                element.Bounds.CalculatedWidth = element.Bounds.CalculatedHeight * element.Settings.AspectRatio;
+                element.Settings.Width.MaxValue = element.Bounds.CalculatedWidth;
+            }
+            else
+            {
+                element.Bounds.CalculatedHeight = (1 / element.Settings.AspectRatio) * element.Bounds.CalculatedWidth;
+                element.Settings.Height.MaxValue = element.Bounds.CalculatedHeight;
+            }
+        }
+
+        foreach (var child in element.Children)
+        {
+            child.Layout.ApplyContraints(child, width);
+        }
+        
+        RecalculateContentSize(element, width);
+    }
     
     public void GrowChildren(UiElement element, bool width)
     {
@@ -202,6 +218,9 @@ public struct Flex : ILayout
                                 (float value, float overflow) =
                                     child.Settings.Width.GetRemainder(child.Bounds.CalculatedWidth + growValue);
 
+                                if (overflow > 0)
+                                    childGrowCount--;
+                                
                                 child.Bounds.CalculatedWidth = value;
                                 remainder -= growValue - overflow;
                             }

@@ -4,57 +4,27 @@ using WaffleEngine.UI;
 
 namespace OurStory.Editor;
 
-public class ToolPanel : Rect
+public class ToolSelector : Rect
 {
-    public ToolPanel()
+    public ToolSelector()
     {
         Default(() => new RectSettings()
         {
-            Width = Ui.Grow,
+            Height = Ui.Grow,
+            Color = TextureEditor.BackgroundColor,
             Padding = 4,
+            Gap = 4,
             BorderRadius = 8,
-            Color = TextureEditor.PanelColor,
-            Gap = 8,
+            Alignment = new UiAlignment
+            {
+                Vertical = UiAlignmentVertical.Center
+            }
         });
-
-        var undoRedoPanel = new Rect()
-            .Default(() => new RectSettings()
-            {
-                Height = Ui.Grow,
-                Color = TextureEditor.BackgroundColor,
-                Padding = 4,
-                Gap = 4,
-                BorderRadius = 8,
-                Alignment = new UiAlignment
-                {
-                    Vertical = UiAlignmentVertical.Center
-                }
-            });
-
-        undoRedoPanel.Add(new UndoButton());
-        undoRedoPanel.Add(new RedoButton());
-
-        var toolsPanel = new Rect()
-            .Default(() => new RectSettings()
-            {
-                Height = Ui.Grow,
-                Color = TextureEditor.BackgroundColor,
-                Padding = 4,
-                Gap = 4,
-                BorderRadius = 8,
-                Alignment = new UiAlignment
-                {
-                    Vertical = UiAlignmentVertical.Center
-                }
-            });
 
         foreach (var type in TextureEditor.SharedState.Tools.Keys)
         {
-            toolsPanel.Add(ToolButton(TextureEditor.SharedState.Tools[type], TextureEditor.Font, type.Name[..^4]));
+            Add(ToolButton(TextureEditor.SharedState.Tools[type], TextureEditor.Font, type.Name[..^4]));
         }
-
-        Add(undoRedoPanel);
-        Add(toolsPanel);
     }
 
     public Rect ToolButton(ICanvasTool tool, Font font, string name) =>
@@ -80,6 +50,7 @@ public class ToolPanel : Rect
             })
             .OnHover((ref RectSettings settings) =>
             {
+                settings.Cursor = Cursor.Pointer;
                 settings.Color = TextureEditor.PanelColor;
             })
             .Add(new Rect()

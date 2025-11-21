@@ -100,6 +100,8 @@ public class ColorPanel : Rect
             })
             .OnHover((ref RectSettings settings) =>
             {
+                settings.Cursor = Cursor.Pointer;
+                
                 if (TextureEditor.SharedState.SelectedColor == color)
                     return;
                 

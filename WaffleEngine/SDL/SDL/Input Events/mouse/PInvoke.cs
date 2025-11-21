@@ -28,6 +28,7 @@
 
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using WaffleEngine;
 
 namespace SDL3;
 
@@ -420,7 +421,7 @@ public static partial class SDL
     /// <since>This function is available since SDL 3.2.0</since>
     /// <seealso cref="DestroyCursor"/>
     [LibraryImport(SDLLibrary, EntryPoint = "SDL_CreateSystemCursor"), UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-    public static partial IntPtr CreateSystemCursor(SystemCursor id);
+    public static partial IntPtr CreateSystemCursor(SDL.SystemCursor id);
 
 
     /// <code>extern SDL_DECLSPEC bool SDLCALL SDL_SetCursor(SDL_Cursor *cursor);</code>

@@ -17,6 +17,13 @@ public interface ILayout
     public void CalculatePercentages(UiElement element, bool width);
 
     /// <summary>
+    /// Apply Contraints ie: Aspect Ratios
+    /// </summary>
+    /// <param name="element"></param>
+    /// <param name="width"></param>
+    public void ApplyContraints(UiElement element, bool width);
+
+    /// <summary>
     /// Grows the children to fill the remainder.
     /// </summary>
     /// <param name="width">Is the Width or Height calculated.</param>

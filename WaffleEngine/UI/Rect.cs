@@ -42,7 +42,7 @@ public class Rect : UiElement
 
     public override void Update()
     {
-        if (_newRectSettings != RectSettings)
+        if (_newRectSettings != RectSettings || Settings != RectSettings.ToUiSettings())
         {
             RectSettings.MoveTowards(_newRectSettings);
             Settings = RectSettings.ToUiSettings();

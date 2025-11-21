@@ -16,12 +16,14 @@ public struct UICrtData
     public Vector2 RefRes;
     public float ChromaticAberration;
     public float BorderSize;
+    public int UseMinMax;
 }
 
 public class RectCrt(GpuTexture texture, float chromaticAberration) : Rect
 {
     public float ChromaticAberration = chromaticAberration;
     public GpuTexture Texture = texture;
+    public bool UseMinMax = false;
 
     private static Shader? _shader;
 
@@ -47,7 +49,8 @@ public class RectCrt(GpuTexture texture, float chromaticAberration) : Rect
             ScreenSize = renderSize,
             RefRes = new Vector2(Texture.Width, Texture.Height),
             ChromaticAberration = ChromaticAberration,
-            BorderSize = RectSettings.BorderSize
+            BorderSize = RectSettings.BorderSize,
+            UseMinMax = UseMinMax ? 1 : 0,
         };
 
         renderPass.SetUniforms(data);

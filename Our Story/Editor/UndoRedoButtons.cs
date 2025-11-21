@@ -1,3 +1,4 @@
+using WaffleEngine;
 using WaffleEngine.UI;
 
 namespace OurStory.Editor;
@@ -10,7 +11,7 @@ public class UndoButton : Rect
         {
             Height = Ui.Grow,
             Padding = (12, 6),
-            BorderRadius = 6,
+            BorderRadius = 8,
             Alignment = new UiAlignment
             {
                 Vertical = UiAlignmentVertical.Center,
@@ -20,7 +21,8 @@ public class UndoButton : Rect
             
         OnHover((ref RectSettings settings) =>
         {
-            settings.Color = TextureEditor.PanelColor;
+            settings.Cursor = Cursor.Pointer;
+            settings.Color = TextureEditor.ElementHighlight;
         });
         
         OnMouseDown((ref RectSettings settings) =>
@@ -30,7 +32,7 @@ public class UndoButton : Rect
         
         OnHold((ref RectSettings settings) =>
         {
-            settings.Color = TextureEditor.ElementShadow;
+            settings.Color = TextureEditor.ElementPressColor;
         });
         
         Add(new Rect()
@@ -53,7 +55,7 @@ public class RedoButton : Rect
         {
             Height = Ui.Grow,
             Padding = (12, 6),
-            BorderRadius = 6,
+            BorderRadius = 8,
             Alignment = new UiAlignment
             {
                 Vertical = UiAlignmentVertical.Center,
@@ -63,7 +65,8 @@ public class RedoButton : Rect
             
         OnHover((ref RectSettings settings) =>
         {
-            settings.Color = TextureEditor.PanelColor;
+            settings.Cursor = Cursor.Pointer;
+            settings.Color = TextureEditor.ElementHighlight;
         });
         
         OnMouseDown((ref RectSettings settings) =>
@@ -73,7 +76,7 @@ public class RedoButton : Rect
         
         OnHold((ref RectSettings settings) =>
         {
-            settings.Color = TextureEditor.ElementShadow;
+            settings.Color = TextureEditor.ElementPressColor;
         });
         
         Add(new Rect()

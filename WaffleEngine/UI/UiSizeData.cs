@@ -6,7 +6,6 @@ public enum UiSizeType
     Grow,
     Percentage,
     Fixed,
-    RatioOfX,
 }
 
 public struct UiSizeData
@@ -124,14 +123,6 @@ public static partial class Ui
     {
         Value = value,
         SizeType = UiSizeType.Fixed,
-        MinValue = float.MinValue,
-        MaxValue = float.MaxValue,
-    };
-
-    public static UiSizeData RatioOfX(float value) => new UiSizeData
-    {
-        Value = value,
-        SizeType = UiSizeType.RatioOfX,
         MinValue = float.MinValue,
         MaxValue = float.MaxValue,
     };

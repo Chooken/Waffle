@@ -8,6 +8,7 @@ cbuffer UIElement : register(b0, space3) {
     float2 RefRes;
     float ChromaticAberration;
     float BorderSize;
+    int UseMinMax;
 }
 
 struct VertexOutput {
@@ -40,17 +41,24 @@ float4 main(VertexOutput input) : SV_Target {
     float2 uv = float2(input.UV.x, (floor(input.UV.y * RefRes.y) + 0.5f) / RefRes.y);
     float2 uv2 = (float2(input.UV.x, 1 - input.UV.y) * RefRes % 1 - 0.5f) * 2;
 
-    float3 color;
+    float4 color;
 
     color.r = Texture.Sample(Sampler, saturate(uv - float2(ChromaticAberration / RefRes.x, 0))).r;
-    color.gb = Texture.Sample(Sampler, uv).gb;
+    color.gba = Texture.Sample(Sampler, uv).gba;
+
+    color = float4(lerp(input.Color.rgb, color.rgb, color.a), 1);
 
     float3 outputColor;
 
-    float minHeight = max(0.2f, 1 / (Size.y / RefRes.y) * 2);
+    float minHeight = 0;
+
+    if (UseMinMax == 1)
+    {
+        minHeight = max(0.2f, 1 / (Size.y / RefRes.y) * 2);
+    }
     
     float height = abs(uv2.y);
-    float3 rayHeight = max(color, minHeight);
+    float3 rayHeight = max(color, minHeight).rgb;
     
     rayHeight.r = 1 - pow(1 - rayHeight.r, 3);
     rayHeight.g = 1 - pow(1 - rayHeight.g, 3);
@@ -62,5 +70,5 @@ float4 main(VertexOutput input) : SV_Target {
 
     outputColor = lerp(outputColor * color.rgb, BorderColor.rgb, saturate(alpha + BorderSize) * saturate(BorderSize));
 
-    return float4(lerp(max(outputColor, color.rgb * 0.0f), input.Color.rgb, input.Color.a), -alpha);
+    return float4(max(outputColor, color.rgb * 0.1f), -alpha);
 }

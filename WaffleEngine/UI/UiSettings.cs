@@ -13,6 +13,10 @@ public struct UiSettings()
     /// </summary>
     public UiSizeData Height = Ui.Fit;
     /// <summary>
+    /// The aspect ratio of the element. -1 if disabled.
+    /// </summary>
+    public float AspectRatio = -1;
+    /// <summary>
     /// Padding around the children on the element.
     /// </summary>
     public UiPadding Padding;
@@ -29,6 +33,10 @@ public struct UiSettings()
     /// The gap between children.
     /// </summary>
     public float Gap;
+    /// <summary>
+    /// The cursor to show when captured input.
+    /// </summary>
+    public Cursor Cursor = Cursor.Default;
     
     public static bool operator ==(UiSettings left, UiSettings right)
     {
