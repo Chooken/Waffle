@@ -143,11 +143,11 @@ public abstract class UiElement
     
     public Vector2 RelativePosition(Vector2 position)
     {
-        Vector3 uiPos = Bounds.CalculatedPosition;
-        Vector2 uiSize = new Vector2(Bounds.CalculatedWidth, Bounds.CalculatedHeight);
+        Vector3 uiPos = Bounds.CalculatedPosition + new Vector2(Settings.Padding.Left, Settings.Padding.Top);
+        Vector2 uiSize = new Vector2(Bounds.CalculatedWidth - Settings.Padding.TotalHorizontal, Bounds.CalculatedHeight - Settings.Padding.TotalVertical);
 
         return new Vector2(
-            position.x - uiPos.x,
-            position.y - uiPos.y);
+            (position.x - uiPos.x) / uiSize.x,
+            (position.y - uiPos.y) / uiSize.x);
     }
 }

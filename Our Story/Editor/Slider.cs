@@ -16,13 +16,12 @@ public class Slider : Rect
     {
         NobColor = nob;
         
-        var line = Line();
+        var trench = Trench();
         
         Default(() => new RectSettings
         {
             Height = Ui.Fixed(24),
             Width = Ui.Grow,
-            Padding = (12, 0),
             Alignment = new UiAlignment
             {
                 Vertical = UiAlignmentVertical.Center,
@@ -42,8 +41,8 @@ public class Slider : Rect
 
         OnHold((ref RectSettings settings) =>
         {
-            var pos = line.RelativePosition(Input.Mouse.Position);
-            Value = float.Clamp(pos.x / line.Bounds.CalculatedWidth, 0, 1);
+            var pos = trench.RelativePosition(Input.Mouse.Position);
+            Value = float.Clamp(pos.x, 0, 1);
             _onValueChanged?.Invoke(Value);
         });
 
@@ -52,8 +51,9 @@ public class Slider : Rect
             NobSize = 24;
         });
 
-        Add(line);
-        Add(Nob());
+        Add(trench
+            .Add(Nob())
+        );
     }
     
     public Slider OnValueChanged(Action<float> action)
@@ -74,12 +74,13 @@ public class Slider : Rect
             BorderSize = 4,
         });
 
-    private Rect Line() => new Rect()
+    private Rect Trench() => new Rect()
         .Default(() => new RectSettings
         {
             Width = Ui.Grow,
             Height = Ui.Fixed(4),
             BorderRadius = 2,
             Color = TextureEditor.BackgroundColor,
+            Padding = (12, 0),
         });
 }
