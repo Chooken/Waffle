@@ -17,11 +17,16 @@ public struct Flex : ILayout
         {
             element.Bounds.ContentHeight = 0;
         }
+
+        int gaps = -1;
         
         // Calculate Fit Content Size
         foreach (var child in element.Children)
         {
             child.Layout.CalculateFitSize(child, width);
+            
+            if (child.Settings.Position.Type != UiPositionType.None)
+                continue;
 
             switch (element.Settings.Direction)
             {
@@ -30,6 +35,7 @@ public struct Flex : ILayout
                     if (width)
                     {
                         element.Bounds.ContentWidth += child.Bounds.CalculatedWidth;
+                        gaps += 1;
                     }
                     else
                     {
@@ -46,6 +52,7 @@ public struct Flex : ILayout
                     else
                     {
                         element.Bounds.ContentHeight += child.Bounds.CalculatedHeight;
+                        gaps += 1;
                     }
                     break;
             }
@@ -55,12 +62,12 @@ public struct Flex : ILayout
         if (width)
         {
             if (element.Settings.Direction == UiDirection.LeftToRight)
-                element.Bounds.ContentWidth += MathF.Max((element.Children.Count - 1) * element.Settings.Gap, 0);
+                element.Bounds.ContentWidth += MathF.Max(gaps * element.Settings.Gap, 0);
         }
         else
         {
             if (element.Settings.Direction == UiDirection.TopToBottom)
-                element.Bounds.ContentHeight += MathF.Max((element.Children.Count - 1) * element.Settings.Gap, 0);
+                element.Bounds.ContentHeight += MathF.Max(gaps * element.Settings.Gap, 0);
         }
 
         // Set Calculated Size based off type.
@@ -109,12 +116,12 @@ public struct Flex : ILayout
                     if (element.Settings.Direction == UiDirection.LeftToRight)
                     {
                         child.Bounds.CalculatedWidth = (element.Bounds.CalculatedWidth - element.Settings.Padding.TotalHorizontal) * child.Settings.Width.Value;
-                        element.Bounds.ContentWidth += child.Bounds.CalculatedWidth;
+                        if (element.Settings.Position.Type == UiPositionType.None) element.Bounds.ContentWidth += child.Bounds.CalculatedWidth;
                     }
                     else
                     {
                         child.Bounds.CalculatedWidth = (element.Bounds.CalculatedWidth - element.Settings.Padding.TotalHorizontal) * child.Settings.Width.Value;
-                        element.Bounds.ContentWidth = MathF.Max(element.Bounds.ContentWidth, child.Bounds.CalculatedWidth);
+                        if (element.Settings.Position.Type == UiPositionType.None) element.Bounds.ContentWidth = MathF.Max(element.Bounds.ContentWidth, child.Bounds.CalculatedWidth);
                     }
 
                     child.Bounds.CalculatedWidth = child.Settings.Width.ComputeValue(child.Bounds.CalculatedWidth);
@@ -127,12 +134,12 @@ public struct Flex : ILayout
                     if (element.Settings.Direction == UiDirection.LeftToRight)
                     {
                         child.Bounds.CalculatedHeight = (element.Bounds.CalculatedHeight - element.Settings.Padding.TotalVertical) * child.Settings.Height.Value;
-                        element.Bounds.ContentHeight = MathF.Max(element.Bounds.ContentHeight, child.Bounds.CalculatedHeight);
+                        if (element.Settings.Position.Type == UiPositionType.None) element.Bounds.ContentHeight = MathF.Max(element.Bounds.ContentHeight, child.Bounds.CalculatedHeight);
                     }
                     else
                     {
                         child.Bounds.CalculatedHeight = (element.Bounds.CalculatedHeight - element.Settings.Padding.TotalVertical) * child.Settings.Height.Value;
-                        element.Bounds.ContentHeight += child.Bounds.CalculatedHeight;
+                        if (element.Settings.Position.Type == UiPositionType.None) element.Bounds.ContentHeight += child.Bounds.CalculatedHeight;
                     }
                     
                     child.Bounds.CalculatedHeight = child.Settings.Height.ComputeValue(child.Bounds.CalculatedHeight);
@@ -313,6 +320,33 @@ public struct Flex : ILayout
 
         foreach (var child in element.Children)
         {
+            if (child.Settings.Position.Type != UiPositionType.None)
+            {
+                Vector2 childPos = Vector2.Zero;
+                
+                switch (child.Settings.Position.Type)
+                {
+                    case UiPositionType.Fixed:
+                        childPos = new Vector2(
+                            child.Settings.Position.X, 
+                            child.Settings.Position.Y);
+                        break;
+                    case UiPositionType.Offset:
+                        childPos = new Vector2(
+                            childStartPosition.x + child.Settings.Position.X,
+                            childStartPosition.y + child.Settings.Position.Y);
+                        break;
+                    case UiPositionType.Relative:
+                        childPos = new Vector2(
+                            childStartPosition.x - child.Bounds.CalculatedWidth * 0.5f + sizeWithoutPadding.x * child.Settings.Position.X,
+                            childStartPosition.y - child.Bounds.CalculatedHeight * 0.5f + sizeWithoutPadding.y * child.Settings.Position.Y);
+                        break;
+                }
+                
+                child.Layout.CalculatePositions(child, childPos);
+                continue;
+            }
+            
             // Get Alignment Offset
             Vector2 alignmentOffset = Vector2.Zero;
 
@@ -363,20 +397,29 @@ public struct Flex : ILayout
     private void RecalculateContentSize(UiElement element, bool width)
     {
         float contentSize = 0;
+        
+        int gaps = -1;
 
         foreach (var child in element.Children)
         {
+            if (child.Settings.Position.Type != UiPositionType.None)
+                continue;
+            
             if (element.Settings.Direction == UiDirection.LeftToRight)
             {
                 contentSize = width ? 
                     contentSize + child.Bounds.CalculatedWidth : 
                     MathF.Max(contentSize, child.Bounds.CalculatedHeight);
+
+                if (width) gaps++;
             }
             else
             {
                 contentSize = width ? 
                     MathF.Max(contentSize, child.Bounds.CalculatedWidth) : 
                     contentSize + child.Bounds.CalculatedHeight;
+                
+                if (!width) gaps++;
             }
         }
         
@@ -384,12 +427,12 @@ public struct Flex : ILayout
         if (width)
         {
             if (element.Settings.Direction == UiDirection.LeftToRight)
-                contentSize += MathF.Max((element.Children.Count - 1) * element.Settings.Gap, 0);
+                contentSize += MathF.Max(gaps * element.Settings.Gap, 0);
         }
         else
         {
             if (element.Settings.Direction == UiDirection.TopToBottom)
-                contentSize += MathF.Max((element.Children.Count - 1) * element.Settings.Gap, 0);
+                contentSize += MathF.Max(gaps * element.Settings.Gap, 0);
         }
 
         if (width)

@@ -12,22 +12,16 @@ public class Topbar : Rect
             Padding = 4,
             BorderRadius = 8,
             Color = TextureEditor.PanelColor,
-            Gap = 8,
+            Gap = 4,
             Alignment = new UiAlignment
             {
                 Vertical = UiAlignmentVertical.Center,
             }
         });
         
-        Add(new UndoButton());
-        Add(new RedoButton());
         Add(new ToolSelector());
         Add(new Spacer());
-        Add(new Toggle()
-            .OnValueChanged(value =>
-            {
-                TextureEditor.SharedState.UseMinMax = value;
-            })
-        );
+        Add(new UndoButton());
+        Add(new RedoButton());
     }
 }

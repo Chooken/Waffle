@@ -13,6 +13,10 @@ public struct RectSettings()
     /// </summary>
     public UiSizeData Height = Ui.Fit;
     /// <summary>
+    /// The position of the element.
+    /// </summary>
+    public UiPositionData Position;
+    /// <summary>
     /// The aspect ratio of height in relation to width.
     /// </summary>
     public float AspectRatio = -1;
@@ -69,6 +73,7 @@ public struct RectSettings()
         return
             Width == other.Width &&
             Height == other.Height &&
+            Position == other.Position &&
             AspectRatio == other.AspectRatio &&
             Padding == other.Padding &&
             BorderRadius == other.BorderRadius &&
@@ -90,6 +95,7 @@ public struct RectSettings()
     {
         Width = Width,
         Height = Height,
+        Position = Position,
         AspectRatio = AspectRatio,
         Alignment = Alignment,
         Direction = Direction,

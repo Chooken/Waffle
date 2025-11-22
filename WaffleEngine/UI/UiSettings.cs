@@ -13,6 +13,10 @@ public struct UiSettings()
     /// </summary>
     public UiSizeData Height = Ui.Fit;
     /// <summary>
+    /// The position of the element.
+    /// </summary>
+    public UiPositionData Position;
+    /// <summary>
     /// The aspect ratio of the element. -1 if disabled.
     /// </summary>
     public float AspectRatio = -1;
@@ -53,6 +57,8 @@ public struct UiSettings()
         return
             Width == other.Width &&
             Height == other.Height &&
+            Position == other.Position &&
+            AspectRatio == other.AspectRatio &&
             Padding == other.Padding &&
             Gap == other.Gap &&
             Direction == other.Direction &&

@@ -9,8 +9,7 @@ public class UndoButton : Rect
     {
         Default(() => new RectSettings
         {
-            Height = Ui.Grow,
-            Padding = (12, 6),
+            Padding = (8, 8),
             BorderRadius = 8,
             Alignment = new UiAlignment
             {
@@ -53,8 +52,7 @@ public class RedoButton : Rect
     {
         Default(() => new RectSettings
         {
-            Height = Ui.Grow,
-            Padding = (12, 6),
+            Padding = (8, 8),
             BorderRadius = 8,
             Alignment = new UiAlignment
             {

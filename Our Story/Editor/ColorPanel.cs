@@ -5,6 +5,12 @@ namespace OurStory.Editor;
 
 public class ColorPanel : Rect
 {
+    private Slider BrightnessSlider = new Slider(TextureEditor.PanelColor)
+        .OnValueChanged(value =>
+        {
+            TextureEditor.SharedState.ColorBrightness = value;
+        });
+    
     public ColorPanel()
     {
         Default(() => new RectSettings()
@@ -12,38 +18,18 @@ public class ColorPanel : Rect
             Height = Ui.Grow,
             Color = TextureEditor.PanelColor,
             Direction = UiDirection.TopToBottom,
-            Padding = (8, 12),
+            Padding = (16, 12),
             BorderRadius = 8,
             Gap = 12,
         });
 
-        Add(new Rect()
-            .Default(() => new RectSettings
+        Add(new Text("Palette", TextureEditor.Font)
+            .Default(() => new Text.TextSettings
             {
-                Width = Ui.Grow,
-                Padding = (2, 0),
+                Color = TextureEditor.FontColor,
+                Size = 12,
             })
-            .Add(new Text("Palette", TextureEditor.Font)
-                .Default(() => new Text.TextSettings
-                {
-                    Color = TextureEditor.FontColor,
-                    Size = 12,
-                })
-            )
-            .Add(new Rect()
-                .Default(() => new RectSettings
-                {
-                    Width = Ui.Grow,
-                })
-            )
-            .Add(new Rect()
-                .Default(() => new RectSettings
-                {
-                    
-                })
-            )
         );
-        
 
         Rect colorSelector = new Rect()
             .Default(() => new RectSettings
@@ -85,8 +71,60 @@ public class ColorPanel : Rect
         colorSelector.Add(finalRect);
 
         Add(colorSelector);
+        
+        // Brightness Slider
+        Add(new Text("Brightness", TextureEditor.Font)
+            .Default(() => new Text.TextSettings
+            {
+                Color = TextureEditor.FontColor,
+                Size = 12,
+            })
+        );
+        
+        Add(BrightnessSlider);
+        
+        // Temp Min Max Toggle
+        Add(new Rect()
+            .Default(() => new RectSettings
+            {
+                Width = Ui.Grow,
+                Direction = UiDirection.LeftToRight,
+                Alignment = new UiAlignment
+                {
+                    Vertical = UiAlignmentVertical.Center,
+                },
+            })
+            .Add(new Text("Crt Min Max", TextureEditor.Font)
+                .Default(() => new Text.TextSettings
+                {
+                    Color = TextureEditor.FontColor,
+                    Size = 12,
+                })
+            )
+            .Add(new Spacer())
+            .Add(new Toggle()
+                .OnValueChanged(value =>
+                {
+                    TextureEditor.SharedState.UseMinMax = value;
+                })
+            )
+        );
     }
-    
+
+    public override void Update()
+    {
+        Color color = TextureEditor.SharedState.SelectedColor;
+        float brightness = TextureEditor.SharedState.ColorBrightness;
+
+        color.r *= brightness;
+        color.g *= brightness;
+        color.b *= brightness;
+
+        BrightnessSlider.NobColor = color;
+        BrightnessSlider.Value = TextureEditor.SharedState.ColorBrightness;
+        base.Update();
+    }
+
     public Rect ColorToggle(Color color) =>
         new Rect()
             .Default(() => new RectSettings()

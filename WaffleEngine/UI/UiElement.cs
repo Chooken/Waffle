@@ -92,28 +92,20 @@ public abstract class UiElement
                 _down = true;
                 captured = OnMouseDown() || captured;
             }
-            
-            if (window.WindowInput.MouseData.IsLeftDown)
-            {
-                captured = OnHold() || captured;
-            }
-
-            if (!window.WindowInput.MouseData.IsLeftDown && _down)
-            {
-                _down = false;
-                OnMouseUp();
-            }
-
-            Mouse.SetCursor(Settings.Cursor);
         }
-        else
+        
+        if (_down && window.WindowInput.MouseData.IsLeftDown)
         {
-            if (_down)
-            {
-                OnMouseUp();
-            }
-            _down = false;
+            captured = OnHold() || captured;
         }
+        
+        if (!window.WindowInput.MouseData.IsLeftDown && _down)
+        {
+            _down = false;
+            OnMouseUp();
+        }
+
+        Mouse.SetCursor(Settings.Cursor);
 
         if (!settings.Equals(Settings))
         {
@@ -148,4 +140,14 @@ public abstract class UiElement
     /// </summary>
     /// <returns>True if the element captures the event.</returns>
     public abstract bool OnMouseUp();
+    
+    public Vector2 RelativePosition(Vector2 position)
+    {
+        Vector3 uiPos = Bounds.CalculatedPosition;
+        Vector2 uiSize = new Vector2(Bounds.CalculatedWidth, Bounds.CalculatedHeight);
+
+        return new Vector2(
+            position.x - uiPos.x,
+            position.y - uiPos.y);
+    }
 }

@@ -32,7 +32,7 @@ public class ToolSelector : Rect
             .Default(() => new RectSettings()
             {
                 Height = Ui.Grow,
-                Padding = (12, 6),
+                Padding = (8, 4),
                 Color = TextureEditor.SharedState.SelectedTool == tool ? 
                     TextureEditor.PanelColor : 
                     Color.Transparent,
@@ -68,7 +68,8 @@ public class ToolSelector : Rect
                 {
                     Color = TextureEditor.SharedState.SelectedTool == tool ? 
                         TextureEditor.Highlight : 
-                        TextureEditor.FontColor
+                        TextureEditor.FontColor,
+                    Size = 14,
                 }));
 
 }
