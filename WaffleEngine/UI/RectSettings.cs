@@ -57,6 +57,10 @@ public struct RectSettings()
     /// The Cursor to show when captured.
     /// </summary>
     public Cursor Cursor;
+    /// <summary>
+    /// Whether to capture input and stop propagation.
+    /// </summary>
+    public bool CaptureInput = true;
     
     public static bool operator ==(RectSettings left, RectSettings right)
     {

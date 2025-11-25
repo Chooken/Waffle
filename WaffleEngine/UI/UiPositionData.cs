@@ -13,6 +13,36 @@ public struct UiPositionData
     public UiPositionType Type;
     public float X;
     public float Y;
+    public float AnchorX;
+    public float AnchorY;
+
+    public UiPositionData Left(float value)
+    {
+        X = value;
+        AnchorX = 0;
+        return this;
+    }
+    
+    public UiPositionData Right(float value)
+    {
+        X = -value;
+        AnchorX = 1;
+        return this;
+    }
+    
+    public UiPositionData Top(float value)
+    {
+        Y = value;
+        AnchorY = 0;
+        return this;
+    }
+    
+    public UiPositionData Bottom(float value)
+    {
+        Y = -value;
+        AnchorY = 1;
+        return this;
+    }
     
     public static bool operator ==(UiPositionData left, UiPositionData right)
     {
@@ -37,24 +67,18 @@ public static partial class Ui
 {
     public static UiPositionData None => new UiPositionData();
 
-    public static UiPositionData Offset(float xOffset, float yOffset) => new UiPositionData
+    public static UiPositionData Offset => new UiPositionData
     {
         Type = UiPositionType.Offset,
-        X = xOffset,
-        Y = yOffset,
     };
     
-    public static UiPositionData Relative(float xPercentage, float yPercentage) => new UiPositionData
+    public static UiPositionData Relative => new UiPositionData
     {
         Type = UiPositionType.Relative,
-        X = xPercentage,
-        Y = yPercentage,
     };
     
-    public static UiPositionData Fixed(float x, float y) => new UiPositionData
+    public static UiPositionData Fixed => new UiPositionData
     {
         Type = UiPositionType.Fixed,
-        X = x,
-        Y = y,
     };
 }

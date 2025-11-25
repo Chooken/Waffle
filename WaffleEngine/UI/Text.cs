@@ -11,20 +11,24 @@ public class Text : UiElement
 
     public struct TextSettings()
     {
-        public Color Color;
+        public string? Text;
+        public Color Color = Color.White;
         public float Size = 16;
     }
     
     private Func<TextSettings>? _default;
 
-    public Text(string text, Font font)
+    public Text(Font font)
     {
         _font = font.Copy();
-        _atlasedText = new AtlasedText(text, _font, new Color(0, 0, 0, 1));
+        _atlasedText = new AtlasedText("", _font, new Color(0, 0, 0, 1));
     }
     
     public override void Render(ImRenderPass renderPass, Vector2 renderSize)
     {
+        if (_textSettings.Text is null)
+            return;
+        
         _atlasedText.Render(
             renderPass, 
             Bounds.CalculatedPosition * Bounds.Scale * Window.GetDensity(), 
@@ -41,13 +45,18 @@ public class Text : UiElement
             Size = 16,
         };
         
+        if (_textSettings.Text is null)
+            return;
+        
         if (_font.Size != _textSettings.Size * Bounds.Scale * Window.GetDensity())
             _font.SetFontSize(_textSettings.Size * Bounds.Scale * Window.GetDensity());
         
+        _atlasedText.SetText(_textSettings.Text);
+        
         _atlasedText.Update();
         Vector2 size = _atlasedText.GetSize();
-        Settings.Width = Ui.Fixed(size.x / Bounds.Scale / Window.GetDensity());
-        Settings.Height = Ui.Fixed(size.y / Bounds.Scale / Window.GetDensity());
+        Settings.Width = Ui.Pixels(size.x / Bounds.Scale / Window.GetDensity());
+        Settings.Height = Ui.Pixels(size.y / Bounds.Scale / Window.GetDensity());
     }
 
     public override bool OnHover() { return false; }

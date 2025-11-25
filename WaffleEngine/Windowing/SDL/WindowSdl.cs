@@ -160,11 +160,11 @@ public sealed class WindowSdl : Window
                 {
                     return true;
                 }
-
+                
                 SDL.GetWindowSize(((WindowSdl)window).WindowPtr, out var width, out var height);
                 SDL.GetWindowSizeInPixels(((WindowSdl)window).WindowPtr, out var pixelWidth, out var pixelHeight);
 
-                if (window.Width == width && window.Height == height)
+                if (window.Width == width && window.Height == height || window.PixelWidth == pixelWidth && window.PixelHeight == pixelHeight)
                     return true;
                 
                 window.Width = width;

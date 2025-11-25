@@ -5,7 +5,7 @@ public enum UiSizeType
     Fit,
     Grow,
     Percentage,
-    Fixed,
+    Pixels,
 }
 
 public struct UiSizeData
@@ -119,10 +119,10 @@ public static partial class Ui
         MaxValue = float.MaxValue,
     };
     
-    public static UiSizeData Fixed(float value) => new UiSizeData
+    public static UiSizeData Pixels(float value) => new UiSizeData
     {
         Value = value,
-        SizeType = UiSizeType.Fixed,
+        SizeType = UiSizeType.Pixels,
         MinValue = float.MinValue,
         MaxValue = float.MaxValue,
     };

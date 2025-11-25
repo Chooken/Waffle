@@ -11,16 +11,19 @@ public class Slider : Rect
 
     private float NobSize = 24;
     private Action<float> _onValueChanged;
+
+    public Rect Trench;
+    public Rect Nob;
     
     public Slider(Color nob)
     {
         NobColor = nob;
         
-        var trench = Trench();
+        Trench = CreateTrench();
         
         Default(() => new RectSettings
         {
-            Height = Ui.Fixed(24),
+            Height = Ui.Pixels(24),
             Width = Ui.Grow,
             Alignment = new UiAlignment
             {
@@ -41,7 +44,7 @@ public class Slider : Rect
 
         OnHold((ref RectSettings settings) =>
         {
-            var pos = trench.RelativePosition(Input.Mouse.Position);
+            var pos = Trench.RelativePosition(Input.Mouse.Position);
             Value = float.Clamp(pos.x, 0, 1);
             _onValueChanged?.Invoke(Value);
         });
@@ -51,8 +54,8 @@ public class Slider : Rect
             NobSize = 24;
         });
 
-        Add(trench
-            .Add(Nob())
+        Add(Trench
+            .Add(CreateNob())
         );
     }
     
@@ -62,25 +65,27 @@ public class Slider : Rect
         return this;
     }
 
-    private Rect Nob() => new Rect()
+    private Rect CreateNob() => new Rect()
         .Default(() => new RectSettings
         {
-            Position = Ui.Relative(Value, 0.5f),
-            Width = Ui.Fixed(NobSize),
-            Height = Ui.Fixed(NobSize),
+            Position = Ui.Relative
+                .Left((Trench.Bounds.CalculatedWidth - Trench.Settings.Padding.TotalHorizontal) * Value - NobSize * 0.5f)
+                .Top(Trench.Bounds.CalculatedHeight * 0.5f - NobSize * 0.5f),
+            Width = Ui.Pixels(NobSize),
+            Height = Ui.Pixels(NobSize),
             BorderRadius = NobSize * 0.5f,
             Color = NobColor,
             BorderColor = TextureEditor.BackgroundColor,
             BorderSize = 4,
         });
 
-    private Rect Trench() => new Rect()
+    private Rect CreateTrench() => new Rect()
         .Default(() => new RectSettings
         {
             Width = Ui.Grow,
-            Height = Ui.Fixed(4),
+            Height = Ui.Pixels(4),
             BorderRadius = 2,
             Color = TextureEditor.BackgroundColor,
-            Padding = (12, 0),
+            Padding = (12,0),
         });
 }

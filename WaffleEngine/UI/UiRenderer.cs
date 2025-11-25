@@ -40,8 +40,8 @@ public class UiRenderer
         _windowRoot = new Rect()
             .Default(() => new RectSettings()
             {
-                Width = Ui.Fixed(_window.Width / _scale),
-                Height = Ui.Fixed(_window.Height / _scale),
+                Width = Ui.Pixels(_window.Width / _scale),
+                Height = Ui.Pixels(_window.Height / _scale),
             });
         _uiTexture = new GpuTexture(_window);
         _scale = scale;

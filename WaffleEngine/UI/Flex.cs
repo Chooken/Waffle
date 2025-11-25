@@ -75,7 +75,7 @@ public struct Flex : ILayout
         {
             switch (element.Settings.Width.SizeType)
             {
-                case UiSizeType.Fixed:
+                case UiSizeType.Pixels:
                     element.Bounds.CalculatedWidth = element.Settings.Width.Value;
                     break;
                 case UiSizeType.Fit or UiSizeType.Grow:
@@ -91,7 +91,7 @@ public struct Flex : ILayout
         {
             switch (element.Settings.Height.SizeType)
             {
-                case UiSizeType.Fixed:
+                case UiSizeType.Pixels:
                     element.Bounds.CalculatedHeight = element.Settings.Height.Value;
                     break;
                 case UiSizeType.Fit or UiSizeType.Grow:
@@ -328,18 +328,24 @@ public struct Flex : ILayout
                 {
                     case UiPositionType.Fixed:
                         childPos = new Vector2(
-                            child.Settings.Position.X, 
-                            child.Settings.Position.Y);
+                            child.Settings.Position.X + child.Settings.Position.AnchorX * 
+                            (sizeWithoutPadding.x - child.Bounds.CalculatedWidth), 
+                            child.Settings.Position.Y + child.Settings.Position.AnchorY * 
+                            (sizeWithoutPadding.y - child.Bounds.CalculatedHeight));
                         break;
                     case UiPositionType.Offset:
                         childPos = new Vector2(
-                            childStartPosition.x + child.Settings.Position.X,
-                            childStartPosition.y + child.Settings.Position.Y);
+                            childStartPosition.x + child.Settings.Position.X + child.Settings.Position.AnchorX *
+                            (sizeWithoutPadding.x - child.Bounds.CalculatedWidth),
+                            childStartPosition.y + child.Settings.Position.Y + child.Settings.Position.AnchorY * 
+                            (sizeWithoutPadding.y - child.Bounds.CalculatedHeight));
                         break;
                     case UiPositionType.Relative:
                         childPos = new Vector2(
-                            childStartPosition.x - child.Bounds.CalculatedWidth * 0.5f + sizeWithoutPadding.x * child.Settings.Position.X,
-                            childStartPosition.y - child.Bounds.CalculatedHeight * 0.5f + sizeWithoutPadding.y * child.Settings.Position.Y);
+                            childStartPosition.x + child.Settings.Position.X + 
+                            child.Settings.Position.AnchorX * (sizeWithoutPadding.x - child.Bounds.CalculatedWidth),
+                            childStartPosition.y + child.Settings.Position.Y +
+                            child.Settings.Position.AnchorY * (sizeWithoutPadding.y - child.Bounds.CalculatedHeight));
                         break;
                 }
                 

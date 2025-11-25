@@ -37,8 +37,8 @@ public class UndoButton : Rect
         Add(new Rect()
             .Default(() => new RectSettings
             {
-                Width = Ui.Fixed(16),
-                Height = Ui.Fixed(16),
+                Width = Ui.Pixels(16),
+                Height = Ui.Pixels(16),
                 Color = TextureEditor.FontColor,
                 BorderRadius = (8, 2, 8, 2),
             })
@@ -80,8 +80,8 @@ public class RedoButton : Rect
         Add(new Rect()
             .Default(() => new RectSettings
             {
-                Width = Ui.Fixed(16),
-                Height = Ui.Fixed(16),
+                Width = Ui.Pixels(16),
+                Height = Ui.Pixels(16),
                 Color = TextureEditor.FontColor,
                 BorderRadius = (2, 8, 2, 8),
             })

@@ -16,6 +16,7 @@ public class AtlasedText
 
     private Buffer<Vertex> _vertexBuffer = new Buffer<Vertex>(BufferUsage.Vertex);
     private RenderBuffer<int> _indexBuffer = new RenderBuffer<int>(BufferUsage.Index);
+    private int _indexCount = 0;
 
     private IntPtr _texture;
     private IntPtr _sampler;
@@ -105,6 +106,8 @@ public class AtlasedText
         _indexBuffer.UploadData(formatted.Indices.AsSpan, copyPass);
         copyPass.End();
         queue.Submit();
+
+        _indexCount = formatted.Indices.Length;
     }
 
     public unsafe void Render(ImRenderPass renderPass, Vector3 position, Vector2 renderSize, Color color)
@@ -138,6 +141,6 @@ public class AtlasedText
         SDL.BindGPUVertexSamplers(renderPass.Handle, 0, ptr, 1);
         SDL.BindGPUFragmentSamplers(renderPass.Handle, 0, ptr, 1);
         
-        renderPass.DrawIndexedPrimatives((uint)_indexBuffer.Length, 1, 0, 0, 0);
+        renderPass.DrawIndexedPrimatives((uint)_indexCount, 1, 0, 0, 0);
     }
 }

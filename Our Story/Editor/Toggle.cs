@@ -12,7 +12,7 @@ public class Toggle : Rect
     {
         Default(() => new RectSettings
         {
-            Width = Ui.Fixed(45),
+            Width = Ui.Pixels(45),
             Color = TextureEditor.BackgroundColor,
             Padding = 4,
             BorderRadius = 25,
@@ -25,8 +25,8 @@ public class Toggle : Rect
         Add(new Rect()
             .Default(() => new RectSettings
             {
-                Width = Ui.Fixed(20),
-                Height = Ui.Fixed(20),
+                Width = Ui.Pixels(20),
+                Height = Ui.Pixels(20),
                 BorderRadius = 10,
                 Color = _value ? TextureEditor.Highlight : TextureEditor.PanelColor,
             })

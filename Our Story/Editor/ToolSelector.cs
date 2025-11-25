@@ -56,16 +56,17 @@ public class ToolSelector : Rect
             .Add(new Rect()
                 .Default(() => new RectSettings
                 {
-                    Width = Ui.Fixed(10),
-                    Height = Ui.Fixed(10),
+                    Width = Ui.Pixels(10),
+                    Height = Ui.Pixels(10),
                     BorderRadius = 5,
                     Color = TextureEditor.SharedState.SelectedTool == tool ? 
                         TextureEditor.Highlight : 
                         TextureEditor.FontColor
                 }))
-            .Add(new Text(name, font)
+            .Add(new Text(font)
                 .Default(() => new Text.TextSettings
                 {
+                    Text = name,
                     Color = TextureEditor.SharedState.SelectedTool == tool ? 
                         TextureEditor.Highlight : 
                         TextureEditor.FontColor,

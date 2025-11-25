@@ -57,7 +57,7 @@ public class Rect : UiElement
             return false;
         
         _onHoverEvent.Invoke(ref _newRectSettings);
-        return true;
+        return _newRectSettings.CaptureInput;
     }
 
     public override bool OnMouseDown()
@@ -66,7 +66,7 @@ public class Rect : UiElement
             return false;
         
         _onMouseDownEvent.Invoke(ref _newRectSettings);
-        return true;
+        return _newRectSettings.CaptureInput;
     }
 
     public override bool OnHold()
@@ -75,7 +75,7 @@ public class Rect : UiElement
             return false;
         
         _onHoldEvent.Invoke(ref _newRectSettings);
-        return true;
+        return _newRectSettings.CaptureInput;
     }
 
     public override bool OnMouseUp()
@@ -84,7 +84,7 @@ public class Rect : UiElement
             return false;
         
         _onMouseUpEvent.Invoke(ref _newRectSettings);
-        return true;
+        return _newRectSettings.CaptureInput;
     }
 
     public override void Render(ImRenderPass renderPass, Vector2 renderSize)

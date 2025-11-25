@@ -23,9 +23,10 @@ public class ColorPanel : Rect
             Gap = 12,
         });
 
-        Add(new Text("Palette", TextureEditor.Font)
+        Add(new Text(TextureEditor.Font)
             .Default(() => new Text.TextSettings
             {
+                Text = "Palette",
                 Color = TextureEditor.FontColor,
                 Size = 12,
             })
@@ -73,9 +74,10 @@ public class ColorPanel : Rect
         Add(colorSelector);
         
         // Brightness Slider
-        Add(new Text("Brightness", TextureEditor.Font)
+        Add(new Text(TextureEditor.Font)
             .Default(() => new Text.TextSettings
             {
+                Text = "Brightness",
                 Color = TextureEditor.FontColor,
                 Size = 12,
             })
@@ -94,9 +96,10 @@ public class ColorPanel : Rect
                     Vertical = UiAlignmentVertical.Center,
                 },
             })
-            .Add(new Text("Crt Min Max", TextureEditor.Font)
+            .Add(new Text(TextureEditor.Font)
                 .Default(() => new Text.TextSettings
                 {
+                    Text = "Crt Min Max",
                     Color = TextureEditor.FontColor,
                     Size = 12,
                 })
@@ -129,8 +132,8 @@ public class ColorPanel : Rect
         new Rect()
             .Default(() => new RectSettings()
             {
-                Width = Ui.Fixed(20),
-                Height = Ui.Fixed(20),
+                Width = Ui.Pixels(20),
+                Height = Ui.Pixels(20),
                 Color = color.WithAlphaOne(),
                 BorderRadius = 10,
                 BorderColor = new Color(1,1,1,1),

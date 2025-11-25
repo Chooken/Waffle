@@ -17,7 +17,7 @@ public class VerticalSeperator : Rect
         Add(new Rect()
             .Default(() => new RectSettings
             {
-                Width = Ui.Fixed(2),
+                Width = Ui.Pixels(2),
                 Height = Ui.Grow,
                 Color = color,
             })
@@ -43,7 +43,7 @@ public class HorizontalSeperator : Rect
             .Default(() => new RectSettings
             {
                 Width = Ui.Grow,
-                Height = Ui.Fixed(2),
+                Height = Ui.Pixels(2),
                 Color = color,
             })
         );

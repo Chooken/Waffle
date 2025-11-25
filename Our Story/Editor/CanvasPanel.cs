@@ -10,32 +10,51 @@ public class CanvasPanel : Rect
     public RectCrt CanvasRect;
     public Canvas Canvas;
     public Vector2 CursorPosition;
+    public int Zoom = 0;
+
+    private float[] _zooms = [float.MaxValue, 512, 256, 128, 64, 32];
     
     public CanvasPanel(Window window, Canvas canvas)
     {
         Canvas = canvas;
         CanvasRect = new RectCrt(Canvas.GetCanvas(), 0.0f);
-        
+
         Default(() => new RectSettings()
         {
             Width = Ui.Grow,
             Height = Ui.Grow,
             Alignment = (UiAlignmentVertical.Center, UiAlignmentHorizontal.Center),
-        })
-        .Add(CanvasRect
+        });
+
+        OnHover((ref RectSettings settings) =>
+        {
+            if (Input.GetDefaultEventSpace.KeyPressed(Keycode.Minus))
+            {
+                Zoom = Math.Min(_zooms.Length - 1, Zoom + 1);
+            }
+            else if (Input.GetDefaultEventSpace.KeyPressed(Keycode.Equals))
+            {
+                Zoom = Math.Max(0, Zoom - 1);
+            }
+        });
+        
+        Add(CanvasRect
             .Default(() =>
             {
+                Zoom = Math.Clamp(Zoom, 0, _zooms.Length - 1);
+                
                 CursorPosition = new Vector2(-1, -1);
                 CanvasRect.UseMinMax = TextureEditor.SharedState.UseMinMax;
                 return new RectSettings()
                 {
-                    Width = Ui.Grow,
+                    Width = Ui.Grow.Max(_zooms[Zoom]),
                     Height = Ui.Grow,
                     AspectRatio = (float)canvas.Width / canvas.Height,
-                    BorderRadius = 40,
+                    BorderRadius = float.Min(42, _zooms[Zoom] * 0.2f),
                     BorderSize = 4,
                     BorderColor = TextureEditor.PanelColor,
                     Color = TextureEditor.BackgroundColor,
+                    CaptureInput = false,
                 };
             })
             .OnHover((ref RectSettings settings) =>
@@ -58,6 +77,21 @@ public class CanvasPanel : Rect
                 TextureEditor.SharedState.SelectedTool?.OnMouseUp(Canvas, CursorPosition);
             })
         );
+
+        Add(new Rect()
+            .Default(() => new RectSettings
+            {
+                Position = Ui.Relative.Right(4).Bottom(4),
+                Color = TextureEditor.PanelColor,
+                Padding = (8,4),
+                BorderRadius = 4,
+            })
+            .Add(new Text(TextureEditor.Font)
+                .Default(() => new Text.TextSettings
+                {
+                    Text = Zoom == 0 ? "auto" : $"{_zooms[Math.Clamp(Zoom, 0, _zooms.Length - 1)]}px",
+                }))
+        );
     }
 
     private void CalculateCursorPosition(Window window)
@@ -67,7 +101,7 @@ public class CanvasPanel : Rect
         Vector2 uiSize = new Vector2(CanvasRect.Bounds.CalculatedWidth, CanvasRect.Bounds.CalculatedHeight);
 
         CursorPosition = new Vector2(
-            (int)((position.x - uiPos.x) / uiSize.x * CanvasRect.Texture.Width),
-            (int)((position.y - uiPos.y) / uiSize.y * CanvasRect.Texture.Height));
+            int.Clamp((int)((position.x - uiPos.x) / uiSize.x * CanvasRect.Texture.Width), 0,  (int)CanvasRect.Texture.Width - 1),
+            int.Clamp((int)((position.y - uiPos.y) / uiSize.y * CanvasRect.Texture.Height), 0,  (int)CanvasRect.Texture.Width - 1));
     }
 }
