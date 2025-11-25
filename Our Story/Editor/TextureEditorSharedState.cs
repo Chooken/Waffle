@@ -13,4 +13,14 @@ public class TextureEditorSharedState
     {
         SelectedColor = color;
     }
+
+    public void SelectTool<T>() where T : ICanvasTool
+    {
+        if (!Tools.TryGetValue(typeof(T), out var tool))
+        {
+            return;
+        }
+
+        SelectedTool = tool;
+    }
 }

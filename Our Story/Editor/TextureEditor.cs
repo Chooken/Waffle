@@ -44,6 +44,7 @@ public class TextureEditor
         SharedState.SelectedColor = new HSVColor(0,0,1);
         SharedState.Tools.Add(typeof(PenTool), new PenTool());
         SharedState.Tools.Add(typeof(EraserTool), new EraserTool());
+        SharedState.Tools.Add(typeof(EyeDropTool), new EyeDropTool());
         SharedState.SelectedTool = SharedState.Tools[typeof(PenTool)];
 
         _ui = new UiRenderer(EditorWindow, EditorWindow.GetDisplayScale() / EditorWindow.GetDensity());
