@@ -4,22 +4,22 @@ public class VerticalSeperator : Rect
 {
     public VerticalSeperator(Color color)
     {
-        Default(() => new RectSettings
+        Default((ref RectSettings settings) =>
         {
-            Height = Ui.Grow,
-            Padding = (4, 0),
-            Alignment = new UiAlignment
+            settings.Height = Ui.Grow;
+            settings.Padding = (4, 0);
+            settings.Alignment = new UiAlignment
             {
                 Horizontal = UiAlignmentHorizontal.Center,
-            },
+            };
         });
 
         Add(new Rect()
-            .Default(() => new RectSettings
+            .Default((ref RectSettings settings) =>
             {
-                Width = Ui.Pixels(2),
-                Height = Ui.Grow,
-                Color = color,
+                settings.Width = Ui.Pixels(2);
+                settings.Height = Ui.Grow;
+                settings.Color = color;
             })
         );
     }
@@ -29,22 +29,22 @@ public class HorizontalSeperator : Rect
 {
     public HorizontalSeperator(Color color)
     {
-        Default(() => new RectSettings
+        Default((ref RectSettings settings) =>
         {
-            Width = Ui.Grow,
-            Padding = (4, 0),
-            Alignment = new UiAlignment
+            settings.Width = Ui.Grow;
+            settings.Padding = (4, 0);
+            settings.Alignment = new UiAlignment
             {
                 Horizontal = UiAlignmentHorizontal.Center,
-            },
+            };
         });
 
         Add(new Rect()
-            .Default(() => new RectSettings
+            .Default((ref RectSettings settings) =>
             {
-                Width = Ui.Grow,
-                Height = Ui.Pixels(2),
-                Color = color,
+                settings.Width = Ui.Grow;
+                settings.Height = Ui.Pixels(2);
+                settings.Color = color;
             })
         );
     }

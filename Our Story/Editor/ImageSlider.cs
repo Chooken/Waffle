@@ -3,7 +3,7 @@ using WaffleEngine.UI;
 
 namespace OurStory.Editor;
 
-public class Slider : Rect
+public class ImageSlider : Rect
 {
     public float Value;
 
@@ -12,10 +12,10 @@ public class Slider : Rect
     private float NobSize = 24;
     private Action<float> _onValueChanged;
 
-    public Rect Trench;
+    public Image Trench;
     public Rect Nob;
     
-    public Slider(Color nob)
+    public ImageSlider(Color nob)
     {
         NobColor = nob;
         
@@ -59,7 +59,7 @@ public class Slider : Rect
         );
     }
     
-    public Slider OnValueChanged(Action<float> action)
+    public ImageSlider OnValueChanged(Action<float> action)
     {
         _onValueChanged += action;
         return this;
@@ -80,7 +80,7 @@ public class Slider : Rect
             settings.BorderSize = 4;
         });
 
-    private Rect CreateTrench() => new Rect()
+    private Image CreateTrench() => (Image)new Image(null)
         .Default((ref RectSettings settings) =>
         {
             settings.Width = Ui.Grow;

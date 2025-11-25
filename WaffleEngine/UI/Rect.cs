@@ -12,7 +12,7 @@ public class Rect : UiElement
     
     public delegate void ActionRef<T>(ref T item);
     
-    private Func<RectSettings>? _default;
+    private ActionRef<RectSettings>? _default;
     private ActionRef<RectSettings>? _onHoverEvent;
     private ActionRef<RectSettings>? _onMouseDownEvent;
     private ActionRef<RectSettings>? _onHoldEvent;
@@ -22,7 +22,10 @@ public class Rect : UiElement
     {
         public AlignedVector3 Position;
         public Vector2 Size;
-        public Vector4 Color;
+        public Vector4 TopLeftColor;
+        public Vector4 TopRightColor;
+        public Vector4 BottomLeftColor;
+        public Vector4 BottomRightColor;
         public Vector4 BorderRadius;
         public Vector4 BorderColor;
         public Vector2 ScreenSize;
@@ -48,7 +51,9 @@ public class Rect : UiElement
             Settings = RectSettings.ToUiSettings();
         }
 
-        _newRectSettings = _default?.Invoke() ?? default;
+        _newRectSettings = new RectSettings();
+
+        _default?.Invoke(ref _newRectSettings);
     }
     
     public override bool OnHover()
@@ -101,7 +106,10 @@ public class Rect : UiElement
         {
             Position = new AlignedVector3(Bounds.CalculatedPosition),
             Size = new Vector2(Bounds.CalculatedWidth, Bounds.CalculatedHeight),
-            Color = RectSettings.Color,
+            TopLeftColor = RectSettings.Color.TopLeft,
+            TopRightColor = RectSettings.Color.TopRight,
+            BottomLeftColor = RectSettings.Color.BottomLeft,
+            BottomRightColor = RectSettings.Color.BottomRight,
             BorderRadius = new Vector4(
                 RectSettings.BorderRadius.BottomLeft, 
                 RectSettings.BorderRadius.TopLeft, 
@@ -112,7 +120,7 @@ public class Rect : UiElement
             BorderSize = RectSettings.BorderSize,
         };
         
-        if (RectSettings.Color.a != 0)
+        if (RectSettings.Color.Visible())
         {
             renderPass.SetUniforms(data);
             renderPass.Bind(_shader);
@@ -120,10 +128,10 @@ public class Rect : UiElement
         }
     }
     
-    public Rect Default(Func<RectSettings> defaultSettings)
+    public Rect Default(ActionRef<RectSettings> defaultSettings)
     {
         _default += defaultSettings;
-        RectSettings = _default.Invoke();
+        _default.Invoke(ref RectSettings);
         _newRectSettings = RectSettings;
         Settings = RectSettings.ToUiSettings();
         return this;

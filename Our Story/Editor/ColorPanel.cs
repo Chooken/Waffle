@@ -5,15 +5,11 @@ namespace OurStory.Editor;
 
 public class ColorPanel : Rect
 {
-    private Slider BrightnessSlider = new Slider(TextureEditor.PanelColor)
-        .OnValueChanged(value =>
-        {
-            TextureEditor.SharedState.ColorBrightness = value;
-        });
+    private HsvSelector HsvSelector = new HsvSelector();
     
     public ColorPanel()
     {
-        Default(() => new RectSettings()
+        Default((ref RectSettings settings) => settings = new RectSettings()
         {
             Height = Ui.Grow,
             Color = TextureEditor.PanelColor,
@@ -33,26 +29,28 @@ public class ColorPanel : Rect
         );
 
         Rect colorSelector = new Rect()
-            .Default(() => new RectSettings
+            .Default((ref RectSettings settings) => settings = new RectSettings
             {
                 Direction = UiDirection.TopToBottom,
                 Gap = 8,
             });
 
-        int rows = 4;
+        int rows = 3;
         int columns = 7;
         
-        for (int y = 0; y < rows - 1; y++)
+        for (int y = 0; y < rows; y++)
         {
             var rect = new Rect()
-                .Default(() => new RectSettings()
+                .Default((ref RectSettings settings) => settings = new RectSettings()
                 {
                     Gap = 8
                 });
             
             for (int x = 0; x < columns; x++)
             {
-                OklabColor color = OklabColor.FromLCH(0.85f, 0.085f, (float)(x + y * columns) / (rows * columns + columns) * Single.Pi * 3);
+                //OklabColor color = OklabColor.FromLCH(0.85f, 0.085f, (float)(x + y * columns) / (rows * columns + columns) * Single.Pi * 3);
+                HSVColor color = new HSVColor((float)(x + y * columns) / ((rows - 1) * columns + columns), 0.66f, 1);
+                
                 
                 rect.Add(ColorToggle(color));
             }
@@ -61,7 +59,7 @@ public class ColorPanel : Rect
         }
         
         var finalRect = new Rect()
-            .Default(() => new RectSettings()
+            .Default((ref RectSettings settings) => settings = new RectSettings()
             {
                 Gap = 8,
             });
@@ -73,28 +71,18 @@ public class ColorPanel : Rect
 
         Add(colorSelector);
         
-        // Brightness Slider
-        Add(new Text(TextureEditor.Font)
-            .Default(() => new Text.TextSettings
-            {
-                Text = "Brightness",
-                Color = TextureEditor.FontColor,
-                Size = 12,
-            })
-        );
-        
-        Add(BrightnessSlider);
+        Add(HsvSelector);
         
         // Temp Min Max Toggle
         Add(new Rect()
-            .Default(() => new RectSettings
+            .Default((ref RectSettings settings) =>
             {
-                Width = Ui.Grow,
-                Direction = UiDirection.LeftToRight,
-                Alignment = new UiAlignment
+                settings.Width = Ui.Grow;
+                settings.Direction = UiDirection.LeftToRight;
+                settings.Alignment = new UiAlignment
                 {
                     Vertical = UiAlignmentVertical.Center,
-                },
+                };
             })
             .Add(new Text(TextureEditor.Font)
                 .Default(() => new Text.TextSettings
@@ -114,30 +102,16 @@ public class ColorPanel : Rect
         );
     }
 
-    public override void Update()
-    {
-        Color color = TextureEditor.SharedState.SelectedColor;
-        float brightness = TextureEditor.SharedState.ColorBrightness;
-
-        color.r *= brightness;
-        color.g *= brightness;
-        color.b *= brightness;
-
-        BrightnessSlider.NobColor = color;
-        BrightnessSlider.Value = TextureEditor.SharedState.ColorBrightness;
-        base.Update();
-    }
-
-    public Rect ColorToggle(Color color) =>
+    public Rect ColorToggle(HSVColor color) =>
         new Rect()
-            .Default(() => new RectSettings()
+            .Default((ref RectSettings settings) =>
             {
-                Width = Ui.Pixels(20),
-                Height = Ui.Pixels(20),
-                Color = color.WithAlphaOne(),
-                BorderRadius = 10,
-                BorderColor = new Color(1,1,1,1),
-                BorderSize = TextureEditor.SharedState.SelectedColor == color ? 4 : 0,
+                settings.Width = Ui.Pixels(20);
+                settings.Height = Ui.Pixels(20);
+                settings.Color = color.ToRgb();
+                settings.BorderRadius = 10;
+                settings.BorderColor = new Color(1, 1, 1, 1);
+                settings.BorderSize = TextureEditor.SharedState.SelectedColor == color ? 4 : 0;
             })
             .OnHover((ref RectSettings settings) =>
             {
@@ -151,8 +125,7 @@ public class ColorPanel : Rect
             })
             .OnMouseDown((ref RectSettings settings) =>
             {
-                TextureEditor.SharedState.SelectedColor = color;
-                TextureEditor.SharedState.ColorBrightness = 1;
+                TextureEditor.SharedState.SelectColor(color);
                 TextureEditor.SharedState.SelectedTool = 
                     TextureEditor.SharedState.Tools[typeof(PenTool)];
             });

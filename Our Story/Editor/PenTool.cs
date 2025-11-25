@@ -11,19 +11,15 @@ public class PenTool : ICanvasTool
     
     public void OnHover(Canvas canvas, Vector2 cursorPosition)
     {
-        Color color = TextureEditor.SharedState.SelectedColor;
-        ref float brightness = ref TextureEditor.SharedState.ColorBrightness;
+        float brightness = TextureEditor.SharedState.SelectedColor.V;
         
         if (Input.Mouse.MouseWheelTicksDelta != 0)
         {
-            brightness = float.Clamp(brightness + (float)Input.Mouse.MouseWheelTicksDelta / 64, 0, 1);
+            brightness = float.Clamp(brightness + Input.Mouse.MouseWheelTicksDelta / 32, 0, 1);
+            TextureEditor.SharedState.SelectedColor.V = brightness;
         }
-
-        color.r *= brightness;
-        color.g *= brightness;
-        color.b *= brightness;
         
-        canvas.SetTempPixel(color, cursorPosition);
+        canvas.SetTempPixel(TextureEditor.SharedState.SelectedColor, cursorPosition);
     }
 
     public void OnMouseDown(Canvas canvas, Vector2 cursorPosition)
@@ -41,11 +37,6 @@ public class PenTool : ICanvasTool
         }
         
         Color color = TextureEditor.SharedState.SelectedColor;
-        float brightness = TextureEditor.SharedState.ColorBrightness;
-        
-        color.r *= brightness;
-        color.g *= brightness;
-        color.b *= brightness;
 
         if (_lastX == (int)cursorPosition.x && _lastY == (int)cursorPosition.y)
         {

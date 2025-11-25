@@ -41,15 +41,14 @@ public class TextureEditor
             "Failed to load font.");
         
         
-        SharedState.SelectedColor = new Color(1, 1, 1, 1);
-        SharedState.ColorBrightness = 1;
+        SharedState.SelectedColor = new HSVColor(0,0,1);
         SharedState.Tools.Add(typeof(PenTool), new PenTool());
         SharedState.Tools.Add(typeof(EraserTool), new EraserTool());
         SharedState.SelectedTool = SharedState.Tools[typeof(PenTool)];
 
         _ui = new UiRenderer(EditorWindow, EditorWindow.GetDisplayScale() / EditorWindow.GetDensity());
         _ui.Root = new Rect()
-            .Default(() => new RectSettings()
+            .Default((ref RectSettings settings) => settings = settings with
             {
                 Width = Ui.Grow,
                 Height = Ui.Grow,
@@ -59,7 +58,7 @@ public class TextureEditor
             })
             .Add(new Topbar())
             .Add(new Rect()
-                .Default(() => new RectSettings()
+                .Default((ref RectSettings settings) => settings = settings with
                 {
                     Width = Ui.Grow,
                     Height = Ui.Grow,

@@ -52,7 +52,7 @@ public struct RectSettings()
     /// <summary>
     /// The color of the rect.
     /// </summary>
-    public Color Color;
+    public GradientColor Color;
     /// <summary>
     /// The Cursor to show when captured.
     /// </summary>

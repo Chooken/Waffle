@@ -8,7 +8,7 @@ public class ToolSelector : Rect
 {
     public ToolSelector()
     {
-        Default(() => new RectSettings()
+        Default((ref RectSettings settings) => settings = settings with
         {
             Height = Ui.Grow,
             Color = TextureEditor.BackgroundColor,
@@ -29,7 +29,7 @@ public class ToolSelector : Rect
 
     public Rect ToolButton(ICanvasTool tool, Font font, string name) =>
         new Rect()
-            .Default(() => new RectSettings()
+            .Default((ref RectSettings settings) => settings = settings with
             {
                 Height = Ui.Grow,
                 Padding = (8, 4),
@@ -54,7 +54,7 @@ public class ToolSelector : Rect
                 settings.Color = TextureEditor.PanelColor;
             })
             .Add(new Rect()
-                .Default(() => new RectSettings
+                .Default((ref RectSettings settings) => settings = settings with
                 {
                     Width = Ui.Pixels(10),
                     Height = Ui.Pixels(10),

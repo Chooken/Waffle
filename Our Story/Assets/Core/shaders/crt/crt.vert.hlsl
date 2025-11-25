@@ -1,7 +1,10 @@
 cbuffer UIElement : register(b0, space1) {
     float3 Position;
     float2 Size;
-    float4 Color;
+    float4 TopLeftColor;
+    float4 TopRightColor;
+    float4 BottomLeftColor;
+    float4 BottomRightColor;
     float4 BorderRadius;
     float4 BorderColor;
     float2 RenderSize;
@@ -13,7 +16,6 @@ cbuffer UIElement : register(b0, space1) {
 struct VertexOutput {
     float2 UV : TEXCOORD0;
     uint SpriteIndex : TEXCOORD1;
-    float4 Color : TEXCOORD2;
     float4 Position : SV_Position;
 };
 
@@ -40,7 +42,6 @@ VertexOutput main(uint vertexID : SV_VertexID) {
     output.Position = float4(clipSpace, 0, 1);
     output.SpriteIndex = spriteIndex;
     output.UV = vertexPos[vert];
-    output.Color = Color;
     
     return output;
 }

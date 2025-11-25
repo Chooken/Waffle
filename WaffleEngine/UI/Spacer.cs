@@ -4,10 +4,10 @@ public class Spacer : Rect
 {
     public Spacer()
     {
-        Default(() => new RectSettings
+        Default((ref RectSettings settings) =>
         {
-            Width = Ui.Grow,
-            Height = Ui.Grow,
+            settings.Width = Ui.Grow;
+            settings.Height = Ui.Grow;
         });
     }
 }

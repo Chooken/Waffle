@@ -72,10 +72,10 @@ internal sealed class WindowEventSystemSdl : IWindowEventSystem
     
     private void ProcessMouseWheel(ref SDL.MouseWheelEvent sdlEvent)
     {
-        Input.GlobalInputHandler.SetMouseWheelTicksDelta((int)sdlEvent.Y);
+        Input.GlobalInputHandler.SetMouseWheelTicksDelta(sdlEvent.Y);
         if (WindowManager.TryGetWindowWithId(sdlEvent.WindowID, out var window))
         {
-            window.WindowInput.SetMouseWheelTicksDelta((int)sdlEvent.Y);
+            window.WindowInput.SetMouseWheelTicksDelta(sdlEvent.Y);
         }
     }
 

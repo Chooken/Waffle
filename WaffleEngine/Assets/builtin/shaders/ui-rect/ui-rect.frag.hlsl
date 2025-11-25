@@ -1,7 +1,10 @@
 cbuffer UIElement : register(b0, space3) {
     float3 Position;
     float2 Size;
-    float4 Color;
+    float4 TopLeftColor;
+    float4 TopRightColor;
+    float4 BottomLeftColor;
+    float4 BottomRightColor;
     float4 BorderRadius;
     float4 BorderColor;
     float2 RenderSize;
@@ -30,8 +33,12 @@ float roundedBoxSDF(float2 uv, float2 halfSize, float4 corners) {
 float4 main(VertexOutput input) : SV_Target {
 
     float alpha = roundedBoxSDF((input.UV - 0.5f) * Size, Size * 0.5f, BorderRadius);
+
+    float4 bgTop = lerp(TopLeftColor, TopRightColor, input.UV.x);
+    float4 bgBottom = lerp(BottomLeftColor, BottomRightColor, input.UV.x);
+    float4 bgColor = lerp(bgTop, bgBottom, input.UV.y);
     
-    float4 color = lerp(Color, BorderColor, saturate(alpha + BorderSize) * saturate(BorderSize));
+    float4 color = lerp(bgColor, BorderColor, saturate(alpha + BorderSize) * saturate(BorderSize));
 
     return float4(color.rgb, color.a * -alpha);
 }

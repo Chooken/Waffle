@@ -6,7 +6,7 @@ public class Topbar : Rect
 {
     public Topbar()
     {
-        Default(() => new RectSettings()
+        Default((ref RectSettings settings) => settings = settings with
         {
             Width = Ui.Grow,
             Padding = 4,

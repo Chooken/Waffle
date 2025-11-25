@@ -9,7 +9,10 @@ public struct UICrtData
 {
     public AlignedVector3 Position;
     public Vector2 Size;
-    public Vector4 Color;
+    public Vector4 TopLeftColor;
+    public Vector4 TopRightColor;
+    public Vector4 BottomLeftColor;
+    public Vector4 BottomRightColor;
     public Vector4 BorderRadius;
     public Vector4 BorderColor;
     public Vector2 ScreenSize;
@@ -39,7 +42,10 @@ public class RectCrt(GpuTexture texture, float chromaticAberration) : Rect
         {
             Position = new AlignedVector3(Bounds.CalculatedPosition),
             Size = new Vector2(Bounds.CalculatedWidth, Bounds.CalculatedHeight),
-            Color = RectSettings.Color,
+            TopLeftColor = RectSettings.Color.TopLeft,
+            TopRightColor = RectSettings.Color.TopRight,
+            BottomLeftColor = RectSettings.Color.BottomLeft,
+            BottomRightColor = RectSettings.Color.BottomRight,
             BorderRadius = new Vector4(
                 RectSettings.BorderRadius.BottomLeft, 
                 RectSettings.BorderRadius.TopLeft, 

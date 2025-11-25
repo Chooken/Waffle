@@ -1,7 +1,10 @@
 cbuffer UIElement : register(b0, space3) {
     float3 Position;
     float2 Size;
-    float4 Color;
+    float4 TopLeftColor;
+    float4 TopRightColor;
+    float4 BottomLeftColor;
+    float4 BottomRightColor;
     float4 BorderRadius;
     float4 BorderColor;
     float2 RenderSize;
@@ -14,7 +17,6 @@ cbuffer UIElement : register(b0, space3) {
 struct VertexOutput {
     float2 UV : TEXCOORD0;
     uint SpriteIndex : TEXCOORD1;
-    float4 Color : TEXCOORD2;
     float4 Position : SV_Position;
 };
 
@@ -41,12 +43,16 @@ float4 main(VertexOutput input) : SV_Target {
     float2 uv = float2(input.UV.x, (floor(input.UV.y * RefRes.y) + 0.5f) / RefRes.y);
     float2 uv2 = (float2(input.UV.x, 1 - input.UV.y) * RefRes % 1 - 0.5f) * 2;
 
+    float4 bgTop = lerp(TopLeftColor, TopRightColor, input.UV.x);
+    float4 bgBottom = lerp(BottomLeftColor, BottomRightColor, input.UV.x);
+    float4 bgColor = lerp(bgTop, bgBottom, input.UV.y);
+    
     float4 color;
 
     color.r = Texture.Sample(Sampler, saturate(uv - float2(ChromaticAberration / RefRes.x, 0))).r;
     color.gba = Texture.Sample(Sampler, uv).gba;
 
-    color = float4(lerp(input.Color.rgb, color.rgb, color.a), 1);
+    color = float4(lerp(bgColor.rgb, color.rgb, color.a), 1);
 
     float3 outputColor;
 

@@ -7,7 +7,7 @@ public class UndoButton : Rect
 {
     public UndoButton()
     {
-        Default(() => new RectSettings
+        Default((ref RectSettings settings) => settings = settings with
         {
             Padding = (8, 8),
             BorderRadius = 8,
@@ -35,7 +35,7 @@ public class UndoButton : Rect
         });
         
         Add(new Rect()
-            .Default(() => new RectSettings
+            .Default((ref RectSettings settings) => settings = settings with
             {
                 Width = Ui.Pixels(16),
                 Height = Ui.Pixels(16),
@@ -50,7 +50,7 @@ public class RedoButton : Rect
 {
     public RedoButton()
     {
-        Default(() => new RectSettings
+        Default((ref RectSettings settings) => settings = settings with
         {
             Padding = (8, 8),
             BorderRadius = 8,
@@ -78,7 +78,7 @@ public class RedoButton : Rect
         });
         
         Add(new Rect()
-            .Default(() => new RectSettings
+            .Default((ref RectSettings settings) => settings = settings with
             {
                 Width = Ui.Pixels(16),
                 Height = Ui.Pixels(16),

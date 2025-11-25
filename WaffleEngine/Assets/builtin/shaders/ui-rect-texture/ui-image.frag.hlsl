@@ -1,7 +1,10 @@
 cbuffer UIElement : register(b0, space3) {
     float3 Position;
     float2 Size;
-    float4 Color;
+    float4 TopLeftColor;
+    float4 TopRightColor;
+    float4 BottomLeftColor;
+    float4 BottomRightColor;
     float4 BorderRadius;
     float4 BorderColor;
     float2 RenderSize;

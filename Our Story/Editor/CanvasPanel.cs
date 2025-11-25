@@ -19,33 +19,20 @@ public class CanvasPanel : Rect
         Canvas = canvas;
         CanvasRect = new RectCrt(Canvas.GetCanvas(), 0.0f);
 
-        Default(() => new RectSettings()
+        Default((ref RectSettings settings) => settings = new RectSettings()
         {
             Width = Ui.Grow,
             Height = Ui.Grow,
             Alignment = (UiAlignmentVertical.Center, UiAlignmentHorizontal.Center),
         });
-
-        OnHover((ref RectSettings settings) =>
-        {
-            if (Input.GetDefaultEventSpace.KeyPressed(Keycode.Minus))
-            {
-                Zoom = Math.Min(_zooms.Length - 1, Zoom + 1);
-            }
-            else if (Input.GetDefaultEventSpace.KeyPressed(Keycode.Equals))
-            {
-                Zoom = Math.Max(0, Zoom - 1);
-            }
-        });
         
         Add(CanvasRect
-            .Default(() =>
+            .Default((ref RectSettings settings) => 
             {
                 Zoom = Math.Clamp(Zoom, 0, _zooms.Length - 1);
-                
                 CursorPosition = new Vector2(-1, -1);
                 CanvasRect.UseMinMax = TextureEditor.SharedState.UseMinMax;
-                return new RectSettings()
+                settings = new RectSettings
                 {
                     Width = Ui.Grow.Max(_zooms[Zoom]),
                     Height = Ui.Grow,
@@ -54,7 +41,6 @@ public class CanvasPanel : Rect
                     BorderSize = 4,
                     BorderColor = TextureEditor.PanelColor,
                     Color = TextureEditor.BackgroundColor,
-                    CaptureInput = false,
                 };
             })
             .OnHover((ref RectSettings settings) =>
@@ -62,7 +48,7 @@ public class CanvasPanel : Rect
                 CalculateCursorPosition(window);
                 TextureEditor.SharedState.SelectedTool?.OnHover(Canvas, CursorPosition);
             })
-            .OnMouseDown((ref RectSettings item) =>
+            .OnMouseDown((ref RectSettings settings) =>
             {
                 CalculateCursorPosition(window);
                 TextureEditor.SharedState.SelectedTool?.OnMouseDown(Canvas, CursorPosition);
@@ -79,12 +65,12 @@ public class CanvasPanel : Rect
         );
 
         Add(new Rect()
-            .Default(() => new RectSettings
+            .Default((ref RectSettings settings) =>
             {
-                Position = Ui.Relative.Right(4).Bottom(4),
-                Color = TextureEditor.PanelColor,
-                Padding = (8,4),
-                BorderRadius = 4,
+                settings.Position = Ui.Relative.Right(4).Bottom(4);
+                settings.Color = TextureEditor.PanelColor;
+                settings.Padding = (8, 4);
+                settings.BorderRadius = 4;
             })
             .Add(new Text(TextureEditor.Font)
                 .Default(() => new Text.TextSettings
@@ -92,6 +78,20 @@ public class CanvasPanel : Rect
                     Text = Zoom == 0 ? "auto" : $"{_zooms[Math.Clamp(Zoom, 0, _zooms.Length - 1)]}px",
                 }))
         );
+    }
+
+    public override void Update()
+    {
+        if (Input.GetDefaultEventSpace.KeyPressed(Keycode.Minus))
+        {
+            Zoom = Math.Min(_zooms.Length - 1, Zoom + 1);
+        }
+        else if (Input.GetDefaultEventSpace.KeyPressed(Keycode.Equals))
+        {
+            Zoom = Math.Max(0, Zoom - 1);
+        }
+        
+        base.Update();
     }
 
     private void CalculateCursorPosition(Window window)

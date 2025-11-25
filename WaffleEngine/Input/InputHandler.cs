@@ -109,7 +109,7 @@ public sealed class InputHandler
         _mouseData.IsRightDown = down;
     }
 
-    public void SetMouseWheelTicksDelta(int delta)
+    public void SetMouseWheelTicksDelta(float delta)
     {
         _mouseData.MouseWheelTicksDelta = delta;
     }

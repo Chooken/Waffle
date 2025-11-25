@@ -61,6 +61,72 @@ public struct Color(float red, float green, float blue, float alpha = 1.0f)
             : MathF.Pow(x, 1.0f/2.4f) * 1.055f - 0.055f;
     }
 
+    /// <summary>
+    /// Generates a color from a HSV color.
+    /// </summary>
+    /// <param name="hue">0 to 1 for the hue of the color</param>
+    /// <param name="saturation"></param>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    public static Color FromHSV(float hue, float saturation, float value)
+    {
+        Color output = new Color(0, 0, 0, 1);
+
+        // Wrap the hue value.
+        hue = (hue % 1 + 1) % 1;
+        
+        // Get the remainder of 60 degree sections.
+        var section = (int)MathF.Floor(hue * 6);
+        var remainder = hue * 6f % 1f;
+
+        var full = value;
+        var washout = value * (1f - saturation);
+        var blendFrom = value * (1f - (saturation * remainder));
+        var blendTo = value * (1f - (saturation * (1f - remainder)));
+
+        switch (section)
+        {
+            // Red -> Yellow
+            case 0:
+                output.r = full;
+                output.g = blendTo;
+                output.b = washout;
+                break;
+            // Yellow -> Green
+            case 1:
+                output.r = blendFrom;
+                output.g = full;
+                output.b = washout;
+                break;
+            // Green -> Cyan
+            case 2:
+                output.r = washout;
+                output.g = full;
+                output.b = blendTo;
+                break;
+            // Cyan -> Blue
+            case 3:
+                output.r = washout;
+                output.g = blendFrom;
+                output.b = full;
+                break;
+            // Blue -> Pink
+            case 4:
+                output.r = blendTo;
+                output.g = washout;
+                output.b = full;
+                break;
+            // Pink -> Red
+            default:
+                output.r = full;
+                output.g = washout;
+                output.b = blendFrom;
+                break;
+        }
+        
+        return output;
+    }
+
     public static Color White => new Color(1, 1, 1, 1);
     public static Color Black => new Color(0, 0, 0, 1);
     public static Color Transparent => new Color(0, 0, 0, 0);
@@ -109,4 +175,119 @@ public struct OklabColor
     }
 
     public static implicit operator Color(OklabColor color) => color.ToRGB();
+}
+
+public struct HSVColor : IEquatable<HSVColor>
+{
+    public float H;
+    public float S;
+    public float V;
+
+    public float Hue => H;
+    public float Saturation => S;
+    public float Value => V;
+
+    public Color ToRgb() => Color.FromHSV(H, S, V);
+
+    public HSVColor(float hue, float saturation, float value)
+    {
+        H = hue;
+        S = saturation;
+        V = value;
+    }
+
+    public static HSVColor FromColor(Color color)
+    {
+        double red = color.r;
+        double green = color.g;
+        double blue = color.b;
+
+        // The value is just the maximum value of red, green or blue
+        double value = Math.Max(red, Math.Max(green, blue));
+
+        if (!(value > 0))
+        {
+            return new HSVColor()
+            {
+                H = 0,
+                S = 0,
+                V = 0,
+            };
+        }
+        
+        // The inverse minimum of red, green or blue scaled to 100% saturation.
+        double minimum = Math.Min(red, Math.Min(green, blue));
+        double saturation = 1f - (minimum / value);
+
+        // If saturation is 0 its impossible to know what hue it is so just return 0.
+        if (saturation <= 0)
+        {
+            return new HSVColor
+            {
+                H = 0,
+                S = (float)saturation,
+                V = (float)value,
+            };
+        }
+        
+        double hue;
+
+        double delta = value - minimum;
+        
+        // In either segment 0 or 5
+        if (red >= value)
+        {
+            hue = (green - blue) / delta;
+        }
+        // In either segment 1 or 2
+        else if (green >= value)
+        {
+            hue = 2.0 + (blue - red) / delta;
+        }
+        // In either segment 3 or 4
+        else
+        {
+            hue = 4.0 + (red - green) / delta;
+        }
+
+        if (hue < 0.0)
+            hue += 6.0;
+
+        hue /= 6.0;
+
+        return new HSVColor
+        {
+            H = (float)hue,
+            S = (float)saturation,
+            V = (float)value,
+        };
+    }
+
+    public static implicit operator Color(HSVColor color) => Color.FromHSV(color.H, color.S, color.V);
+    public static implicit operator HSVColor(Color color) => FromColor(color);
+    
+    public static bool operator ==(HSVColor left, HSVColor right)
+    {
+        return left.Equals(right);
+    }
+    
+    public static bool operator !=(HSVColor left, HSVColor right)
+    {
+        return !left.Equals(right);
+    }
+    
+    public bool Equals(HSVColor other)
+    {
+        return H == other.H && S == other.S && V == other.V;
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return obj is HSVColor other && Equals(other);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(H, S, V);
+    }
 }

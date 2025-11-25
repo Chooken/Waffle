@@ -10,7 +10,7 @@ public class Toggle : Rect
     
     public Toggle()
     {
-        Default(() => new RectSettings
+        Default((ref RectSettings settings) => settings = settings with
         {
             Width = Ui.Pixels(45),
             Color = TextureEditor.BackgroundColor,
@@ -23,7 +23,7 @@ public class Toggle : Rect
         });
 
         Add(new Rect()
-            .Default(() => new RectSettings
+            .Default((ref RectSettings settings) => settings = settings with
             {
                 Width = Ui.Pixels(20),
                 Height = Ui.Pixels(20),
