@@ -13,15 +13,17 @@ namespace OurStory.Scenes;
 
 public class GameScene : IScene
 {
-    private TextureEditor editor;
+    //private TextureEditor editor;
     
     public bool OnSceneLoaded()
     {
         if (!Assets.TryLoadAssetBundle("Core"))
             return false;
 
-        editor = new TextureEditor();
-        editor.Start();
+        //editor = new TextureEditor();
+        //editor.Start();
+
+        Editor.Editor.Open();
 
         return true;
     }
@@ -34,12 +36,13 @@ public class GameScene : IScene
 
     private void Update()
     {
-        editor.Update();
+        //editor.Update();
+        Editor.Editor.Update();
     }
 
     private void Render()
     {
-        editor.Render();
+        //editor.Render();
     }
 
     public void OnSceneExit()

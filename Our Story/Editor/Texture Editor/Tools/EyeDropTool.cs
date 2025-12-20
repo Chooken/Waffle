@@ -8,7 +8,6 @@ public class EyeDropTool : ICanvasTool
     {
         
     }
-
     public void OnMouseDown(Canvas canvas, Vector2 cursorPosition)
     {
         

@@ -18,12 +18,11 @@ public class TextureEditor
     public static Color BackgroundColor = Color.RGBA255(25, 25, 25, 255);
     public static Color PanelColor = Color.RGBA255(40, 40, 40, 255);
     public static Color Highlight = Color.RGBA255(0, 255, 132, 255);
-
-    public static Color FontColor = Color.RGBA255(200, 200, 200, 255);
     
     public static Color ElementHighlight = Color.RGBA255(60, 60, 60, 255);
-    public static Color ElementShadow = Color.RGBA255(20, 20, 20, 255);
     public static Color ElementPressColor = Color.RGBA255(80, 80, 80, 255);
+
+    public static Color FontColor = Color.RGBA255(200, 200, 200, 255);
 
     public static Font Font;
     
