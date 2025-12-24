@@ -1,7 +1,19 @@
 using System.Numerics;
+using System.Runtime.InteropServices;
 using SDL3;
 
 namespace WaffleEngine;
+
+[StructLayout(LayoutKind.Sequential)]
+public struct Color255(byte red, byte green, byte blue, byte alpha)
+{
+    public byte r = red;
+    public byte g = green;
+    public byte b = blue;
+    public byte a = alpha;
+
+    public static implicit operator Color(Color255 color) => Color.RGBA255(color.r, color.g, color.b, color.a);
+}
 
 public struct Color(float red, float green, float blue, float alpha = 1.0f)
 {

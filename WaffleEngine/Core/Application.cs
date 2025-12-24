@@ -8,6 +8,10 @@ public static class Application
 {
     private static bool _isRunning;
     private static readonly IWindowEventSystem AppEventSystem = new WindowEventSystemSdl();
+    private static Time _time;
+
+    public static Time Time => _time;
+
     public static void Run(IScene startScene)
     {
         if (_isRunning)
@@ -64,7 +68,8 @@ public static class Application
             
             Input.GlobalInputHandler.Update();
             WindowManager.UpdateWindowInput();
-            
+
+            _time.DeltaTime = (float)timer.Elapsed.TotalSeconds;
             timer.Restart();
         }
     }

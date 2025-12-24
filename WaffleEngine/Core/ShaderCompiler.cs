@@ -19,9 +19,14 @@ public static class ShaderCompiler
         return true;
     }
 
-    public struct ShaderProgram
+    public struct ShaderProgram : IDisposable
     {
         public IntPtr Handle;
+
+        public void Dispose()
+        {
+            SDL.ReleaseGPUShader(Device.Handle, Handle);
+        }
     }
 
     public static bool CompileVertexShader(string shaderPath, string entrypoint, out ShaderProgram compiledShader)

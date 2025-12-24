@@ -363,10 +363,25 @@ public struct AssetBundle()
         {
             texture.Dispose();
         }
+        
+        foreach (var vertexProgram in VertexPrograms.Values)
+        {
+            vertexProgram.Dispose();
+        }
+        
+        foreach (var fragmentProgram in FragmentPrograms.Values)
+        {
+            fragmentProgram.Dispose();
+        }
             
         foreach (var shader in Shaders.Values)
         {
             shader.Dispose();
+        }
+        
+        foreach (var computeShader in ComputeShaders.Values)
+        {
+            computeShader.Dispose();
         }
     }
 }

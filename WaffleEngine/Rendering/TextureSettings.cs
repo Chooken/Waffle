@@ -19,8 +19,8 @@ public struct GpuTextureSettings
         Format = TextureFormat.B8G8R8A8Unorm,
         ColorTarget = false,
         RandomWrites = false,
-        MinFilter = FilterMode.Linear,
-        MagFilter = FilterMode.Linear,
+        MinFilter = FilterMode.Nearest,
+        MagFilter = FilterMode.Nearest,
         MipsFilter = FilterMode.Nearest,
         SamplerMode = GPUSamplerMode.ClampToEdge,
     };

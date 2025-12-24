@@ -9,6 +9,21 @@ public static class Yaml
 {
     public static bool TrySerialize(string path, ISerializable obj)
     {
+        StartSerialization(out var buffer, out var emitter);
+        
+        obj.Serialize(ref emitter);
+        
+        return TryEndSerialization(path, buffer);
+    }
+
+    public static void StartSerialization(out ArrayBufferWriter<byte> buffer, out Utf8YamlEmitter emitter)
+    {
+        buffer = new ArrayBufferWriter<byte>();
+        emitter = new Utf8YamlEmitter(buffer);
+    }
+
+    public static bool TryEndSerialization(string path, ArrayBufferWriter<byte> buffer)
+    {
         string? dir = Path.GetDirectoryName(path);
 
         if (dir is null)
@@ -22,11 +37,6 @@ public static class Yaml
             Directory.CreateDirectory(dir);
         }
         
-        var buffer = new ArrayBufferWriter<byte>();
-        var emitter = new Utf8YamlEmitter(buffer);
-        
-        obj.Serialize(ref emitter);
-        
         File.WriteAllBytes(path, buffer.WrittenSpan);
         return true;
     }
@@ -34,6 +44,18 @@ public static class Yaml
     public static bool TryDeserialize<T>(string path, [NotNullWhen(true)] out T? obj) where T : IDeserializable<T>
     {
         obj = default;
+
+        if (!TryStartDeserialize(path, out var parser))
+        {
+            return false;
+        }
+
+        return T.TryDeserialize(ref parser, out obj);
+    }
+
+    public static bool TryStartDeserialize(string path, out YamlParser parser)
+    {
+        parser = default;
         
         if (!File.Exists(path))
         {
@@ -43,15 +65,10 @@ public static class Yaml
 
         byte[] source = File.ReadAllBytes(path);
 
-        var parser = YamlParser.FromBytes(source);
+        parser = YamlParser.FromBytes(source);
         
         parser.SkipHeader();
-
-        if (!T.TryDeserialize(ref parser, out obj))
-        {
-            return false;
-        }
-
+        
         return true;
     }
 }

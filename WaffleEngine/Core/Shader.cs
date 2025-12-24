@@ -5,7 +5,7 @@ using WaffleEngine.Rendering.Immediate;
 
 namespace WaffleEngine;
 
-public sealed unsafe class Shader : IRenderBindable, IDisposable
+public sealed class Shader : IRenderBindable, IDisposable
 {
     public IntPtr VertexHandle { get; private set; }
     public IntPtr FragmentHandle { get; private set; }
@@ -34,13 +34,11 @@ public sealed unsafe class Shader : IRenderBindable, IDisposable
     {
         if (VertexHandle != IntPtr.Zero)
         {
-            SDL.ReleaseGPUShader(Device.Handle, VertexHandle);
             VertexHandle = IntPtr.Zero;
         }
         
         if (FragmentHandle != IntPtr.Zero)
         {
-            SDL.ReleaseGPUShader(Device.Handle, FragmentHandle);
             FragmentHandle = IntPtr.Zero;
         }
 
