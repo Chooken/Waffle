@@ -221,6 +221,9 @@ public class World
 
     public void Load()
     {
+        if (!Directory.Exists("world"))
+            return;
+        
         var files = Directory.EnumerateFiles("world", "*.chunk");
 
         foreach (var file in files)
