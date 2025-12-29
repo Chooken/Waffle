@@ -5,6 +5,8 @@ namespace WaffleEngine;
 
 public abstract class Window : IDisposable
 {
+    public GpuTexture RenderTarget { get; internal set; }
+    
     public InputHandler WindowInput = new InputHandler();
     
     public string WindowHandle { get; internal set; }

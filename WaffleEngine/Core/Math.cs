@@ -380,3 +380,64 @@ public struct Vector4
     
     public static Vector4 operator -(Vector4 vector) => new (-vector.x, -vector.y, -vector.z, -vector.w);
 }
+
+[StructLayout(LayoutKind.Explicit, Size = 16)]
+public struct Vector4Int
+{
+    [FieldOffset(0)]
+    public int x;
+    [FieldOffset(4)]
+    public int y;
+    [FieldOffset(8)]
+    public int z; 
+    [FieldOffset(12)]
+    public int w;
+
+    [FieldOffset(0)]
+    private Vector128<int> data;
+    
+    public Vector4Int(int x, int y, int z, int w)
+    {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.w = w;
+    }
+    
+    public static Vector4Int Zero => new Vector4Int(0, 0, 0, 0);
+    public static Vector4Int One => new Vector4Int(1, 1, 1, 1);
+    
+    public static bool operator ==(Vector4Int lhs, Vector4Int rhs)
+    {
+        return lhs.x == rhs.x && lhs.y == rhs.y && lhs.z == rhs.z && lhs.w == rhs.w;
+    }
+    
+    public static bool operator !=(Vector4Int lhs, Vector4Int rhs)
+    {
+        return lhs.x != rhs.x || lhs.y != rhs.y || lhs.z != lhs.z || lhs.w != rhs.w;
+    }
+    
+    
+    
+    public static Vector4Int operator *(Vector4Int lhs, int rhs)
+    {
+        return new Vector4Int(lhs.x * rhs, lhs.y * rhs, lhs.z * rhs, lhs.w * rhs);
+    }
+    
+    public static Vector4Int operator /(Vector4Int lhs, int rhs)
+    {
+        return new Vector4Int(lhs.x / rhs, lhs.y / rhs, lhs.z / rhs, lhs.w / rhs);
+    }
+
+    public static Vector4Int operator -(Vector4Int lhs, int rhs)
+    {
+        return new Vector4Int(lhs.x - rhs, lhs.y - rhs, lhs.z - rhs, lhs.w - rhs);
+    }
+    
+    public static Vector4Int operator +(Vector4Int lhs, int rhs)
+    {
+        return new Vector4Int(lhs.x - rhs, lhs.y + rhs, lhs.z + rhs, lhs.w + rhs);
+    }
+    
+    public static Vector4Int operator -(Vector4Int vector) => new (-vector.x, -vector.y, -vector.z, -vector.w);
+}

@@ -57,6 +57,6 @@ public struct GpuTile
     public Vector4 Position;
     public int TileIndex;
     public int PaletteIndex;
-    public int Height;
-    public int Padding;
+    public int FadeIndex;
+    public int Rotation;
 }

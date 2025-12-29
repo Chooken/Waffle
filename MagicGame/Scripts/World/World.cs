@@ -17,33 +17,16 @@ public class World
     
     // Rendering
     private Buffer<GpuTile>[] _gpuTiles;
-    private Texture _tilesheet;
-    private Texture _palette;
-    private Shader? _shader;
 
-    public World(Vector2Int chunkSize, Texture tilesheet, Texture palette)
+    public World(Vector2Int chunkSize)
     {
         _chunkSize = chunkSize;
-        _tilesheet = tilesheet;
-        _palette = palette;
         _gpuTiles = new Buffer<GpuTile>[9];
 
         for (int i = 0; i < 9; i++)
         {
             _gpuTiles[i] = new Buffer<GpuTile>(BufferUsage.GraphicsStorageRead, chunkSize.x * chunkSize.y);
         }
-
-        if (!Assets.TryGetShader("core", "tile", out _shader))
-        {
-            return;
-        }
-
-        var queue = new ImQueue();
-        var copypass = queue.AddCopyPass();
-        copypass.Upload(_tilesheet);
-        copypass.Upload(_palette);
-        copypass.End();
-        queue.Submit();
     }
 
     public void SetEntity(Vector3Int postion, Tile tile)
@@ -87,19 +70,18 @@ public class World
         _chunks[chunk].SetTile(WMath.Mod(x, _chunkSize.x), WMath.Mod(y, _chunkSize.y), tile);;
     }
 
-    public void Update(ImQueue queue)
+    public void Update(Camera camera)
     {
         Vector2Int playerChunk = new Vector2Int(
             (int)Math.Floor((float)_focus.x / _chunkSize.x),
             (int)Math.Floor((float)_focus.y / _chunkSize.y));
-        
-        Vector2Int playerOffset = new Vector2Int(
-            WMath.Mod(_focus.x, _chunkSize.x),
-            WMath.Mod(_focus.y, _chunkSize.y));
 
         for (int y = -1; y <= 1; y++)
         for (int x = -1; x <= 1; x++)
         {
+            if (IsChunkOffscreen(x, y, camera))
+                continue;
+            
             UploadChunk(playerChunk, new Vector2Int(x, y));
         }
 
@@ -128,21 +110,37 @@ public class World
                 Position = tempTile.Position with { z = entityTile.Height },
                 TileIndex = entityTile.TileIndex,
                 PaletteIndex = entityTile.PaletteIndex,
-                Height = entityTile.Height,
+                FadeIndex = Math.Abs(entityTile.Height - _focus.z),
             };
         }
         
-        ImCopyPass copyPass = queue.AddCopyPass();
-        foreach (var tiles in _gpuTiles)
+        for (int y = -1; y <= 1; y++)
+        for (int x = -1; x <= 1; x++)
         {
-            if (tiles.Count == 0)
+            if (IsChunkOffscreen(x, y, camera))
                 continue;
             
-            copyPass.Upload(tiles);
+            TilemapRenderer.QueueTiles(_gpuTiles[x + 1 + (y + 1) * 3]);
         }
-        copyPass.End();
         
         _entities.Clear();
+    }
+
+    private bool IsChunkOffscreen(int x, int y, Camera camera)
+    {
+        var min = new Vector2(
+            x * _chunkSize.x - WMath.Mod(_focus.x, _chunkSize.x) - 0.5f, 
+            y * _chunkSize.y -  WMath.Mod(_focus.y, _chunkSize.y) - 0.5f);
+        
+        var max = new Vector2(
+            _chunkSize.x + x * _chunkSize.x - WMath.Mod(_focus.x, _chunkSize.x) - 0.5f, 
+            _chunkSize.y + y * _chunkSize.y -  WMath.Mod(_focus.y, _chunkSize.y) - 0.5f);
+
+        var camWidth = camera.Width * 0.5f;
+        var camHeight = camera.Height * 0.5f;
+
+        return min.x > camWidth || max.x < -camWidth ||
+               min.y > camHeight || max.y < -camHeight;
     }
 
     private void UploadChunk(Vector2Int chunk, Vector2Int offset)
@@ -160,21 +158,24 @@ public class World
         for (int x = 0; x < _chunkSize.x; x++)
         {
             GpuTile gpuTile = new GpuTile();
-            gpuTile.Position = new Vector4(x + offset.x * _chunkSize.x, y + offset.y * _chunkSize.y, 0, 1);
+            gpuTile.Position = new Vector4(
+                x + offset.x * _chunkSize.x - WMath.Mod(_focus.x, _chunkSize.x) - 0.5f, 
+                y + offset.y * _chunkSize.y -  WMath.Mod(_focus.y, _chunkSize.y) - 0.5f, 
+                0, 1);
             
             if (_chunks.TryGetValue(chunk, out Tilemap<Tile>? tilemap) && tilemap.TryGetTile(x, y, out Tile tile))
             {
                 gpuTile.Position.z = tile.Height;
                 gpuTile.TileIndex = tile.TileIndex;
                 gpuTile.PaletteIndex = tile.PaletteIndex;
-                gpuTile.Height = tile.Height;
+                gpuTile.FadeIndex = Math.Abs(tile.Height - _focus.z);
             }
             
             tiles.Add(gpuTile);
         }
     }
 
-    public Vector2 ScreenToWorld(Vector2 screenPos, Window window)
+    public Vector2 ClipToWorldSpace(Vector2 screenPos, Camera camera)
     {
         Vector2Int playerChunk = new Vector2Int(
             (int)Math.Floor((float)_focus.x / _chunkSize.x),
@@ -185,7 +186,7 @@ public class World
             WMath.Mod(_focus.y, _chunkSize.y));
         
         System.Numerics.Matrix4x4.Invert(System.Numerics.Matrix4x4.CreateTranslation(-playerOffset.x - 0.5f, -playerOffset.y - 0.5f, 10), out var iv);
-        System.Numerics.Matrix4x4.Invert(System.Numerics.Matrix4x4.CreateOrthographic(((float)window.Width / window.Height) * 12, 12, 0, 100), out var ip);
+        System.Numerics.Matrix4x4.Invert(camera.GetProjectionMatrix(), out var ip);
 
         var viewPos = System.Numerics.Vector2.Transform(screenPos, ip);
         var worldPos = System.Numerics.Vector2.Transform(viewPos, iv);
@@ -193,37 +194,6 @@ public class World
         return new Vector2(
             worldPos.X + playerChunk.x * _chunkSize.x, 
             worldPos.Y + playerChunk.y * _chunkSize.y);
-    }
-
-    public void Render(ImRenderPass renderPass, Window window)
-    {
-        if (_shader is null)
-            return;
-        
-        Vector2Int playerOffset = new Vector2Int(
-            WMath.Mod(_focus.x, _chunkSize.x),
-            WMath.Mod(_focus.y, _chunkSize.y));
-        
-        renderPass.SetUniforms(new WorldUniforms()
-        {
-            ViewMatrix = System.Numerics.Matrix4x4.CreateTranslation(-playerOffset.x - 0.5f, -playerOffset.y - 0.5f, 10),
-            ProjectionMatrix = System.Numerics.Matrix4x4.CreateOrthographic(((float)window.Width / window.Height) * 12, 12, 0, 100),
-            PlayerHeight = _focus.z,
-        });
-        
-        renderPass.Bind(_shader);
-        renderPass.Bind(_tilesheet, 0);
-        renderPass.Bind(_palette, 1);
-
-        for (int y = 0; y < 3; y++)
-        for (int x = 0; x < 3; x++)
-        {
-            if (_gpuTiles[x + 3 * y].Count == 0)
-                continue;
-            
-            renderPass.Bind(_gpuTiles[x + 3 * y]);
-            renderPass.DrawPrimatives(6, (uint)_chunkSize.x * (uint)_chunkSize.y, 0, 0);
-        }
     }
 
     public void Save()

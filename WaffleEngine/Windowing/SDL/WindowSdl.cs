@@ -67,6 +67,7 @@ public sealed class WindowSdl : Window
         windowSdl.Height = height;
         windowSdl.PixelWidth = pixelWidth;
         windowSdl.PixelHeight = pixelHeight;
+        windowSdl.RenderTarget = new GpuTexture(windowSdl);
         window = windowSdl;
 
         unsafe
@@ -150,7 +151,7 @@ public sealed class WindowSdl : Window
         }
     }
     
-    private static unsafe bool HandleWindowResize(IntPtr userdata, ref SDL.Event sdlEvent)
+    private static bool HandleWindowResize(IntPtr userdata, ref SDL.Event sdlEvent)
     {
         switch ((SDL.EventType)sdlEvent.Type)
         {
@@ -171,6 +172,7 @@ public sealed class WindowSdl : Window
                 window.Height = height;
                 window.PixelWidth = pixelWidth;
                 window.PixelHeight = pixelHeight;
+                window.RenderTarget.Resize((uint)pixelWidth, (uint)pixelHeight);
                 
                 window.OnWindowResized?.Invoke(new Vector2(window.Width, window.Height));
                 

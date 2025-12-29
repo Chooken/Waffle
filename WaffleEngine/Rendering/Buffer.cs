@@ -55,6 +55,16 @@ public sealed class Buffer<T>: IRenderBindable, IComputeBindable, IGpuUploadable
         get => _data[index]; 
         set
         {
+            if (_data.Length <= index)
+            {
+                Array.Resize(ref _data, _data.Length * 2);
+            }
+
+            if (_count <= index)
+            {
+                _count = index + 1;
+            }
+
             _updated = true;
             _data[index] = value;
         }

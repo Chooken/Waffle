@@ -43,29 +43,43 @@ public sealed unsafe class RenderBuffer<T> : IRenderBindable, IComputeBindable w
         AllocateBuffer(size);
     }
 
+    private static IntPtr _transferBuffer;
+    private static int _transferBufferSize;
+
     public void UploadData(Span<T> cpuData, ImCopyPass copyPass)
     {
         if (cpuData.Length > _gpuBufferSize)
         {
             Resize(cpuData.Length);
         }
-        
-        SDL.GPUTransferBufferCreateInfo transferCreateInfo = new SDL.GPUTransferBufferCreateInfo();
-        transferCreateInfo.Size = (uint)(sizeof(T) * cpuData.Length);
-        transferCreateInfo.Usage = SDL.GPUTransferBufferUsage.Upload;
-        
-        IntPtr transferBuffer = SDL.CreateGPUTransferBuffer(Device.Handle, transferCreateInfo);
 
-        var dataPtr = SDL.MapGPUTransferBuffer(Device.Handle, transferBuffer, false);
+        var dataSize = sizeof(T) * cpuData.Length;
+
+        if (_transferBufferSize < dataSize)
+        {
+            if (_transferBuffer != IntPtr.Zero)
+            {
+                SDL.ReleaseGPUTransferBuffer(Device.Handle, _transferBuffer);
+            }
+            
+            SDL.GPUTransferBufferCreateInfo transferCreateInfo = new SDL.GPUTransferBufferCreateInfo();
+            transferCreateInfo.Size = (uint)dataSize;
+            transferCreateInfo.Usage = SDL.GPUTransferBufferUsage.Upload;
+
+            _transferBuffer = SDL.CreateGPUTransferBuffer(Device.Handle, transferCreateInfo);
+            _transferBufferSize = dataSize;
+        }
+
+        var dataPtr = SDL.MapGPUTransferBuffer(Device.Handle, _transferBuffer, true);
 
         Span<T> data = new (dataPtr.ToPointer(), sizeof(T) * cpuData.Length);
         
         cpuData.CopyTo(data);
         
-        SDL.UnmapGPUTransferBuffer(Device.Handle, transferBuffer);
+        SDL.UnmapGPUTransferBuffer(Device.Handle, _transferBuffer);
         
         SDL.GPUTransferBufferLocation location = new SDL.GPUTransferBufferLocation();
-        location.TransferBuffer = transferBuffer;
+        location.TransferBuffer = _transferBuffer;
         location.Offset = 0;
         
         SDL.GPUBufferRegion region = new SDL.GPUBufferRegion();
@@ -73,9 +87,9 @@ public sealed unsafe class RenderBuffer<T> : IRenderBindable, IComputeBindable w
         region.Size = (uint)(sizeof(T) * cpuData.Length);
         region.Offset = 0;
         
-        SDL.UploadToGPUBuffer(copyPass.Handle, location, region, true);
+        SDL.UploadToGPUBuffer(copyPass.Handle, location, region, false);
         
-        SDL.ReleaseGPUTransferBuffer(Device.Handle, transferBuffer);
+        // SDL.ReleaseGPUTransferBuffer(Device.Handle, _transferBuffer);
     }
 
     public void Bind(ImRenderPass renderPass, uint slot)

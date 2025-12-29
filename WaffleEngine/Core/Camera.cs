@@ -1,18 +1,20 @@
 using System.Numerics;
 using VYaml.Emitter;
 using VYaml.Parser;
+using WaffleEngine.Rendering.Immediate;
 
 namespace WaffleEngine;
 
 public struct Camera : ISerializable
 {
     private Window _window;
+    
     private float _fov;
     private float _near;
     private float _far;
 
-    private Matrix4x4 _viewMat;
-    private bool _needsViewBuild;
+    private Matrix4x4 _projectionMat;
+    private bool _needsBuild;
 
     public float Width => (float)_window.Width / _window.Height * _fov;
     public float Height => _fov;
@@ -28,44 +30,50 @@ public struct Camera : ISerializable
         _fov = fov;
         _near = near;
         _far = far;
-        _needsViewBuild = true;
+        _needsBuild = true;
     }
 
     public void SetWindow(Window window)
     {
         _window = window;
-        _needsViewBuild = true;
+        _needsBuild = true;
     }
     
     public void SetFov(float fov)
     {
         _fov = fov;
-        _needsViewBuild = true;
+        _needsBuild = true;
     }
     
     public void SetNear(float near)
     {
         _near = near;
-        _needsViewBuild = true;
+        _needsBuild = true;
     }
     
     public void SetFar(float far)
     {
         _far = far;
-        _needsViewBuild = true;
+        _needsBuild = true;
     }
 
-    public Matrix4x4 GetViewMatrix()
+    public Matrix4x4 GetProjectionMatrix()
     {
-        if (_needsViewBuild || _viewMat == new Matrix4x4())
-            BuildViewMatrix();
+        if (_needsBuild || _projectionMat == new Matrix4x4())
+            BuildProjectionMatrix();
 
-        return _viewMat;
+        return _projectionMat;
     }
 
-    private void BuildViewMatrix()
+    private void BuildProjectionMatrix()
     {
-        _viewMat = Matrix4x4.CreateOrthographic(Width, Height, _near, _far);
+        _projectionMat = Matrix4x4.CreateOrthographic(Width, Height, _near, _far);
+    }
+
+    public Vector2 ScreenToClipSpace(Vector2 position)
+    {
+        return new Vector2(
+            position.x / _window.Width * 2 - 1, 1 - (position.y / _window.Height * 2));
     }
     
     public void Serialize(ref Utf8YamlEmitter emitter)

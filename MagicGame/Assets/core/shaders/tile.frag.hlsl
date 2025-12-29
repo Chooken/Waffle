@@ -2,7 +2,7 @@ struct VertexOutput {
     float2 UV : TEXCOORD0;
     int TileIndex : TEXCOORD1;
     int PaletteColor : TEXCOORD2;
-    int Height : TEXCOORD3;
+    int FadeIndex : TEXCOORD3;
     float4 Position : SV_Position;
 };
 
@@ -14,11 +14,11 @@ SamplerState PaletteSampler : register(s1, space2);
 
 float4 main(VertexOutput input) : SV_Target {
 
-    if (input.TileIndex == 0 || input.Height > 2)
+    if (input.TileIndex == 0 || input.FadeIndex > 2)
         discard;
 
-    if (input.TileIndex == 0 || input.Height > 2)
-        return ColorPalette[int2(input.PaletteColor, input.Height)];
+    if (input.TileIndex == 0 || input.FadeIndex > 2)
+        return ColorPalette[int2(input.PaletteColor, input.FadeIndex)];
 
     input.TileIndex -= 1;
 
@@ -28,5 +28,5 @@ float4 main(VertexOutput input) : SV_Target {
         float(input.TileIndex % 8) * 1.0f / 8.0f,
         floor(float(input.TileIndex / 8)) * 1.0f / 8.0f)).r;
     
-    return lerp(ColorPalette[int2(8, 0)], ColorPalette[int2(input.PaletteColor, input.Height)], alpha);
+    return lerp(ColorPalette[int2(8, 0)], ColorPalette[int2(input.PaletteColor, input.FadeIndex)], alpha);
 }

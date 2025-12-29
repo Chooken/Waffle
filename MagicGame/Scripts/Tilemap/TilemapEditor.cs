@@ -101,11 +101,11 @@ public static class TilemapEditor
             PlayerPos.z -= 1;
     }
 
-    public static void Update(World world, Window window)
+    public static void Update(World world, Camera camera)
     {
-        var mouseClip = new Vector2(Input.Mouse.Position.x / (window.Width * 0.5f) - 1, 1 - Input.Mouse.Position.y / (window.Height * 0.5f));
+        var mouseClip = camera.ScreenToClipSpace(Input.Mouse.Position);
         
-        var tile = world.ScreenToWorld(mouseClip, window);
+        var tile = world.ClipToWorldSpace(mouseClip, camera);
 
         var tilePos = new Vector3Int((int)Math.Floor(tile.x), (int)Math.Floor(tile.y), SelectedTile.Height);
         
