@@ -66,6 +66,7 @@ public static class ShaderCompiler
         if (fragmentSpriv == IntPtr.Zero)
         {
             WLog.Error(SDL.GetError());
+            SDL.Free(vertexSpriv);
             return false;
         }
         
@@ -78,37 +79,128 @@ public static class ShaderCompiler
             Props = fragmentInfo.Props,
         };
 
-        NativePtr<ShaderCross.GraphicsShaderMetadata> metadata = ShaderCross.ReflectGraphicsSPIRV(fragmentSpriv, fragmentSize, 0);
+        NativePtr<ShaderCross.GraphicsShaderMetadata> vertexMetadata = ShaderCross.ReflectGraphicsSPIRV(vertexSpriv, vertexSize, 0);
+
+        if (vertexMetadata.IsNull)
+        {
+            WLog.Error(SDL.GetError());
+            SDL.Free(vertexSpriv);
+            SDL.Free(fragmentSpriv);
+            return false;
+        }
         
-        IntPtr vertexShader = ShaderCross.CompileGraphicsShaderFromSPIRV(Device.Handle, ref vertexSprivInfo, ref metadata.Value.ResourceInfo, 0);
+        NativePtr<ShaderCross.GraphicsShaderMetadata> fragmentMetadata = ShaderCross.ReflectGraphicsSPIRV(fragmentSpriv, fragmentSize, 0);
+
+        if (fragmentMetadata.IsNull)
+        {
+            WLog.Error(SDL.GetError());
+            SDL.Free(vertexMetadata);
+            SDL.Free(vertexSpriv);
+            SDL.Free(fragmentSpriv);
+            return false;
+        }
+        
+        IntPtr vertexShader = ShaderCross.CompileGraphicsShaderFromSPIRV(Device.Handle, ref vertexSprivInfo, ref vertexMetadata.Value.ResourceInfo, 0);
 
         if (vertexShader == IntPtr.Zero)
         {
             WLog.Error(SDL.GetError());
+            SDL.Free(vertexMetadata);
+            SDL.Free(fragmentMetadata);
+            SDL.Free(vertexSpriv);
+            SDL.Free(fragmentSpriv);
             return false;
         }
 
-        IntPtr fragmentShader = ShaderCross.CompileGraphicsShaderFromSPIRV(Device.Handle, ref fragmentSprivInfo, ref metadata.Value.ResourceInfo, 0);
+        IntPtr fragmentShader = ShaderCross.CompileGraphicsShaderFromSPIRV(Device.Handle, ref fragmentSprivInfo, ref fragmentMetadata.Value.ResourceInfo, 0);
         
         if (fragmentShader == IntPtr.Zero)
         {
             WLog.Error(SDL.GetError());
+            SDL.ReleaseGPUShader(Device.Handle, vertexShader);
+            SDL.Free(vertexMetadata);
+            SDL.Free(fragmentMetadata);
+            SDL.Free(vertexSpriv);
+            SDL.Free(fragmentSpriv);
             return false;
         }
         
         string relPath = $"{Path.GetRelativePath(AppDomain.CurrentDomain.BaseDirectory, Path.GetDirectoryName(shaderPath) ?? string.Empty)}/{Path.GetFileNameWithoutExtension(shaderPath)}";
         
         WLog.Info($"Shader compiled: {relPath}");
+
+        var inputs = new NativeArray<ShaderCross.IOVarMetadata>(vertexMetadata.Value.Inputs, vertexMetadata.Value.NumInputs);
+
+        var vertex_inputs = new VertexInput[inputs.Length];
+
+        for (int i = 0; i < inputs.Length; i++)
+        {
+            ShaderCross.IOVarMetadata input =  inputs[i];
+
+            VertexAttributeType type = input.VectorSize switch
+            {
+                1 => input.VectorType switch
+                {
+                    ShaderCross.IOVarType.Float32 => VertexAttributeType.Float,
+                    ShaderCross.IOVarType.Int32 => VertexAttributeType.Int,
+                    ShaderCross.IOVarType.UInt32 => VertexAttributeType.UInt,
+                    _ => VertexAttributeType.Invalid,
+                },
+
+                2 => input.VectorType switch
+                {
+                    ShaderCross.IOVarType.Float16 => VertexAttributeType.Half2,
+                    ShaderCross.IOVarType.Float32 => VertexAttributeType.Float2,
+                    ShaderCross.IOVarType.Int8 => VertexAttributeType.Byte2,
+                    ShaderCross.IOVarType.UInt8 => VertexAttributeType.UByte2,
+                    ShaderCross.IOVarType.Int16 => VertexAttributeType.Short2,
+                    ShaderCross.IOVarType.UInt16 => VertexAttributeType.UShort2,
+                    ShaderCross.IOVarType.Int32 => VertexAttributeType.Int2,
+                    ShaderCross.IOVarType.UInt32 => VertexAttributeType.UInt2,
+                    _ => VertexAttributeType.Invalid,
+                },
+
+                3 => input.VectorType switch
+                {
+                    ShaderCross.IOVarType.Float32 => VertexAttributeType.Float3,
+                    ShaderCross.IOVarType.Int32 => VertexAttributeType.Int3,
+                    ShaderCross.IOVarType.UInt32 => VertexAttributeType.UInt3,
+                    _ => VertexAttributeType.Invalid,
+                },
+
+                4 => input.VectorType switch
+                {
+                    ShaderCross.IOVarType.Float16 => VertexAttributeType.Half4,
+                    ShaderCross.IOVarType.Float32 => VertexAttributeType.Float4,
+                    ShaderCross.IOVarType.Int8 => VertexAttributeType.Byte4,
+                    ShaderCross.IOVarType.UInt8 => VertexAttributeType.UByte4,
+                    ShaderCross.IOVarType.Int16 => VertexAttributeType.Short4,
+                    ShaderCross.IOVarType.UInt16 => VertexAttributeType.UShort4,
+                    ShaderCross.IOVarType.Int32 => VertexAttributeType.Int4,
+                    ShaderCross.IOVarType.UInt32 => VertexAttributeType.UInt4,
+                    _ => VertexAttributeType.Invalid,
+                },
+                _ => VertexAttributeType.Invalid,
+            };
+
+            vertex_inputs[i] = new VertexInput
+            {
+                Location = input.Location,
+                AttributeType = type,
+            };
+        }
         
         shader = new Shader(
             vertexShader, 
             fragmentShader,
-            metadata.Value.ResourceInfo.NumSamplers, 
-            metadata.Value.ResourceInfo.NumUniformBuffers, 
-            metadata.Value.ResourceInfo.NumStorageBuffers, 
-            metadata.Value.ResourceInfo.NumStorageTextures);
+            vertexMetadata.Value.ResourceInfo.NumSamplers + fragmentMetadata.Value.ResourceInfo.NumSamplers, 
+            vertexMetadata.Value.ResourceInfo.NumUniformBuffers + fragmentMetadata.Value.ResourceInfo.NumUniformBuffers, 
+            vertexMetadata.Value.ResourceInfo.NumStorageBuffers + fragmentMetadata.Value.ResourceInfo.NumStorageBuffers, 
+            vertexMetadata.Value.ResourceInfo.NumStorageTextures + fragmentMetadata.Value.ResourceInfo.NumStorageTextures,
+            vertex_inputs);
         
-        SDL.Free(metadata);
+        SDL.Free(vertexMetadata);
+        SDL.Free(fragmentMetadata);
         SDL.Free(vertexSpriv);
         SDL.Free(fragmentSpriv);
 

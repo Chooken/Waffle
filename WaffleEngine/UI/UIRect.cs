@@ -65,10 +65,10 @@ public class UIRect
     public virtual Vector2 Render(ImQueue queue, ImRenderPass renderPass, Vector3 position, Vector2 parentSize, Vector2 grow, Vector2 renderSize)
     {
         Vector2 elementGrow = Settings.Grow ? grow : Vector2.Zero;
-
-        if (Settings.Grow)
+        
+        if (Settings.ChildAnchor.Position.x != 0)
         {
-            WLog.Info("Grow");
+            Log.Info("heeloo");
         }
         
         var size = GetSize(parentSize);
@@ -275,50 +275,20 @@ public class UIRect
 
     protected bool SetupMaterials()
     {
-        if (!Assets.TryGetShader("builtin", "ui-rect", out var _shader))
+        if (!Assets.TryGetShader("builtin", "ui-rect", out var shader))
         {
             WLog.Error("Shader not found");
             return false;
         }
         
-        if (!Assets.TryGetShader("builtin", "ui-rect-texture", out var _shaderTex))
+        if (!Assets.TryGetShader("builtin", "ui-rect-texture", out var shaderTex))
         {
             WLog.Error("Shader not found");
             return false;
         }
-        
-        _shader.SetPipeline(new PipelineSettings()
-        {
-            ColorBlendOp = BlendOp.Add,
-            AlphaBlendOp = BlendOp.Add,
-            SrcColorBlendFactor = BlendFactor.SrcAlpha,
-            DstColorBlendFactor = BlendFactor.OneMinusSrcAlpha,
-            SrcAlphaBlendFactor = BlendFactor.SrcAlpha,
-            DstAlphaBlendFactor = BlendFactor.One,
-            ColorTargetFormat = TextureFormat.B8G8R8A8Unorm,
-            PrimitiveType = PrimitiveType.TriangleList,
-            FillMode = FillMode.Fill,
-            VertexInputRate = VertexInputRate.Vertex,
-            VertexAttributes = null,
-        });
-        
-        _shaderTex.SetPipeline(new PipelineSettings()
-        {
-            ColorBlendOp = BlendOp.Add,
-            AlphaBlendOp = BlendOp.Add,
-            SrcColorBlendFactor = BlendFactor.SrcAlpha,
-            DstColorBlendFactor = BlendFactor.OneMinusSrcAlpha,
-            SrcAlphaBlendFactor = BlendFactor.SrcAlpha,
-            DstAlphaBlendFactor = BlendFactor.One,
-            ColorTargetFormat = TextureFormat.B8G8R8A8Unorm,
-            PrimitiveType = PrimitiveType.TriangleList,
-            FillMode = FillMode.Fill,
-            VertexInputRate = VertexInputRate.Vertex,
-            VertexAttributes = null,
-        });
 
-        BaseRectMaterial = new Material(_shader);
-        BaseTexturedRectMaterial = new Material(_shaderTex);
+        BaseRectMaterial = new Material(shader);
+        BaseTexturedRectMaterial = new Material(shaderTex);
 
         return true;
     }

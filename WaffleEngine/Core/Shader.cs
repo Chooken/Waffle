@@ -11,6 +11,7 @@ public sealed unsafe class Shader : IRenderBindable, IDisposable
     public int UniformBuffers { get; private set; }
     public int StorageBuffers { get; private set; }
     public int StorageTextures { get; private set; }
+    public VertexInput[] Inputs { get; private set; }
 
     public IntPtr VertexHandle { get; private set; }
     public IntPtr FragmentHandle { get; private set; }
@@ -23,7 +24,8 @@ public sealed unsafe class Shader : IRenderBindable, IDisposable
         uint samplers, 
         uint uniformBuffers, 
         uint storageBuffers, 
-        uint storageTextures)
+        uint storageTextures,
+        VertexInput[] inputs)
     {
         VertexHandle = vertexHandle;
         FragmentHandle = fragmentHandle;
@@ -31,6 +33,7 @@ public sealed unsafe class Shader : IRenderBindable, IDisposable
         UniformBuffers = (int) uniformBuffers;
         StorageBuffers = (int) storageBuffers;
         StorageTextures = (int) storageTextures;
+        Inputs = inputs;
         
         Build();
     }

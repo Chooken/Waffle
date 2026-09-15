@@ -26,21 +26,6 @@ public class Canvas
             "Canvas Blit Shader not found."
         );
         
-        _canvasBlitShader.SetPipeline(new PipelineSettings()
-        {
-            ColorBlendOp = BlendOp.Add,
-            AlphaBlendOp = BlendOp.Add,
-            SrcColorBlendFactor = BlendFactor.SrcAlpha,
-            DstColorBlendFactor = BlendFactor.OneMinusSrcAlpha,
-            SrcAlphaBlendFactor = BlendFactor.SrcAlpha,
-            DstAlphaBlendFactor = BlendFactor.OneMinusSrcAlpha,
-            ColorTargetFormat = TextureFormat.B8G8R8A8Unorm,
-            PrimitiveType = PrimitiveType.TriangleList,
-            FillMode = FillMode.Fill,
-            VertexInputRate = VertexInputRate.Vertex,
-            VertexAttributes = null
-        });
-        
         _texture = new Texture(width, height);
         _canvasTexture = new GpuTexture(GpuTextureSettings.Default(width, height) with
         {

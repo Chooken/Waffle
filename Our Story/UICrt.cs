@@ -125,28 +125,13 @@ public class UICrt(Vector2 resolution, float chromaticAberration) : UIRect
 
     private bool SetupCrtMaterials()
     {
-        if (!Assets.TryGetShader("Core", "crt", out var _crtShader))
+        if (!Assets.TryGetShader("Core", "crt", out var crtShader))
         {
             Log.Error("Shader not found");
             return false;
         }
-        
-        _crtShader.SetPipeline(new PipelineSettings()
-        {
-            ColorBlendOp = BlendOp.Add,
-            AlphaBlendOp = BlendOp.Add,
-            SrcColorBlendFactor = BlendFactor.SrcAlpha,
-            DstColorBlendFactor = BlendFactor.OneMinusSrcAlpha,
-            SrcAlphaBlendFactor = BlendFactor.SrcAlpha,
-            DstAlphaBlendFactor = BlendFactor.One,
-            ColorTargetFormat = TextureFormat.B8G8R8A8Unorm,
-            PrimitiveType = PrimitiveType.TriangleList,
-            FillMode = FillMode.Fill,
-            VertexInputRate = VertexInputRate.Vertex,
-            VertexAttributes = null,
-        });
 
-         _crtMaterial = new Material(_crtShader);
+        _crtMaterial = new Material(crtShader);
 
         return true;
     }

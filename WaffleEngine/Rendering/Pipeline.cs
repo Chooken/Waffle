@@ -24,6 +24,7 @@ public sealed unsafe class Pipeline : IDisposable
             DstColorBlendFactor = (SDL.GPUBlendFactor) pipelineSettings.DstColorBlendFactor,
             SrcAlphaBlendFactor = (SDL.GPUBlendFactor) pipelineSettings.SrcAlphaBlendFactor,
             DstAlphaBlendFactor = (SDL.GPUBlendFactor) pipelineSettings.DstAlphaBlendFactor,
+            ColorWriteMask = SDL.GPUColorComponentFlags.R | SDL.GPUColorComponentFlags.G | SDL.GPUColorComponentFlags.B | SDL.GPUColorComponentFlags.A,
         };
         
         SDL.GPUGraphicsPipelineCreateInfo pipelineInfo = new SDL.GPUGraphicsPipelineCreateInfo();
@@ -42,32 +43,34 @@ public sealed unsafe class Pipeline : IDisposable
 
         pipeline = new();
 
-        if (pipelineSettings.VertexAttributes is null || pipelineSettings.VertexAttributes.Count == 0)
+        if (shader.Inputs.Length == 0)
         {
             pipeline.Handle = SDL.CreateGPUGraphicsPipeline(Device.Handle, pipelineInfo);
+
+            if (pipeline.Handle == IntPtr.Zero)
+            {
+                WLog.Error(SDL.GetError());
+                return false;
+            }
+            
             return true;
         }
 
         uint totalSize = 0;
         
-        SDL.GPUVertexAttribute[] vertexAttributes = new SDL.GPUVertexAttribute[pipelineSettings.VertexAttributes.Count];
+        SDL.GPUVertexAttribute[] vertexAttributes = new SDL.GPUVertexAttribute[shader.Inputs.Length];
 
-        for (uint i = 0; i < pipelineSettings.VertexAttributes.Count; i++)
+        for (uint i = 0; i < shader.Inputs.Length; i++)
         {
             vertexAttributes[i].BufferSlot = 0;
-            vertexAttributes[i].Location = i;
-            vertexAttributes[i].Format = (SDL.GPUVertexElementFormat) pipelineSettings.VertexAttributes[(int)i];
+            vertexAttributes[i].Location = shader.Inputs[i].Location;
+            vertexAttributes[i].Format = (SDL.GPUVertexElementFormat) shader.Inputs[i].AttributeType;
             vertexAttributes[i].Offset = totalSize;
 
-            totalSize += pipelineSettings.VertexAttributes[(int)i].Size();
+            totalSize += shader.Inputs[i].AttributeType.Size();
         }
         
-        pipelineInfo.VertexInputState.NumVertexAttributes = (uint)pipelineSettings.VertexAttributes.Count;
-
-        fixed (SDL.GPUVertexAttribute* vertexAttributesPtr = vertexAttributes)
-        {
-            pipelineInfo.VertexInputState.VertexAttributes = (IntPtr)vertexAttributesPtr;
-        }
+        pipelineInfo.VertexInputState.NumVertexAttributes = (uint)shader.Inputs.Length;
 
         SDL.GPUVertexBufferDescription vertexBufferDescription = new SDL.GPUVertexBufferDescription();
         vertexBufferDescription.Slot = 0;
@@ -76,9 +79,20 @@ public sealed unsafe class Pipeline : IDisposable
         vertexBufferDescription.Pitch = totalSize;
 
         pipelineInfo.VertexInputState.NumVertexBuffers = 1;
-        pipelineInfo.VertexInputState.VertexBufferDescriptions = (IntPtr)(&vertexBufferDescription);
         
-        pipeline.Handle = SDL.CreateGPUGraphicsPipeline(Device.Handle, pipelineInfo);
+        fixed (SDL.GPUVertexAttribute* vertexAttributesPtr = vertexAttributes)
+        {
+            pipelineInfo.VertexInputState.VertexAttributes = (IntPtr)vertexAttributesPtr;
+            pipelineInfo.VertexInputState.VertexBufferDescriptions = (IntPtr)(&vertexBufferDescription);
+
+            pipeline.Handle = SDL.CreateGPUGraphicsPipeline(Device.Handle, in pipelineInfo);
+        }
+        
+        if (pipeline.Handle == IntPtr.Zero)
+        {
+            WLog.Error(SDL.GetError());
+            return false;
+        }
 
         return true;
     }
@@ -92,6 +106,7 @@ public sealed unsafe class Pipeline : IDisposable
     {
         SDL.ReleaseGPUGraphicsPipeline(Device.Handle, Handle);
     }
+    
 }
 
 public struct PipelineSettings()
@@ -160,6 +175,12 @@ public enum PrimitiveType
     PointList,
 }
 
+public struct VertexInput
+{
+    public uint Location;
+    public VertexAttributeType AttributeType;
+}
+
 public static class VertexAttribute
 {
     public static uint Size(this VertexAttributeType attributeType)
@@ -168,34 +189,34 @@ public static class VertexAttribute
         {
             VertexAttributeType.Byte2
                 or VertexAttributeType.Byte2Norm
-                or VertexAttributeType.Ubyte2
-                or VertexAttributeType.Ubyte2Norm => 2,
+                or VertexAttributeType.UByte2
+                or VertexAttributeType.UByte2Norm => 2,
             VertexAttributeType.Byte4 
                 or VertexAttributeType.Byte4Norm
-                or VertexAttributeType.Ubyte4
-                or VertexAttributeType.Ubyte4Norm
+                or VertexAttributeType.UByte4
+                or VertexAttributeType.UByte4Norm
                 or VertexAttributeType.Short2 
                 or VertexAttributeType.Short2Norm
-                or VertexAttributeType.Ushort2
-                or VertexAttributeType.Ushort2Norm
+                or VertexAttributeType.UShort2
+                or VertexAttributeType.UShort2Norm
                 or VertexAttributeType.Int 
-                or VertexAttributeType.Uint
+                or VertexAttributeType.UInt
                 or VertexAttributeType.Float 
                 or VertexAttributeType.Half2 => 4,
             VertexAttributeType.Int2 
                 or VertexAttributeType.Float2 
-                or VertexAttributeType.Uint2 
+                or VertexAttributeType.UInt2 
                 or VertexAttributeType.Short4 
-                or VertexAttributeType.Ushort4 
+                or VertexAttributeType.UShort4 
                 or VertexAttributeType.Short4Norm 
-                or VertexAttributeType.Ushort4Norm 
+                or VertexAttributeType.UShort4Norm 
                 or VertexAttributeType.Half4 => 8, 
             VertexAttributeType.Int3 
                 or VertexAttributeType.Float3 
-                or VertexAttributeType.Uint3 => 12,
+                or VertexAttributeType.UInt3 => 12,
             VertexAttributeType.Int4 
                 or VertexAttributeType.Float4 
-                or VertexAttributeType.Uint4 => 16,
+                or VertexAttributeType.UInt4 => 16,
             
             _ => 0
         };
@@ -209,30 +230,30 @@ public enum VertexAttributeType
     Int2,
     Int3,
     Int4,
-    Uint,
-    Uint2,
-    Uint3,
-    Uint4,
+    UInt,
+    UInt2,
+    UInt3,
+    UInt4,
     Float,
     Float2,
     Float3,
     Float4,
     Byte2,
     Byte4,
-    Ubyte2,
-    Ubyte4,
+    UByte2,
+    UByte4,
     Byte2Norm,
     Byte4Norm,
-    Ubyte2Norm,
-    Ubyte4Norm,
+    UByte2Norm,
+    UByte4Norm,
     Short2,
     Short4,
-    Ushort2,
-    Ushort4,
+    UShort2,
+    UShort4,
     Short2Norm,
     Short4Norm,
-    Ushort2Norm,
-    Ushort4Norm,
+    UShort2Norm,
+    UShort4Norm,
     Half2,
     Half4,
 }

@@ -1,9 +1,3 @@
-cbuffer Uniforms : register(b0, space1) {
-    float4 SelectedColor;
-    float2 CursorPosition;
-    float2 TextureSize;
-}
-
 struct VertexToFragment {
     float2 UV : TEXCOORD0;
     float4 Position : SV_Position;
@@ -17,6 +11,12 @@ VertexToFragment vsMain(uint vertexID : SV_VertexID) {
     output.Position = float4(output.UV * float2(2, -2) + float2(-1, 1), 0, 1);
     
     return output;
+}
+
+cbuffer Uniforms : register(b0, space3) {
+    float4 SelectedColor;
+    float2 CursorPosition;
+    float2 TextureSize;
 }
 
 float4 fsMain(float2 uv : TEXCOORD0) : SV_Target0 {
