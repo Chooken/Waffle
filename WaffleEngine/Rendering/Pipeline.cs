@@ -17,13 +17,13 @@ public sealed unsafe class Pipeline : IDisposable
         colorTargetDescription.Format = (SDL.GPUTextureFormat)pipelineSettings.ColorTargetFormat;
         colorTargetDescription.BlendState = new SDL.GPUColorTargetBlendState
         {
-            EnableBlend = 1,
+            EnableBlend = true,
             ColorBlendOp = (SDL.GPUBlendOp) pipelineSettings.ColorBlendOp,
             AlphaBlendOp = (SDL.GPUBlendOp) pipelineSettings.AlphaBlendOp,
-            SrcColorBlendfactor = (SDL.GPUBlendFactor) pipelineSettings.SrcColorBlendFactor,
-            DstColorBlendfactor = (SDL.GPUBlendFactor) pipelineSettings.DstColorBlendFactor,
-            SrcAlphaBlendfactor = (SDL.GPUBlendFactor) pipelineSettings.SrcAlphaBlendFactor,
-            DstAlphaBlendfactor = (SDL.GPUBlendFactor) pipelineSettings.DstAlphaBlendFactor,
+            SrcColorBlendFactor = (SDL.GPUBlendFactor) pipelineSettings.SrcColorBlendFactor,
+            DstColorBlendFactor = (SDL.GPUBlendFactor) pipelineSettings.DstColorBlendFactor,
+            SrcAlphaBlendFactor = (SDL.GPUBlendFactor) pipelineSettings.SrcAlphaBlendFactor,
+            DstAlphaBlendFactor = (SDL.GPUBlendFactor) pipelineSettings.DstAlphaBlendFactor,
         };
         
         SDL.GPUGraphicsPipelineCreateInfo pipelineInfo = new SDL.GPUGraphicsPipelineCreateInfo();

@@ -139,9 +139,7 @@ public sealed unsafe class RenderBuffer<T> : IRenderBindable, IComputeBindable w
     {
         IntPtr ptr = _gpuBuffer;
         
-        SDL.BindGPUVertexStorageBuffers(renderPass.Handle, slot, (IntPtr)(&ptr), 1);
-        SDL.BindGPUFragmentStorageBuffers(renderPass.Handle, slot, (IntPtr)(&ptr), 1);
+        SDL.BindGPUVertexStorageBuffers(renderPass.Handle, slot, new ReadOnlySpan<IntPtr>(ref ptr), 1);
+        SDL.BindGPUFragmentStorageBuffers(renderPass.Handle, slot, new ReadOnlySpan<IntPtr>(ref ptr), 1);
     }
-
-    
 }

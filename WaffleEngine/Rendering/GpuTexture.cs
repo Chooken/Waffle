@@ -40,7 +40,7 @@ public sealed class GpuTexture : IRenderBindable
             Width = settings.Width,
             Height = settings.Height,
             Usage = SDL.GPUTextureUsageFlags.Sampler,
-            Type = SDL.GPUTextureType.Texturetype2D,
+            Type = SDL.GPUTextureType.TextureType2D,
             LayerCountOrDepth = 1,
             NumLevels = 1,
         };

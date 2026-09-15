@@ -26,29 +26,25 @@ public static class ShaderCompiler
         
         var vertexInfo = new ShaderCross.HLSLInfo()
         {
-            EnableDebug = true,
-            Entrypoint = "vsMain",
-            IncludeDir = null,
-            Name = null,
-            Props = 0,
+            ManagedEntrypoint = "vsMain",
             ShaderStage = ShaderCross.ShaderStage.Vertex,
-            Source = source,
+            ManagedSource = source,
+            IncludeDir = IntPtr.Zero,
             Defines = IntPtr.Zero,
+            Props = 0,
         };
         
         var fragmentInfo = new ShaderCross.HLSLInfo()
         {
-            EnableDebug = true,
-            Entrypoint = "fsMain",
-            IncludeDir = null,
-            Name = null,
-            Props = 0,
+            ManagedEntrypoint = "fsMain",
             ShaderStage = ShaderCross.ShaderStage.Fragment,
-            Source = source,
+            ManagedSource = source,
+            IncludeDir = IntPtr.Zero,
             Defines = IntPtr.Zero,
+            Props = 0,
         };
 
-        IntPtr vertexSpriv = ShaderCross.CompileSPIRVFromHLSL(in vertexInfo, out UIntPtr vertexSize);
+        IntPtr vertexSpriv = ShaderCross.CompileSPIRVFromHLSL(ref vertexInfo, out UIntPtr vertexSize);
 
         if (vertexSpriv == IntPtr.Zero)
         {
@@ -61,12 +57,11 @@ public static class ShaderCompiler
             ByteCode = vertexSpriv,
             ByteCodeSize = vertexSize,
             Entrypoint = vertexInfo.Entrypoint,
-            Name = vertexInfo.Name,
-            Props = vertexInfo.Props,
             ShaderStage = vertexInfo.ShaderStage,
+            Props = vertexInfo.Props,
         };
         
-        IntPtr fragmentSpriv = ShaderCross.CompileSPIRVFromHLSL(in fragmentInfo, out UIntPtr fragmentSize);
+        IntPtr fragmentSpriv = ShaderCross.CompileSPIRVFromHLSL(ref fragmentInfo, out UIntPtr fragmentSize);
 
         if (fragmentSpriv == IntPtr.Zero)
         {
@@ -79,14 +74,13 @@ public static class ShaderCompiler
             ByteCode = fragmentSpriv,
             ByteCodeSize = fragmentSize,
             Entrypoint = fragmentInfo.Entrypoint,
-            Name = fragmentInfo.Name,
+            ShaderStage = fragmentInfo.ShaderStage,
             Props = fragmentInfo.Props,
-            ShaderStage = fragmentInfo.ShaderStage
         };
 
         NativePtr<ShaderCross.GraphicsShaderMetadata> metadata = ShaderCross.ReflectGraphicsSPIRV(fragmentSpriv, fragmentSize, 0);
         
-        IntPtr vertexShader = ShaderCross.CompileGraphicsShaderFromSPIRV(Device.Handle, in vertexSprivInfo, in metadata.Value, 0);
+        IntPtr vertexShader = ShaderCross.CompileGraphicsShaderFromSPIRV(Device.Handle, ref vertexSprivInfo, ref metadata.Value.ResourceInfo, 0);
 
         if (vertexShader == IntPtr.Zero)
         {
@@ -94,16 +88,13 @@ public static class ShaderCompiler
             return false;
         }
 
-        IntPtr fragmentShader = ShaderCross.CompileGraphicsShaderFromSPIRV(Device.Handle, in fragmentSprivInfo, in metadata.Value, 0);
+        IntPtr fragmentShader = ShaderCross.CompileGraphicsShaderFromSPIRV(Device.Handle, ref fragmentSprivInfo, ref metadata.Value.ResourceInfo, 0);
+        
         if (fragmentShader == IntPtr.Zero)
         {
             WLog.Error(SDL.GetError());
             return false;
         }
-
-        SDL.Free(metadata);
-        SDL.Free(vertexSpriv);
-        SDL.Free(fragmentSpriv);
         
         string relPath = $"{Path.GetRelativePath(AppDomain.CurrentDomain.BaseDirectory, Path.GetDirectoryName(shaderPath) ?? string.Empty)}/{Path.GetFileNameWithoutExtension(shaderPath)}";
         
@@ -112,10 +103,14 @@ public static class ShaderCompiler
         shader = new Shader(
             vertexShader, 
             fragmentShader,
-            metadata.Value.NumSamplers, 
-            metadata.Value.NumUniformBuffers, 
-            metadata.Value.NumStorageBuffers, 
-            metadata.Value.NumStorageTextures);
+            metadata.Value.ResourceInfo.NumSamplers, 
+            metadata.Value.ResourceInfo.NumUniformBuffers, 
+            metadata.Value.ResourceInfo.NumStorageBuffers, 
+            metadata.Value.ResourceInfo.NumStorageTextures);
+        
+        SDL.Free(metadata);
+        SDL.Free(vertexSpriv);
+        SDL.Free(fragmentSpriv);
 
         return true;
     }
@@ -128,17 +123,15 @@ public static class ShaderCompiler
         
         var computeInfo = new ShaderCross.HLSLInfo()
         {
-            EnableDebug = true,
-            Entrypoint = "main",
-            IncludeDir = null,
-            Name = null,
-            Props = 0,
-            ShaderStage = ShaderCross.ShaderStage.Vertex,
-            Source = source,
+            ManagedEntrypoint = "main",
+            ShaderStage = ShaderCross.ShaderStage.Compute,
+            ManagedSource = source,
+            IncludeDir = IntPtr.Zero,
             Defines = IntPtr.Zero,
+            Props = 0,
         };
 
-        IntPtr computeSpriv = ShaderCross.CompileSPIRVFromHLSL(in computeInfo, out UIntPtr computeSize);
+        IntPtr computeSpriv = ShaderCross.CompileSPIRVFromHLSL(ref computeInfo, out UIntPtr computeSize);
 
         if (computeSpriv == IntPtr.Zero)
         {
@@ -151,12 +144,11 @@ public static class ShaderCompiler
             ByteCode = computeSpriv,
             ByteCodeSize = computeSize,
             Entrypoint = computeInfo.Entrypoint,
-            Name = computeInfo.Name,
-            Props = computeInfo.Props,
             ShaderStage = computeInfo.ShaderStage,
+            Props = computeInfo.Props,
         };
 
-        var metadata = ShaderCross.ReflectComputeSPIRV(computeSpriv, computeSize, 0);
+        NativePtr<ShaderCross.ComputePipelineMetadata> metadata = ShaderCross.ReflectComputeSPIRV(computeSpriv, computeSize, 0);
 
         IntPtr computeShader =
             ShaderCross.CompileComputePipelineFromSPIRV(Device.Handle, in computeSprivInfo, in metadata.Value, 0);
@@ -167,8 +159,6 @@ public static class ShaderCompiler
             return false;
         }
         
-        SDL.Free(metadata);
-        SDL.Free(computeSpriv);
         
         string relPath = $"{Path.GetRelativePath(AppDomain.CurrentDomain.BaseDirectory, Path.GetDirectoryName(shaderPath) ?? string.Empty)}/{Path.GetFileNameWithoutExtension(shaderPath)}";
         
@@ -181,10 +171,13 @@ public static class ShaderCompiler
             metadata.Value.NumReadWriteStorageTextures, 
             metadata.Value.NumUniformBuffers,
             metadata.Value.NumReadOnlyStorageBuffers,
-            metadata.Value.NumReadwriteStorageBuffers,
+            metadata.Value.NumReadWriteStorageBuffers,
             metadata.Value.ThreadCountX,
             metadata.Value.ThreadCountY,
             metadata.Value.ThreadCountZ);
+        
+        SDL.Free(metadata);
+        SDL.Free(computeSpriv);
 
         return true;
     }

@@ -1,4 +1,5 @@
 using SDL3;
+using WaffleEngine.Native;
 using WaffleEngine.Rendering;
 using WaffleEngine.Rendering.Immediate;
 
@@ -70,12 +71,35 @@ public class AtlasedText
     {
         TTF.SetTextWrapWidth(Handle, Math.Max(width, 0));
     }
+    
+    private struct GPUAtlasDrawSequenceFormatted
+    {
+        public IntPtr AtlasTexture;
+        public NativeArray<Vector2> Vertices;
+        public NativeArray<Vector2> UVs;
+        public NativeArray<int> Indices;
+        public TTF.ImageType ImageType;
+        public NativePtr<TTF.GPUAtlasDrawSequence> Next;
+
+        public static GPUAtlasDrawSequenceFormatted From(TTF.GPUAtlasDrawSequence sequence)
+        {
+            return new GPUAtlasDrawSequenceFormatted()
+            {
+                AtlasTexture = sequence.AtlasTexture,
+                Vertices = new NativeArray<Vector2>(sequence.XY, (uint)sequence.NumVertices),
+                UVs = new NativeArray<Vector2>(sequence.UV, (uint)sequence.NumVertices),
+                Indices = new NativeArray<int>(sequence.Indices, (uint)sequence.NumIndices),
+                ImageType = sequence.ImageType,
+                Next = sequence.Next,
+            };
+        }
+    }
 
     public unsafe void Update()
     {
-        var sequence = (TTF.GPUAtlasDrawSequence*)TTF.GetGPUTextDrawData(Handle);
+        NativePtr<TTF.GPUAtlasDrawSequence> sequence = TTF.GetGPUTextDrawData(Handle);
 
-        if (sequence is null)
+        if (sequence.IsNull)
         {
             WLog.Error($"{SDL.GetError()}");
             _empty = true;
@@ -84,7 +108,7 @@ public class AtlasedText
 
         _empty = false;
         
-        var formatted = sequence->AsFormatted();
+        var formatted = GPUAtlasDrawSequenceFormatted.From(sequence.Value);
         
         _vertexBuffer.Clear();
         
