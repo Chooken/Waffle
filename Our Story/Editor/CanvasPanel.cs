@@ -23,7 +23,7 @@ public class CanvasPanel
             .Default(() => new UISettings()
             {
                 Height = UISize.PercentageHeight(100),
-                Grow = true,
+                Width = UISize.PercentageWidth(100),
                 ChildAnchor = UIAnchor.Center,
                 Color = Color.RGBA255(255,0,0,255),
                 BorderRadius = new UIBorderRadius(20, 20, 20, 20, UISizeType.Pixels)

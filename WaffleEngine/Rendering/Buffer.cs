@@ -71,6 +71,18 @@ public sealed class Buffer<T>: IRenderBindable, IComputeBindable, IGpuUploadable
         _updated = true;
     }
 
+    public void Add(Span<T> items)
+    {
+        int end = _count;
+        _count += items.Length;
+        
+        while (_count > _data.Length)
+            Array.Resize(ref _data, _data.Length * 2);
+        
+        items.CopyTo(new Span<T>(_data, end, items.Length));
+        _updated = true;
+    }
+
     public void Sort(IComparer<T> comparer)
     {
         Array.Sort(_data, 0, _count, comparer);

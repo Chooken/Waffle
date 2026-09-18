@@ -39,8 +39,6 @@ public static class Application
 
         if (!Assets.TryLoadAssetBundle("builtin"))
             return false;
-
-        SpriteBatch.Init();
         
         WLog.Info("Application Initialised");
         
