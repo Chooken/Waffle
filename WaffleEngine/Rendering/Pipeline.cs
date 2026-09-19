@@ -104,7 +104,13 @@ public sealed unsafe class Pipeline : IDisposable
 
     public void Dispose()
     {
+        if (Handle == IntPtr.Zero)
+        {
+            return;
+        }
+        
         SDL.ReleaseGPUGraphicsPipeline(Device.Handle, Handle);
+        Handle = IntPtr.Zero;
     }
     
 }

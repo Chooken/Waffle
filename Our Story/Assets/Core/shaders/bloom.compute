@@ -1,9 +1,0 @@
-RWTexture2D<float4> Texture : register(u0, space1);
-
-
-[numthreads(8, 8, 1)]
-void main(uint3 GlobalInvocationID : SV_DispatchThreadID)
-{
-    int2 coord = int2(GlobalInvocationID.xy);
-    Texture[coord] = float4(GlobalInvocationID.xy % 4 / 4, 0, 1);
-}

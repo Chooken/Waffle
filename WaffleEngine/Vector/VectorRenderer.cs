@@ -48,7 +48,7 @@ public class VectorRenderer
 
             for (int i = 0; i + 2 < curve.Points.Count; i += 2)
             {
-                SplitAndAddBezier(curve.Points[0].Position, curve.Points[i + 1].Position, curve.Points[i + 2].Position);
+                SplitAndAddBezier(curve.Points[i].Position, curve.Points[i + 1].Position, curve.Points[i + 2].Position);
                 PointBuffer.Add(curve.Points[i + 2]);
             }
             
@@ -102,16 +102,9 @@ public class VectorRenderer
 
     private void SplitAndAddBezier(System.Numerics.Vector2 start, System.Numerics.Vector2 control, System.Numerics.Vector2 end)
     {
-        float aY = start.Y - 2.0f * control.Y + end.Y;
-        float bY = control.Y - start.Y;
+        float tE = (start.Y - control.Y) / (start.Y - 2 * control.Y + end.Y);
 
-        float tE = -1.0f;
-        if (MathF.Abs(aY) > 1e-6f)
-        {
-            tE = -bY / aY;
-        }
-
-        if (tE > 1e-4f && tE < (1.0f - 1e-4f))
+        if (tE > 0 && tE < 1)
         {
             System.Numerics.Vector2 p01 = System.Numerics.Vector2.Lerp(start, control, tE);
             System.Numerics.Vector2 p12 = System.Numerics.Vector2.Lerp(control, end, tE);

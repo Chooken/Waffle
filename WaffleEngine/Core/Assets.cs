@@ -127,7 +127,7 @@ public static class Assets
             return;
         }
         
-        if (!_assetBundles.TryGetValue(bundleName, out var bundle))
+        if (!_assetBundles.TryRemove(bundleName, out var bundle))
         {
             WLog.Warning($"Tried to unload an asset bundle that wasn't loaded: {bundleName}");
             return;

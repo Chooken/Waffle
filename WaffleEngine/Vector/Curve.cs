@@ -60,8 +60,14 @@ public class Curve
         
         Point start = Points[^1];
         Point start_ctrl = Points[^2];
+
+        Point a = CalculateSmooth(start_ctrl, start, Points[0]);
+        Point c = CalculateSmooth(Points[1], Points[0], start);
+        Point b = CalculateLinear(a, c);
         
-        AddPoint(CalculateSmooth(start_ctrl, start, Points[0]));
+        AddPoint(a);
+        AddPoint(b);
+        AddPoint(c);
     }
 
     private Point CalculateLinear(Point start, Point end)

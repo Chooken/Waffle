@@ -129,6 +129,7 @@ float4 fsMain(VertexOutput input) : SV_Target {
             {
                 return float4(1,0,0,1);
             }
+            
             return float4(0,0,1,1);
         }
     }
