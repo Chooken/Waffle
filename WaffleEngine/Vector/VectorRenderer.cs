@@ -44,16 +44,33 @@ public class VectorRenderer
         
         foreach (var curve in Curves)
         {
+            PointBuffer.Add(curve.Points[0]);
+
+            for (int i = 0; i + 2 < curve.Points.Count; i += 2)
+            {
+                SplitAndAddBezier(curve.Points[0].Position, curve.Points[i + 1].Position, curve.Points[i + 2].Position);
+                PointBuffer.Add(curve.Points[i + 2]);
+            }
+            
+            Vector2 start = (curve.Points.Count % 2 == 1) ? 
+                curve.Points[^1].Position : 
+                curve.Points[^2].Position;
+            Vector2 control = (curve.Points.Count % 2 == 1)
+                ? (PointBuffer[^1].Position + PointBuffer[0].Position) / 2
+                : curve.Points[^1].Position;
+            Vector2 end = curve.Points[0].Position;
+
+            SplitAndAddBezier(start, control, end);
+            
             InstanceBuffer.Add(new Instance()
             {
                 Min = curve.Bounds.Min,
                 Max = curve.Bounds.Max,
                 Offset = offset,
-                Length = curve.Points.Count,
+                Length = PointBuffer.Count,
             });
-            PointBuffer.Add(curve.Points.AsSpan());
-
-            offset += curve.Points.Count;
+            
+            offset += PointBuffer.Count;
         }
         
         var copypass = queue.AddCopyPass();
@@ -81,5 +98,32 @@ public class VectorRenderer
         renderPass.End();
         
         Curves.Clear();
+    }
+
+    private void SplitAndAddBezier(System.Numerics.Vector2 start, System.Numerics.Vector2 control, System.Numerics.Vector2 end)
+    {
+        float aY = start.Y - 2.0f * control.Y + end.Y;
+        float bY = control.Y - start.Y;
+
+        float tE = -1.0f;
+        if (MathF.Abs(aY) > 1e-6f)
+        {
+            tE = -bY / aY;
+        }
+
+        if (tE > 1e-4f && tE < (1.0f - 1e-4f))
+        {
+            System.Numerics.Vector2 p01 = System.Numerics.Vector2.Lerp(start, control, tE);
+            System.Numerics.Vector2 p12 = System.Numerics.Vector2.Lerp(control, end, tE);
+            System.Numerics.Vector2 pMid = System.Numerics.Vector2.Lerp(p01, p12, tE);
+
+            PointBuffer.Add(new Point(p01));
+            PointBuffer.Add(new Point(pMid));
+            PointBuffer.Add(new Point(p12));
+        }
+        else
+        {
+            PointBuffer.Add(new Point(control));
+        }
     }
 }

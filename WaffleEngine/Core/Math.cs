@@ -22,6 +22,9 @@ public struct Vector2
     public static implicit operator System.Numerics.Vector2(Vector2 vector) =>
         new (vector.x, vector.y);
     
+    public static implicit operator Vector2(System.Numerics.Vector2 vector) =>
+        new (vector.X, vector.Y);
+    
     public static bool operator ==(Vector2 lhs, Vector2 rhs)
     {
         return lhs.x == rhs.x && lhs.y == rhs.y;

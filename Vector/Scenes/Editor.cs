@@ -26,8 +26,9 @@ public class Editor : IScene
 
         Renderer = new VectorRenderer();
         
-        curve.AddPoint(new Point(){ Position = new Vector2( -0.5f, -0.25f ) });
-        curve.AddPoint(new Point(){ Position = new Vector2( 0.75f, 0.5f ) });
+        curve.AddSmooth(new Point(new Vector2(-0.50f, -0.25f)));
+        curve.AddSmooth(new Point(new Vector2(0.25f, 0.25f)));
+        curve.CloseSmooth();
         
         return true;
     }
@@ -38,7 +39,7 @@ public class Editor : IScene
         Render();
     }
 
-    private Curve curve = new Curve();
+    private Curve curve = new Curve(new Point(){ Position = new Vector2(-0.4f, -0.5f) });
 
     private void Update()
     {
