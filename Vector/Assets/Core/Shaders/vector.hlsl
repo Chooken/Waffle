@@ -50,58 +50,38 @@ VertexOutput vsMain(uint vertexID : SV_VertexID, uint instanceID : SV_InstanceID
 StructuredBuffer<Instance> f_InstanceBuffer : register(t0, space2);
 StructuredBuffer<Point> f_PointBuffer : register(t1, space2);
 
-int evaluate_ray(float2 pos, float2 start, float2 control, float2 end)
+int solve(float2 pixelPos, float2 p0, float2 p1, float2 p2)
 {
-    float2 p0 = start - pos;
-    float2 p1 = control - pos;
-    float2 p2 = end - pos;
+    float a = p0.y - 2.0f * p1.y + p2.y;
+    float b = 2.0f * (p1.y - p0.y);
+    float c = p0.y - pixelPos.y;
 
-    float a = p0.y - 2.0 * p1.y + p2.y;
-    float b = 2.0 * (p1.y - p0.y);
-    float c = p0.y;
+    float disc = b * b - 4.0f * a * c;
+    
+    float signB = (b >= 0.0f) ? 1.0f : -1.0f;
+    float q = -0.5f * (b + signB * sqrt(max(disc, 0.0f)));
 
-    if (abs(a) < 1e-5) {
-        if (abs(b) > 1e-5) {
-            
-            float t = -c / b;
-            
-            if (t >= 0.0 && t < 1.0) {
-                
-                float x = (1.0 - t) * (1.0 - t) * p0.x + 2.0 * (1.0 - t) * t * p1.x + t * t * p2.x;
-                
-                if (x > 0.0)
-                {
-                    return (b > 0.0) ? 1 : -1;
-                }
-            }
-        }
-        return 0;
-    }
+    float safeA = (a == 0.0f) ? 1e-20f : a;
+    float safeQ = (q == 0.0f) ? 1e-20f : q;
 
-    float delta = b * b - 4.0 * a * c;
-    if (delta < 0.0) return 0;
+    float t0 = q / safeA;
+    float t1 = c / safeQ;
 
-    float sqrt_delta = sqrt(delta);
-    float r1 = (-b - sqrt_delta) / (2.0 * a);
-    float r2 = (-b + sqrt_delta) / (2.0 * a);
+    bool validDisc = disc >= 0.0f;
+    bool validT0 = validDisc && (t0 >= 0.0f && t0 < 1.0f);
+    bool validT1 = validDisc && (t1 >= 0.0f && t1 < 1.0f);
+    
+    float t = validT0 ? t0 : (validT1 ? t1 : 0.0f);
 
-    int winding = 0;
-    float roots[2] = { r1, r2 };
+    float x01 = lerp(p0.x, p1.x, t);
+    float x12 = lerp(p1.x, p2.x, t);
+    float x = lerp(x01, x12, t);
 
-    for (int i = 0; i < 2; i++) {
-        
-        float t = roots[i];
-        
-        if (t >= 0.0 && t < 1.0) {
-            
-            float x = (1.0 - t) * (1.0 - t) * p0.x + 2.0 * (1.0 - t) * t * p1.x + t * t * p2.x;
-            
-            if (x > 0.0) {
-                float dy = 2.0 * a * t + b;
-                winding += (dy > 0.0) ? 1 : -1;
-            }
-        }
-    }
+    bool isToRight = x >= pixelPos.x;
+    int isValid = ((validT0 || validT1) && isToRight) ? 1 : 0;
+
+    float dY = 2.0f * a * t + b;
+    int winding = sign(dY) * isValid;
     
     return winding;
 }
@@ -144,8 +124,16 @@ float4 fsMain(VertexOutput input) : SV_Target {
         int end_index = (i + 2 < instance.Length) ? i + 2 : 0;
         
         Point end = f_PointBuffer[instance.Offset + end_index];
+
+        float max_x = max(max(start.Position.x, control.Position.x), end.Position.x);
+
+        bool y_hit = (start.Position.y <= pos.y && pos.y < start.Position.y) ||
+            (start.Position.y >= pos.y && pos.y > start.Position.y);
         
-        winding += evaluate_ray(pos, start.Position, control.Position, end.Position);
+        // Early out if the whole curve is to the left.
+        if (max_x < pos.x || y_hit) continue;
+        
+        winding += solve(pos, start.Position, control.Position, end.Position);
     }
     
     if (winding == 0)
