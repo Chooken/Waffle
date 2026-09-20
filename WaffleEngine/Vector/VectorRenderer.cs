@@ -30,6 +30,34 @@ public class VectorRenderer
         PointBuffer = new Buffer<Point>(BufferUsage.GraphicsStorageRead);
     }
 
+    private Vector2 min = new Vector2(float.MaxValue, float.MaxValue);
+    private Vector2 max = new Vector2(float.MinValue, float.MinValue);
+
+    private void ResetMinMax()
+    {
+        min = new Vector2(float.MaxValue, float.MaxValue);
+        max = new Vector2(float.MinValue, float.MinValue);
+    }
+
+    private void AddPoint(Point point)
+    {
+        min.x = Math.Min(min.x, point.Position.x);
+        max.x = Math.Max(max.x, point.Position.x);
+        
+        PointBuffer.Add(point);
+    }
+    
+    private void AddControlPoint(Point point)
+    {
+        min.x = Math.Min(min.x, point.Position.x);
+        max.x = Math.Max(max.x, point.Position.x);
+
+        min.y = Math.Min(min.y, point.Position.y);
+        max.y = Math.Max(max.y, point.Position.y);
+        
+        PointBuffer.Add(point);
+    }
+
     public void Render(ImQueue queue, GpuTexture target)
     {
         if (!Assets.TryGetShader("Core", "vector", out Shader? shader))
@@ -44,12 +72,14 @@ public class VectorRenderer
         
         foreach (var curve in Curves)
         {
-            PointBuffer.Add(curve.Points[0]);
+            ResetMinMax();
+            
+            AddPoint(curve.Points[0]);
 
             for (int i = 0; i + 2 < curve.Points.Count; i += 2)
             {
                 SplitAndAddBezier(curve.Points[i].Position, curve.Points[i + 1].Position, curve.Points[i + 2].Position);
-                PointBuffer.Add(curve.Points[i + 2]);
+                AddPoint(curve.Points[i + 2]);
             }
             
             Vector2 start = (curve.Points.Count % 2 == 1) ? 
@@ -64,8 +94,8 @@ public class VectorRenderer
             
             InstanceBuffer.Add(new Instance()
             {
-                Min = curve.Bounds.Min,
-                Max = curve.Bounds.Max,
+                Min = min,
+                Max = max,
                 Offset = offset,
                 Length = PointBuffer.Count,
             });
@@ -110,13 +140,13 @@ public class VectorRenderer
             System.Numerics.Vector2 p12 = System.Numerics.Vector2.Lerp(control, end, tE);
             System.Numerics.Vector2 pMid = System.Numerics.Vector2.Lerp(p01, p12, tE);
 
-            PointBuffer.Add(new Point(p01));
-            PointBuffer.Add(new Point(pMid));
-            PointBuffer.Add(new Point(p12));
+            AddControlPoint(new Point(p01));
+            AddPoint(new Point(pMid));
+            AddControlPoint(new Point(p12));
         }
         else
         {
-            PointBuffer.Add(new Point(control));
+            AddControlPoint(new Point(control));
         }
     }
 }

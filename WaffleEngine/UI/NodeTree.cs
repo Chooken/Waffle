@@ -1,4 +1,6 @@
-﻿namespace WaffleEngine.UI;
+﻿using WaffleEngine.Rendering.Immediate;
+
+namespace WaffleEngine.UI;
 
 public class NodeTree
 {
@@ -28,8 +30,8 @@ public class NodeTree
         Root.PropagateUpdate();
     }
 
-    public void Draw()
+    public void Draw(ImRenderPass renderPass, IRect screenSize)
     {
-        Root.Draw();
+        Root.Draw(renderPass, screenSize);
     }
 }

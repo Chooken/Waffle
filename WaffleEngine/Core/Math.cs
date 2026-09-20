@@ -177,6 +177,13 @@ public struct AlignedVector3
     public float y;
     [FieldOffset(8)]
     public float z;
+    
+    public AlignedVector3(float x, float y, float z)
+    {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+    }
 
     public AlignedVector3(Vector3 vector)
     {
@@ -458,6 +465,7 @@ public struct IVector2
     public static IVector2 operator -(IVector2 vector) => new (-vector.x, -vector.y);
     
     public static implicit operator IVector2(Vector2 vector) => new IVector2((int)vector.x, (int)vector.y);
+    public static implicit operator Vector2(IVector2 vector) => new Vector2(vector.x, vector.y);
 }
 
 [StructLayout(LayoutKind.Explicit, Size = 16)]

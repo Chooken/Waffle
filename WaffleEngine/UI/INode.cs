@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using WaffleEngine.Rendering.Immediate;
 
 namespace WaffleEngine.UI;
 
@@ -15,7 +16,7 @@ public abstract class INode
     public virtual void OnInit() {}
     public virtual void OnUpdate() { SetChildrenToParentSize(); }
     public virtual void OnEvent(NodeEvent node_event) {}
-    public virtual void OnDraw() { DrawAllChildren(); }
+    public virtual void OnDraw(ImRenderPass renderPass, IRect screenSize) { DrawAllChildren(renderPass, screenSize); }
     public virtual void OnDeinit() {}
     
     public bool IsFocused => Tree.Focused == this;
@@ -152,7 +153,7 @@ public abstract class INode
         }
     }
 
-    public void Draw()
+    public void Draw(ImRenderPass renderPass, IRect screenSize)
     {
         if (!Enabled || Rect.Width == 0 || Rect.Height == 0)
         {
@@ -173,7 +174,7 @@ public abstract class INode
             Tree.Clipstack.Push(clippedRect);
         }
         
-        OnDraw();
+        OnDraw(renderPass, screenSize);
 
         if (Clipped)
         {
@@ -189,11 +190,11 @@ public abstract class INode
         }
     }
     
-    public void DrawAllChildren()
+    public void DrawAllChildren(ImRenderPass renderPass, IRect screenSize)
     {
         foreach (INode child in Children)
         {
-            child.Draw();
+            child.Draw(renderPass, screenSize);
         }
     }
 }

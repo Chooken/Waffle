@@ -3,7 +3,6 @@
 public class Curve
 {
     public List<Point> Points = new ();
-    public Rect Bounds = Rect.Zero;
 
     public Curve(Point start_point)
     {
@@ -13,7 +12,6 @@ public class Curve
     private void AddPoint(Point point)
     {
         Points.Add(point);
-        Bounds.Contain(point.Position);
     }
 
     public void AddLinear(Point point)
@@ -98,16 +96,5 @@ public class Curve
     public void RemovePoint(int index)
     {
         Points.RemoveAt(index);
-        CalculateBounds();
-    }
-    
-    public void CalculateBounds()
-    {
-        Bounds = Rect.Zero;
-        
-        foreach (Point p in Points)
-        {
-            Bounds.Contain(p.Position);
-        }
     }
 }

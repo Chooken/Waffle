@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using SDL3;
 using WaffleEngine.Rendering;
 using WaffleEngine.Text;
 
@@ -6,6 +7,7 @@ namespace WaffleEngine;
 
 public static class Application
 {
+    private static ulong _updateRate = 0;
     private static bool _isRunning;
     private static readonly IWindowEventSystem AppEventSystem = new WindowEventSystemSdl();
     public static void Run(IScene startScene)
@@ -48,8 +50,9 @@ public static class Application
     private static void MainLoop()
     {
         WLog.Info("Started Application Main Loop");
-        
-        Stopwatch timer = Stopwatch.StartNew();
+
+        ulong ns_timer = SDL.GetTicksNS();
+        ulong elapsed;
         
         while (_isRunning)
         {
@@ -62,9 +65,22 @@ public static class Application
             
             Input.GlobalInputHandler.Update();
             WindowManager.UpdateWindowInput();
+
+            elapsed = SDL.GetTicksNS() - ns_timer;
+
+            if (elapsed < _updateRate)
+            {
+                SDL.DelayPrecise(_updateRate - elapsed);
+            }
             
-            timer.Restart();
+            ns_timer = SDL.GetTicksNS();
         }
+    }
+
+    public static void SetUpdateRate(float updates_per_second)
+    {
+        float seconds_per_update = 1 / updates_per_second;
+        _updateRate = (ulong)(seconds_per_update * 1_000_000_000);
     }
 
     private static void CleanUp()

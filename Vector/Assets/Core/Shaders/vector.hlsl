@@ -99,21 +99,6 @@ float4 fsMain(VertexOutput input) : SV_Target {
     pos.x = lerp(instance.Min.x, instance.Max.x, input.UV.x);
     pos.y = lerp(instance.Min.y, instance.Max.y, input.UV.y);
     
-    for (int i = 0; i < instance.Length; i++)
-    {
-        Point point_1 = f_PointBuffer[instance.Offset + i];
-        
-        if (distance(pos, point_1.Position) < 0.025)
-        {
-            if (i % 2 == 0)
-            {
-                return float4(1,0,0,1);
-            }
-            
-            return float4(0,0,1,1);
-        }
-    }
-    
     int winding = 0;
     
     for (int i = 0; i < instance.Length; i += 2)
@@ -130,7 +115,7 @@ float4 fsMain(VertexOutput input) : SV_Target {
         bool y_hit = (start.Position.y <= pos.y && pos.y < start.Position.y) ||
             (start.Position.y >= pos.y && pos.y > start.Position.y);
         
-        // Early out if the whole curve is to the left.
+        // Early out if the whole curve is to the left or above or below y band.
         if (max_x < pos.x || y_hit) continue;
         
         winding += solve(pos, start.Position, control.Position, end.Position);

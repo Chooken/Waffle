@@ -11,6 +11,7 @@ public class Editor : IScene
     public static GpuTexture SwapchainTexture = new GpuTexture();
 
     public VectorRenderer Renderer;
+    public DownscaledTexture Texture = new DownscaledTexture(DownscaledTexture.ScaleMode.Height, 108);
     
     public bool OnSceneLoaded()
     {
@@ -23,6 +24,8 @@ public class Editor : IScene
         {
             return false;
         }
+        
+        Application.SetUpdateRate(60);
 
         Renderer = new VectorRenderer();
         
@@ -51,7 +54,11 @@ public class Editor : IScene
         ImQueue queue = new ImQueue();
         queue.TryGetSwapchainTexture(Window, ref SwapchainTexture);
         
-        Renderer.Render(queue, SwapchainTexture);
+        Texture.SetOutputTexture(SwapchainTexture);
+        
+        Renderer.Render(queue, Texture.GetTexture());
+
+        Texture.GetFullResTexture(queue);
         
         queue.Submit();
     }
