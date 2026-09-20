@@ -1,4 +1,5 @@
-﻿using WaffleEngine.Rendering.Immediate;
+﻿using WaffleEngine.Rendering;
+using WaffleEngine.Rendering.Immediate;
 
 namespace WaffleEngine.UI;
 
@@ -9,9 +10,20 @@ public class NodeTree
     public INode? Focused { get; private set; }
     public Stack<IRect> Clipstack { get; private set; }
     
+    public int HeightInUnits = 0;
+    
+    public IRect UnitRect = IRect.Zero;
+    
     public NodeTree(INode root)
     {
+        root.Tree = this;
         this.Root = root;
+        this.Clipstack = new Stack<IRect>();
+    }
+
+    public void SetHeightInUnits(int height)
+    {
+        HeightInUnits = height;
     }
     
     public void SetActive(INode? active)
@@ -24,14 +36,47 @@ public class NodeTree
         this.Focused = focused;
     }
 
-    public void Update(IRect root_rect)
+    public void Update(GpuTexture target)
     {
-        Root.SetRect(root_rect);
+        if (target.Width == 0 || target.Height == 0)
+        {
+            return;
+        }
+
+        UnitRect = new IRect
+        {
+            x = 0,
+            y = 0,
+            w = (int)((float)target.Width / target.Height * HeightInUnits),
+            h = HeightInUnits,
+        };
+        
+        Root.SetRect(UnitRect);
         Root.PropagateUpdate();
+
+        bool process_events = true;
+        Root.PropagateStates(ref process_events);
     }
 
-    public void Draw(ImRenderPass renderPass, IRect screenSize)
+    public void Draw(ImQueue queue, GpuTexture target)
     {
-        Root.Draw(renderPass, screenSize);
+        if (UnitRect == IRect.Zero)
+        {
+            return;
+        }
+        
+        ColorTargetSettings bgColorTargetSettings = new ColorTargetSettings
+        {
+            ClearColor = new Color(0,0,0,0),
+            GpuTexture = target,
+            LoadOperation = LoadOperation.Load,
+            StoreOperation = StoreOperation.Store,
+        };
+
+        var renderPass = queue.AddRenderPass(bgColorTargetSettings);
+        
+        Root.Draw(renderPass, UnitRect);
+        
+        renderPass.End();
     }
 }

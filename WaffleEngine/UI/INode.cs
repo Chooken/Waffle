@@ -5,7 +5,7 @@ namespace WaffleEngine.UI;
 
 public abstract class INode
 {
-    public NodeTree Tree { get; private set; }
+    public NodeTree Tree { get; set; }
     public IRect Rect { get; private set; }
     public bool Clipped { get; private set; }
     public bool Enabled { get; private set; }
@@ -13,6 +13,13 @@ public abstract class INode
     public List<INode> Children { get; private set; }
     public Dictionary<string, INode> TaggedNodes { get; private set; }
 
+    public INode()
+    {
+        Enabled = true;
+        Children = new List<INode>();
+        TaggedNodes = new Dictionary<string, INode>();
+    }
+    
     public virtual void OnInit() {}
     public virtual void OnUpdate() { SetChildrenToParentSize(); }
     public virtual void OnEvent(NodeEvent node_event) {}
@@ -42,6 +49,7 @@ public abstract class INode
 
     public INode AddNode(INode child)
     {
+        child.Tree = this.Tree;
         Children.Add(child);
         return this;
     }
@@ -153,14 +161,12 @@ public abstract class INode
         }
     }
 
-    public void Draw(ImRenderPass renderPass, IRect screenSize)
+    public void Draw(ImRenderPass renderPass, IRect screenRect)
     {
         if (!Enabled || Rect.Width == 0 || Rect.Height == 0)
         {
             return;
         }
-
-        IRect clip = Tree.Clipstack.Peek();
 
         if (Clipped)
         {
@@ -174,7 +180,7 @@ public abstract class INode
             Tree.Clipstack.Push(clippedRect);
         }
         
-        OnDraw(renderPass, screenSize);
+        OnDraw(renderPass, screenRect);
 
         if (Clipped)
         {

@@ -4,10 +4,10 @@ namespace WaffleEngine.UI.Nodes;
 
 public class Rect : INode
 {
-    public Color Color;
-    public Vector4 BorderRadius;
-    public float BorderSize;
-    public Color BorderColor;
+    public Color Color = new Color(0,0,0,0);
+    public Vector4 BorderRadius = Vector4.Zero;
+    public float BorderSize = 0;
+    public Color BorderColor = new Color(0,0,0,0);
     
     public struct UIRectData
     {
@@ -40,7 +40,7 @@ public class Rect : INode
             Color = Color,
             BorderRadius = BorderRadius,
             BorderColor = BorderColor,
-            ScreenSize = new Vector2(screenSize.x, screenSize.y),
+            ScreenSize = new Vector2(screenSize.w, screenSize.h),
             BorderSize = BorderSize,
             ClipMin = clip.Min,
             ClipMax = clip.Max,

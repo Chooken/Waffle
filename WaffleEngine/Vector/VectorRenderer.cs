@@ -1,5 +1,4 @@
-﻿using CommunityToolkit.HighPerformance;
-using WaffleEngine.Rendering;
+﻿using WaffleEngine.Rendering;
 using WaffleEngine.Rendering.Immediate;
 
 namespace WaffleEngine.Vector;
