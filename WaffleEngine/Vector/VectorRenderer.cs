@@ -59,6 +59,11 @@ public class VectorRenderer
 
     public void Render(ImQueue queue, GpuTexture target)
     {
+        if (Curves.Count == 0)
+        {
+            return;
+        }
+        
         if (!Assets.TryGetShader("Core", "vector", out Shader? shader))
         {
             return;

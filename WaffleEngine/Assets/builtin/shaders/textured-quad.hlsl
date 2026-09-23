@@ -1,11 +1,7 @@
 cbuffer Uniforms : register(b0, space1) {
     float3 Position;
+    float2 Size;
     float2 RenderSize;
-};
-
-struct VertexInput {
-    float3 Position : TEXCOORD0;
-    float2 UV : TEXCOORD1;
 };
 
 struct VertexOutput {
@@ -13,13 +9,29 @@ struct VertexOutput {
     float4 Position : SV_Position;
 };
 
-VertexOutput vsMain(VertexInput input) {
+static const uint triangleIndices[6] = {0, 1, 2, 3, 2, 1};
+static const float2 vertexPos[4] = {
+    {0.0f, 0.0f},
+    {1.0f, 0.0f},
+    {0.0f, 1.0f},
+    {1.0f, 1.0f}
+};
+
+VertexOutput vsMain(uint vertexID : SV_VertexID) {
+    
+    uint vert = triangleIndices[vertexID % 6];
+    
+    int2 pos;
+    pos.x = (vertexPos[vert].x) * Size.x + Position.x;
+    pos.y = RenderSize.y - (vertexPos[vert].y) * Size.y - Position.y;
+    
+    float2 clipSpace = pos / RenderSize * 2 - 1;
+    
     VertexOutput output;
-    output.Position = float4(
-        (float)((int)(input.Position.x + Position.x)) / RenderSize.x * 2 - 1, 
-        (float)((int)(input.Position.y + (RenderSize.y - Position.y))) / RenderSize.y * 2 - 1, 
-        Position.z, 1);
-    output.UV = input.UV;
+    
+    output.Position = float4(clipSpace.xy, Position.z, 1);
+    output.UV = vertexPos[vert];
+    
     return output;
 }
 

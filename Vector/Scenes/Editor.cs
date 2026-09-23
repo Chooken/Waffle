@@ -13,9 +13,10 @@ public class Editor : IScene
     public static Window Window;
     public static GpuTexture SwapchainTexture = new GpuTexture();
 
-    public VectorRenderer Renderer;
-    public DownscaledTexture Texture = new DownscaledTexture(DownscaledTexture.ScaleMode.Height, 108);
+
     public NodeTree NodeTree;
+    public AssetEditor AssetEditor;
+    
     public bool OnSceneLoaded()
     {
         if (!Assets.TryLoadAssetBundle("Core"))
@@ -29,27 +30,10 @@ public class Editor : IScene
         }
         
         Application.SetUpdateRate(60);
-
-        Renderer = new VectorRenderer();
         
-        curve.AddSmooth(new Point(new Vector2(-0.50f, -0.25f)));
-        curve.AddSmooth(new Point(new Vector2(0.25f, 0.25f)));
-        curve.CloseSmooth();
+        AssetEditor = new AssetEditor(new IVector2(32, 32));
 
-        NodeTree = new NodeTree(new FixedView()
-        {
-            VerticalAlignment = FixedView.Alignment.Middle,
-            HorizontalAlignment = FixedView.Alignment.Middle,
-            Size = new IVector2(10, 10),
-        });
-        
-        NodeTree.SetHeightInUnits(108);
-
-        NodeTree.Root.AddNode(new Rect
-        {
-            Color = Color.RGBA255(255, 0, 0, 255),
-            BorderRadius = Vector4.One,
-        });
+        NodeTree = new NodeTree(AssetEditor);
         
         return true;
     }
@@ -64,8 +48,6 @@ public class Editor : IScene
 
     private void Update()
     {
-        Renderer.AddCurve(curve);
-        
         NodeTree.Update(SwapchainTexture);
     }
 
@@ -74,13 +56,9 @@ public class Editor : IScene
         ImQueue queue = new ImQueue();
         queue.TryGetSwapchainTexture(Window, ref SwapchainTexture);
         
-        Texture.SetOutputTexture(SwapchainTexture);
+        AssetEditor.RenderAsset(queue);
         
-        Renderer.Render(queue, Texture.GetTexture());
-
-        Texture.GetFullResTexture(queue);
-        
-        NodeTree.Draw(queue, SwapchainTexture);
+        NodeTree.Draw(queue, SwapchainTexture, true);
         
         queue.Submit();
     }

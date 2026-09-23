@@ -51,6 +51,7 @@ public abstract class INode
     {
         child.Tree = this.Tree;
         Children.Add(child);
+        child.OnInit();
         return this;
     }
     

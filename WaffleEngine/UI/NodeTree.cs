@@ -10,8 +10,6 @@ public class NodeTree
     public INode? Focused { get; private set; }
     public Stack<IRect> Clipstack { get; private set; }
     
-    public int HeightInUnits = 0;
-    
     public IRect UnitRect = IRect.Zero;
     
     public NodeTree(INode root)
@@ -19,11 +17,7 @@ public class NodeTree
         root.Tree = this;
         this.Root = root;
         this.Clipstack = new Stack<IRect>();
-    }
-
-    public void SetHeightInUnits(int height)
-    {
-        HeightInUnits = height;
+        root.OnInit();
     }
     
     public void SetActive(INode? active)
@@ -42,23 +36,23 @@ public class NodeTree
         {
             return;
         }
-
+        
         UnitRect = new IRect
         {
             x = 0,
             y = 0,
-            w = (int)((float)target.Width / target.Height * HeightInUnits),
-            h = HeightInUnits,
+            w = (int)target.Width,
+            h = (int)target.Height,
         };
+        
+        bool process_events = true;
+        Root.PropagateStates(ref process_events);
         
         Root.SetRect(UnitRect);
         Root.PropagateUpdate();
-
-        bool process_events = true;
-        Root.PropagateStates(ref process_events);
     }
 
-    public void Draw(ImQueue queue, GpuTexture target)
+    public void Draw(ImQueue queue, GpuTexture target, bool clear)
     {
         if (UnitRect == IRect.Zero)
         {
@@ -69,7 +63,7 @@ public class NodeTree
         {
             ClearColor = new Color(0,0,0,0),
             GpuTexture = target,
-            LoadOperation = LoadOperation.Load,
+            LoadOperation = clear ? LoadOperation.Clear : LoadOperation.Load,
             StoreOperation = StoreOperation.Store,
         };
 
