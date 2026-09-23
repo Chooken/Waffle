@@ -130,11 +130,11 @@ public class AssetEditor : INode
             renderPass.SetUniforms(new Rect.UIRectData()
             {
                 Position = new AlignedVector3(
-                    Rect.x + ((float)Rect.w / 2) - (size.x / 2) + Offset.x,
-                    Rect.y + ((float)Rect.h / 2) - (size.x / 2) + Offset.y,
+                    Rect.x + ((float)Rect.w / 2) + Offset.x + point.Position.x * (size.x / 2),
+                    Rect.y + ((float)Rect.h / 2) + Offset.y - point.Position.y * (size.y / 2),
                     0
                 ),
-                Size = new Vector2(100, 100),
+                Size = new Vector2(10, 10),
                 Color = new Vector4(1, 0, 0, 1),
                 BorderRadius = new Vector2(5, 5),
                 BorderColor = new Vector4(1, 1, 1, 1),

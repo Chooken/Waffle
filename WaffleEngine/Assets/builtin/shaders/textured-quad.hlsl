@@ -21,11 +21,10 @@ VertexOutput vsMain(uint vertexID : SV_VertexID) {
     
     uint vert = triangleIndices[vertexID % 6];
     
-    int2 pos;
-    pos.x = (vertexPos[vert].x) * Size.x + Position.x;
-    pos.y = RenderSize.y - (vertexPos[vert].y) * Size.y - Position.y;
+    int2 pos = vertexPos[vert] * Size + Position;
     
     float2 clipSpace = pos / RenderSize * 2 - 1;
+    clipSpace.y = -clipSpace.y;
     
     VertexOutput output;
     

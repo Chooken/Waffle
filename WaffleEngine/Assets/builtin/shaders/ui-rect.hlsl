@@ -30,9 +30,7 @@ VertexOutput vsMain(uint vertexID : SV_VertexID) {
     
     VertexOutput output;
     
-    int2 pos;
-    pos.x = (vertexPos[vert].x) * v_Size.x + v_Position.x;
-    pos.y = v_RenderSize.y - (vertexPos[vert].y) * v_Size.y - v_Position.y;
+    int2 pos = vertexPos[vert] * v_Size + v_Position;
     
     int2 clipped = int2(
         min(max(pos.x, v_clipMin.x), v_clipMax.x), 
@@ -40,6 +38,7 @@ VertexOutput vsMain(uint vertexID : SV_VertexID) {
     );
     
     float2 clipSpace = clipped / v_RenderSize * 2 - 1;
+    clipSpace.y = -clipSpace.y;
     
     output.Position = float4(clipSpace, 0, 1);
     output.SpriteIndex = spriteIndex;
