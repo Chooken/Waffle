@@ -30,7 +30,7 @@ VertexOutput vsMain(uint vertexID : SV_VertexID) {
     
     VertexOutput output;
     
-    int2 pos = vertexPos[vert] * v_Size + v_Position;
+    int2 pos = vertexPos[vert] * v_Size + v_Position.xy;
     
     int2 clipped = int2(
         min(max(pos.x, v_clipMin.x), v_clipMax.x), 

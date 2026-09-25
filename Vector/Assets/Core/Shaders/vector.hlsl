@@ -42,7 +42,7 @@ VertexOutput vsMain(uint vertexID : SV_VertexID, uint instanceID : SV_InstanceID
     
     output.Position = float4(pos, 0, 1);
     output.Instance = instanceID;
-    output.UV = vertexPos[vert];
+    output.UV = pos;
     
     return output;
 }
@@ -50,40 +50,85 @@ VertexOutput vsMain(uint vertexID : SV_VertexID, uint instanceID : SV_InstanceID
 StructuredBuffer<Instance> f_InstanceBuffer : register(t0, space2);
 StructuredBuffer<Point> f_PointBuffer : register(t1, space2);
 
-int solve(float2 pixelPos, float2 p0, float2 p1, float2 p2)
+uint CalcRootCode(float y1, float y2, float y3)
 {
-    float a = p0.y - 2.0f * p1.y + p2.y;
-    float b = 2.0f * (p1.y - p0.y);
-    float c = p0.y - pixelPos.y;
+    // Calculate the root eligibility code for a sample-relative quadratic Bézier curve.
+    // Extract the signs of the y coordinates of the three control points.
 
-    float disc = b * b - 4.0f * a * c;
+    uint i1 = asuint(y1) >> 31U;
+    uint i2 = asuint(y2) >> 30U;
+    uint i3 = asuint(y3) >> 29U;
+
+    uint shift = (i2 & 2U) | (i1 & ~2U);
+    shift = (i3 & 4U) | (shift & ~4U);
+
+    // Eligibility is returned in bits 0 and 8.
+
+    return ((0x2E74U >> shift) & 0x0101U);
+}
+
+float2 SolveHorizPoly(float2 p1, float2 p2, float2 p3)
+{
+    // Solve for the values of t where the curve crosses y = 0.
+    // The quadratic polynomial in t is given by
+    //
+    //     a t^2 - 2b t + c,
+    //
+    // where a = p1.y - 2 p2.y + p3.y, b = p1.y - p2.y, and c = p1.y.
+    // The discriminant b^2 - ac is clamped to zero, and imaginary
+    // roots are treated as a double root at the global minimum
+    // where t = b / a.
+
+    float2 a = p1 - p2 * 2.0 + p3;
+    float2 b = p1 - p2;
+    float ra = 1.0 / a.y;
+    float rb = 0.5 / b.y;
+
+    float d = sqrt(max(b.y * b.y - a.y * p1.y, 0.0));
+    float t1 = (b.y - d) * ra;
+    float t2 = (b.y + d) * ra;
+
+    // If the polynomial is nearly linear, then solve -2b t + c = 0.
+
+    if (abs(a.y) < 1.0 / 65536.0) t1 = t2 = p1.y * rb;
+
+    // Return the x coordinates where C(t) = 0.
+
+    return (float2((a.x * t1 - b.x * 2.0) * t1 + p1.x, (a.x * t2 - b.x * 2.0) * t2 + p1.x));
+}
+
+float2 SolveVertPoly(float2 p1, float2 p2, float2 p3)
+{
+    // Solve for the values of t where the curve crosses x = 0.
+
+    float2 a = p1 - p2 * 2.0 + p3;
+    float2 b = p1 - p2;
+    float ra = 1.0 / a.x;
+    float rb = 0.5 / b.x;
+
+    float d = sqrt(max(b.x * b.x - a.x * p1.x, 0.0));
+    float t1 = (b.x - d) * ra;
+    float t2 = (b.x + d) * ra;
+
+    // If the polynomial is nearly linear, then solve -2b t + c = 0.
+
+    if (abs(a.x) < 1.0 / 65536.0) t1 = t2 = p1.x * rb;
+
+    // Return the y coordinates where C(t) = 0.
+
+    return (float2((a.y * t1 - b.y * 2.0) * t1 + p1.y, (a.y * t2 - b.y * 2.0) * t2 + p1.y));
+}
+
+float CalcCoverage(float xcov, float ycov, float xwgt, float ywgt)
+{
+    // Combine coverages from the horizontal and vertical rays using their weights.
+    // Absolute values ensure that either winding direction convention works.
+
+    float coverage = max(abs(xcov * xwgt + ycov * ywgt) / max(xwgt + ywgt, 1.0 / 65536.0), min(abs(xcov), abs(ycov)));
     
-    float signB = (b >= 0.0f) ? 1.0f : -1.0f;
-    float q = -0.5f * (b + signB * sqrt(max(disc, 0.0f)));
+    coverage = saturate(coverage);
 
-    float safeA = (a == 0.0f) ? 1e-20f : a;
-    float safeQ = (q == 0.0f) ? 1e-20f : q;
-
-    float t0 = q / safeA;
-    float t1 = c / safeQ;
-
-    bool validDisc = disc >= 0.0f;
-    bool validT0 = validDisc && (t0 >= 0.0f && t0 < 1.0f);
-    bool validT1 = validDisc && (t1 >= 0.0f && t1 < 1.0f);
-    
-    float t = validT0 ? t0 : (validT1 ? t1 : 0.0f);
-
-    float x01 = lerp(p0.x, p1.x, t);
-    float x12 = lerp(p1.x, p2.x, t);
-    float x = lerp(x01, x12, t);
-
-    bool isToRight = x >= pixelPos.x;
-    int isValid = ((validT0 || validT1) && isToRight) ? 1 : 0;
-
-    float dY = 2.0f * a * t + b;
-    int winding = sign(dY) * isValid;
-    
-    return winding;
+    return (coverage);
 }
 
 float4 fsMain(VertexOutput input) : SV_Target {
@@ -95,36 +140,72 @@ float4 fsMain(VertexOutput input) : SV_Target {
         return float4(0, 0, 0, 1);
     }
     
-    float2 pos;
-    pos.x = lerp(instance.Min.x, instance.Max.x, input.UV.x);
-    pos.y = lerp(instance.Min.y, instance.Max.y, input.UV.y);
+    float2 emsPerPixel = fwidth(input.UV);
+    float2 pixelsPerEm = 1.0 / emsPerPixel;
     
-    int winding = 0;
+    float2 pos = input.UV;
+    
+    float xcov = 0.0;
+    float xwgt = 0.0;
     
     for (int i = 0; i < instance.Length; i += 2)
     {
-        Point start = f_PointBuffer[instance.Offset + i];
-        Point control = f_PointBuffer[instance.Offset + i + 1];
+        float2 start = f_PointBuffer[instance.Offset + i].Position - pos;
+        float2 control = f_PointBuffer[instance.Offset + i + 1].Position - pos;
         
         int end_index = (i + 2 < instance.Length) ? i + 2 : 0;
         
-        Point end = f_PointBuffer[instance.Offset + end_index];
-
-        float max_x = max(max(start.Position.x, control.Position.x), end.Position.x);
-
-        bool y_hit = (start.Position.y <= pos.y && pos.y < start.Position.y) ||
-            (start.Position.y >= pos.y && pos.y > start.Position.y);
+        float2 end = f_PointBuffer[instance.Offset + end_index].Position - pos;
         
-        // Early out if the whole curve is to the left or above or below y band.
-        if (max_x < pos.x || y_hit) continue;
-        
-        winding += solve(pos, start.Position, control.Position, end.Position);
+        uint code = CalcRootCode(start.y, control.y, end.y);
+        if (code != 0U)
+        {
+            float2 r = SolveHorizPoly(start, control, end) * pixelsPerEm.x;
+            
+            if ((code & 1U) != 0U)
+            {
+                xcov += saturate(r.x + 0.5);
+                xwgt = max(xwgt, saturate(1.0 - abs(r.x) * 2.0));
+            }
+
+            if (code > 1U)
+            {
+                xcov -= saturate(r.y + 0.5);
+                xwgt = max(xwgt, saturate(1.0 - abs(r.y) * 2.0));
+            }
+        }
     }
     
-    if (winding == 0)
+    float ycov = 0.0;
+    float ywgt = 0.0;
+    
+    for (int i = 0; i < instance.Length; i += 2)
     {
-        discard;
+        float2 start = f_PointBuffer[instance.Offset + i].Position - pos;
+        float2 control = f_PointBuffer[instance.Offset + i + 1].Position - pos;
+        
+        int end_index = (i + 2 < instance.Length) ? i + 2 : 0;
+        
+        float2 end = f_PointBuffer[instance.Offset + end_index].Position - pos;
+        
+        uint code = CalcRootCode(start.x, control.x, end.x);
+        if (code != 0U)
+        {
+            float2 r = SolveVertPoly(start, control, end) * pixelsPerEm.x;
+            
+            if ((code & 1U) != 0U)
+            {
+                ycov += saturate(r.x + 0.5);
+                ywgt = max(xwgt, saturate(1.0 - abs(r.x) * 2.0));
+            }
+
+            if (code > 1U)
+            {
+                ycov -= saturate(r.y + 0.5);
+                ywgt = max(xwgt, saturate(1.0 - abs(r.y) * 2.0));
+            }
+        }
     }
     
-    return float4(0, 1, 0, 1);
+    return float4(1, 0, 0, 1) * step(1, CalcCoverage(xcov, ycov, xwgt, ywgt));
 }

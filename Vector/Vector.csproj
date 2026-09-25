@@ -15,8 +15,4 @@
         <Content Include="Assets/**" CopyToOutputDirectory="Always" />
     </ItemGroup>
 
-    <ItemGroup>
-      <ClCompile Include="Assets\Core\Shaders\crt.hlsl" />
-    </ItemGroup>
-
 </Project>

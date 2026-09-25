@@ -89,6 +89,21 @@ public struct Vector2
 
     public static implicit operator Vector3(Vector2 vector) => new Vector3(vector.x, vector.y, 0);
     public static implicit operator Vector4(Vector2 vector) => new Vector4(vector.x, vector.y, 0, 0);
+
+    public float Length()
+    {
+        return MathF.Sqrt(SquaredLength());
+    }
+    
+    public float SquaredLength()
+    {
+        return Dot(this, this);
+    }
+
+    public static float Dot(Vector2 a, Vector2 b)
+    {
+        return a.x * b.x + a.y * b.y;
+    }
 }
 
 [StructLayout(LayoutKind.Explicit, Size = 12)]

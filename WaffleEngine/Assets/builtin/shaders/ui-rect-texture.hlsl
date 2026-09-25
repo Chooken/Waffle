@@ -77,5 +77,5 @@ float4 fsMain(VertexOutput input) : SV_Target {
     
     color = lerp(color, f_BorderColor, saturate(alpha + f_BorderSize) * saturate(f_BorderSize));
     
-    return float4(color.rgb, color.a * -alpha);
+    return float4(input.UV, 0, color.a * -alpha);
 }

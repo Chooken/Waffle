@@ -50,22 +50,61 @@ public class AssetEditor : INode
 
     private Vector2 grabPosition;
     private IVector2 grabOffset;
+    private Vector2 pointPosition;
 
-    private Curve? _selectedCurve; 
+    private Curve? _selectedCurve;
+    private int? _selectedPoint;
 
     public override void OnEvent(NodeEvent node_event)
     {
         switch (node_event)
         {
             case NodeEvent.MouseHold:
+                
+                Vector2 size = new Vector2((float)Rect.h / 2, (float)Rect.h / 2);
+        
+                size.x -= size.x % AssetTexture.Width;
+                size.y -= size.y % AssetTexture.Width;
+                
                 if (Input.Mouse.IsLeftPressed)
                 {
                     grabPosition = Input.Mouse.Position;
                     grabOffset = Offset;
+                    _selectedPoint = null;
+
+                    for (int i = 0; i < _selectedCurve.Points.Count; i++)
+                    {
+                        Point point = _selectedCurve.Points[i];
+                        
+                        Vector2 point_screen_pos = new Vector2(
+                            Rect.x + ((float)Rect.w / 2) + Offset.x + point.Position.x * (size.x / 2),
+                            Rect.y + ((float)Rect.h / 2) + Offset.y - point.Position.y * (size.y / 2));
+
+                        float distance = MathF.Abs((grabPosition - point_screen_pos).Length());
+
+                        if (distance < 10)
+                        {
+                            _selectedPoint = i;
+                            pointPosition = _selectedCurve.Points[i].Position;
+                            break;
+                        }
+                    }
                 } else if (Input.Mouse.IsLeftDown)
                 {
                     Vector2 delta = Input.Mouse.Position - grabPosition;
-                    Offset = new IVector2(grabOffset.x + (int)delta.x, grabOffset.y + (int)delta.y);
+
+                    if (_selectedPoint != null)
+                    {
+                        Vector2 point_screen_pos = new Vector2(
+                            delta.x / (size.x / 2),
+                            -delta.y / (size.y / 2));
+
+                        _selectedCurve.Points[_selectedPoint.Value] = new Point(pointPosition + point_screen_pos);
+                    }
+                    else
+                    {
+                        Offset = new IVector2(grabOffset.x + (int)delta.x, grabOffset.y + (int)delta.y);
+                    }
                 }
                 break;
         }
@@ -96,6 +135,9 @@ public class AssetEditor : INode
         
         Vector2 size = new Vector2((float)Rect.h / 2, (float)Rect.h / 2);
         
+        size.x -= size.x % AssetTexture.Width;
+        size.y -= size.y % AssetTexture.Width;
+        
         renderPass.SetUniforms(new TexturedQuad
         {
             Position = new AlignedVector3(
@@ -125,6 +167,8 @@ public class AssetEditor : INode
         
         renderPass.Bind(handle_shader);
 
+        int i = 0;
+
         foreach (var point in _selectedCurve.Points)
         {
             renderPass.SetUniforms(new Rect.UIRectData()
@@ -135,8 +179,8 @@ public class AssetEditor : INode
                     0
                 ),
                 Size = new Vector2(10, 10),
-                Color = new Vector4(1, 0, 0, 1),
-                BorderRadius = new Vector2(5, 5),
+                Color = i % 2 == 0 ? new Vector4(1, 0, 0, 1) : new Vector4(0, 0, 0, 0),
+                BorderRadius = new Vector4(5, 5, 5, 5),
                 BorderColor = new Vector4(1, 1, 1, 1),
                 ScreenSize = new Vector2(screenSize.w, screenSize.h),
                 BorderSize = 2.5f,
@@ -144,6 +188,7 @@ public class AssetEditor : INode
                 ClipMax = clip.Max,
             });
             renderPass.DrawPrimatives(6, 1, 0, 0);
+            i++;
         }
     }
 }

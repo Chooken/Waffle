@@ -42,6 +42,9 @@ public class VectorRenderer
     {
         min.x = Math.Min(min.x, point.Position.x);
         max.x = Math.Max(max.x, point.Position.x);
+
+        min.y = Math.Min(min.y, point.Position.y);
+        max.y = Math.Max(max.y, point.Position.y);
         
         PointBuffer.Add(point);
     }
@@ -50,9 +53,6 @@ public class VectorRenderer
     {
         min.x = Math.Min(min.x, point.Position.x);
         max.x = Math.Max(max.x, point.Position.x);
-
-        min.y = Math.Min(min.y, point.Position.y);
-        max.y = Math.Max(max.y, point.Position.y);
         
         PointBuffer.Add(point);
     }
