@@ -179,7 +179,7 @@ public class AssetEditor : INode
                     0
                 ),
                 Size = new Vector2(10, 10),
-                Color = i % 2 == 0 ? new Vector4(1, 0, 0, 1) : new Vector4(0, 0, 0, 0),
+                Color = i % 2 == 0 ? Color.Gray : new Vector4(0, 0, 0, 0),
                 BorderRadius = new Vector4(5, 5, 5, 5),
                 BorderColor = new Vector4(1, 1, 1, 1),
                 ScreenSize = new Vector2(screenSize.w, screenSize.h),

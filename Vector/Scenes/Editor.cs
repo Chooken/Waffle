@@ -33,7 +33,10 @@ public class Editor : IScene
         
         AssetEditor = new AssetEditor(new IVector2(32, 32));
 
-        NodeTree = new NodeTree(AssetEditor);
+        Rect root = new Rect();
+        NodeTree = new NodeTree(root);
+        NodeTree.Root.AddNode(AssetEditor);
+        NodeTree.SetClearColor(Color.Azure.ToGamma());
         
         return true;
     }

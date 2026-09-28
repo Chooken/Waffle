@@ -9,7 +9,8 @@ public class NodeTree
     public INode? Active { get; private set; }
     public INode? Focused { get; private set; }
     public Stack<IRect> Clipstack { get; private set; }
-    
+    public Color? ClearColor { get; private set; }
+
     public IRect UnitRect = IRect.Zero;
     
     public NodeTree(INode root)
@@ -18,6 +19,11 @@ public class NodeTree
         this.Root = root;
         this.Clipstack = new Stack<IRect>();
         root.OnInit();
+    }
+
+    public void SetClearColor(Color? color)
+    {
+        ClearColor = color;
     }
     
     public void SetActive(INode? active)
@@ -61,9 +67,9 @@ public class NodeTree
         
         ColorTargetSettings bgColorTargetSettings = new ColorTargetSettings
         {
-            ClearColor = new Color(0,0,0,0),
+            ClearColor = ClearColor ?? new Color(0,0,0,0),
             GpuTexture = target,
-            LoadOperation = clear ? LoadOperation.Clear : LoadOperation.Load,
+            LoadOperation = ClearColor.HasValue ? LoadOperation.Clear : LoadOperation.Load,
             StoreOperation = StoreOperation.Store,
         };
 

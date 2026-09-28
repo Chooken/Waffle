@@ -9,6 +9,7 @@ public class VectorRenderer
     
     public struct Instance
     {
+        public Vector4 Color;
         public Vector2 Min;
         public Vector2 Max;
         public int Offset;
@@ -94,10 +95,16 @@ public class VectorRenderer
                 : curve.Points[^1].Position;
             Vector2 end = curve.Points[0].Position;
 
+            if (start.y == end.y && start.y == control.y)
+            {
+                continue;
+            }
+            
             SplitAndAddBezier(start, control, end);
             
             InstanceBuffer.Add(new Instance()
             {
+                Color = Color.Green.ToGamma(),
                 Min = min,
                 Max = max,
                 Offset = offset,

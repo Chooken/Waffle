@@ -13,22 +13,11 @@ public unsafe class Texture : IGpuUploadable, IRenderBindable, IDisposable
     public Span<byte> Data => new Span<byte>((void *)_surface.Value.Pixels, Width * Height * 4);
     
     private NativePtr<SDL.Surface> _surface;
-    private GpuTexture _gpuTexture;
+    private GpuTexture? _gpuTexture;
 
     public Texture(uint width, uint height)
     {
         _surface = SDL.CreateSurface((int)width, (int)height, SDL.PixelFormat.ABGR8888);
-        
-        _gpuTexture = new GpuTexture(GpuTextureSettings.Default((uint)Width, (uint)Height) with
-        {
-            Format = TextureFormat.R8G8B8A8Unorm,
-        });
-        
-        ImQueue queue = new ImQueue();
-        ImCopyPass copyPass = queue.AddCopyPass();
-        UploadToGpu(copyPass);
-        copyPass.End();
-        queue.Submit();
     }
     
     public Texture(string path)
@@ -56,17 +45,6 @@ public unsafe class Texture : IGpuUploadable, IRenderBindable, IDisposable
             WLog.Error(SDL.GetError());
             return;
         }
-
-        _gpuTexture = new GpuTexture(GpuTextureSettings.Default((uint)Width, (uint)Height) with
-        {
-            Format = TextureFormat.R8G8B8A8Unorm,
-        });
-
-        ImQueue queue = new ImQueue();
-        ImCopyPass copyPass = queue.AddCopyPass();
-        UploadToGpu(copyPass);
-        copyPass.End();
-        queue.Submit();
     }
 
     public Texture(IntPtr surface)
@@ -96,6 +74,16 @@ public unsafe class Texture : IGpuUploadable, IRenderBindable, IDisposable
 
     public void UploadToGpu(ImCopyPass copyPass)
     {
+        _gpuTexture ??= new GpuTexture(GpuTextureSettings.Default((uint)Width, (uint)Height) with
+        {
+            Format = TextureFormat.R8G8B8A8Unorm,
+        });
+
+        if (_gpuTexture.Handle == IntPtr.Zero)
+        {
+            return;
+        }
+        
         SDL.GPUTransferBufferCreateInfo transferCreateInfo = new SDL.GPUTransferBufferCreateInfo();
         transferCreateInfo.Size = (uint)Width * (uint)Height * 4;
         transferCreateInfo.Usage = SDL.GPUTransferBufferUsage.Upload;
@@ -124,6 +112,8 @@ public unsafe class Texture : IGpuUploadable, IRenderBindable, IDisposable
 
         SDL.ReleaseGPUTransferBuffer(Device.Handle, transferBuffer);
     }
+    
+    public Span<byte> ByteArray() => new Span<byte>((void*)_surface.Value.Pixels, Width * Height * 4);
 
     public Span<T> GetAs<T>() => new Span<T>((void*)_surface.Value.Pixels, Width * Height);
     

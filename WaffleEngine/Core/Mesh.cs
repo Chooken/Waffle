@@ -5,28 +5,24 @@ namespace WaffleEngine;
 
 public class Mesh : IGpuUploadable, IRenderBindable
 {
-    private Buffer<Vertex> _vertexBuffer = new Buffer<Vertex>(BufferUsage.Vertex);
-    private Buffer<int> _indexBuffer = new Buffer<int>(BufferUsage.Index);
+    public Buffer<Vertex> Vertexes = new Buffer<Vertex>(BufferUsage.Vertex);
+    public Buffer<int> Indices = new Buffer<int>(BufferUsage.Index);
 
-    public void AddVertex(Vertex vertex) => _vertexBuffer.Add(vertex);
-
-    public void AddIndex(int index) => _indexBuffer.Add(index);
-
-    public static Mesh Quad(Vector3 min, Vector3 max)
+    public static Mesh Quad(Vector3 min, Vector3 max, Color color)
     {
         Mesh mesh = new Mesh();
         
-        mesh._vertexBuffer.Add(new Vertex { Position = new Vector3(max.x, max.y, max.z), Uv = new Vector2(1f, 0f)});
-        mesh._vertexBuffer.Add(new Vertex { Position = new Vector3(max.x, min.y, min.z + max.z * 0.5f), Uv = new Vector2(1f, 1f)});
-        mesh._vertexBuffer.Add(new Vertex { Position = new Vector3(min.x, min.y, min.z), Uv = new Vector2(0f, 1f)});
-        mesh._vertexBuffer.Add(new Vertex { Position = new Vector3(min.x, max.y, min.z + max.z * 0.5f), Uv = new Vector2(0f, 0f)});
+        mesh.Vertexes.Add(new Vertex { Color = color, Position = new Vector4(max.x, max.y, max.z, 1), Uv = new Vector2(1f, 0f)});
+        mesh.Vertexes.Add(new Vertex { Color = color, Position = new Vector4(max.x, min.y, min.z + (max.z - min.z) * 0.5f, 1), Uv = new Vector2(1f, 1f)});
+        mesh.Vertexes.Add(new Vertex { Color = color, Position = new Vector4(min.x, min.y, min.z, 1), Uv = new Vector2(0f, 1f)});
+        mesh.Vertexes.Add(new Vertex { Color = color, Position = new Vector4(min.x, max.y, min.z + (max.z - min.z) * 0.5f, 1), Uv = new Vector2(0f, 0f)});
         
-        mesh._indexBuffer.Add(0);
-        mesh._indexBuffer.Add(1);
-        mesh._indexBuffer.Add(2);
-        mesh._indexBuffer.Add(0);
-        mesh._indexBuffer.Add(2);
-        mesh._indexBuffer.Add(3);
+        mesh.Indices.Add(0);
+        mesh.Indices.Add(1);
+        mesh.Indices.Add(2);
+        mesh.Indices.Add(0);
+        mesh.Indices.Add(2);
+        mesh.Indices.Add(3);
 
         return mesh;
     }
@@ -34,19 +30,19 @@ public class Mesh : IGpuUploadable, IRenderBindable
 
     public void UploadToGpu(ImCopyPass copyPass)
     {
-        if (_vertexBuffer.Count > 0)
-            copyPass.Upload(_vertexBuffer);
+        if (Vertexes.Count > 0)
+            copyPass.Upload(Vertexes);
         
-        if (_indexBuffer.Count > 0)
-            copyPass.Upload(_indexBuffer);
+        if (Indices.Count > 0)
+            copyPass.Upload(Indices);
     }
 
     public void Bind(ImRenderPass renderPass, uint slot)
     {
-        if (_vertexBuffer.Count > 0)
-            renderPass.Bind(_vertexBuffer);
+        if (Vertexes.Count > 0)
+            renderPass.Bind(Vertexes);
         
-        if (_indexBuffer.Count > 0)
-            renderPass.Bind(_indexBuffer);
+        if (Indices.Count > 0)
+            renderPass.Bind(Indices);
     }
 }

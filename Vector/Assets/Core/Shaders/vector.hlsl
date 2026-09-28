@@ -1,5 +1,6 @@
 ﻿struct Instance
 {
+    float4 Color;
     float2 Min;
     float2 Max;
     int Offset;
@@ -119,12 +120,12 @@ float2 SolveVertPoly(float2 p1, float2 p2, float2 p3)
     return (float2((a.y * t1 - b.y * 2.0) * t1 + p1.y, (a.y * t2 - b.y * 2.0) * t2 + p1.y));
 }
 
-float CalcCoverage(float xcov, float ycov, float xwgt, float ywgt)
+float CalcCoverage(float xcov, float xwgt)
 {
     // Combine coverages from the horizontal and vertical rays using their weights.
     // Absolute values ensure that either winding direction convention works.
 
-    float coverage = max(abs(xcov * xwgt + ycov * ywgt) / max(xwgt + ywgt, 1.0 / 65536.0), min(abs(xcov), abs(ycov)));
+    float coverage = max(abs(xcov * xwgt) / max(xwgt, 1.0 / 65536.0), abs(xcov));
     
     coverage = saturate(coverage);
 
@@ -176,36 +177,5 @@ float4 fsMain(VertexOutput input) : SV_Target {
         }
     }
     
-    float ycov = 0.0;
-    float ywgt = 0.0;
-    
-    for (int i = 0; i < instance.Length; i += 2)
-    {
-        float2 start = f_PointBuffer[instance.Offset + i].Position - pos;
-        float2 control = f_PointBuffer[instance.Offset + i + 1].Position - pos;
-        
-        int end_index = (i + 2 < instance.Length) ? i + 2 : 0;
-        
-        float2 end = f_PointBuffer[instance.Offset + end_index].Position - pos;
-        
-        uint code = CalcRootCode(start.x, control.x, end.x);
-        if (code != 0U)
-        {
-            float2 r = SolveVertPoly(start, control, end) * pixelsPerEm.x;
-            
-            if ((code & 1U) != 0U)
-            {
-                ycov += saturate(r.x + 0.5);
-                ywgt = max(xwgt, saturate(1.0 - abs(r.x) * 2.0));
-            }
-
-            if (code > 1U)
-            {
-                ycov -= saturate(r.y + 0.5);
-                ywgt = max(xwgt, saturate(1.0 - abs(r.y) * 2.0));
-            }
-        }
-    }
-    
-    return float4(1, 0, 0, 1) * step(1, CalcCoverage(xcov, ycov, xwgt, ywgt));
+    return instance.Color * step(1, CalcCoverage(xcov, xwgt));
 }

@@ -5,6 +5,8 @@ cbuffer VertUniforms : register(b0, space1) {
     float4 v_BorderRadius;
     float4 v_BorderColor;
     float2 v_RenderSize;
+    float2 v_clipMin;
+    float2 v_clipMax;
     float v_BorderSize;
 }
 
@@ -28,15 +30,22 @@ VertexOutput vsMain(uint vertexID : SV_VertexID) {
     
     VertexOutput output;
     
-    int2 pos;
-    pos.x = (vertexPos[vert].x) * v_Size.x + v_Position.x;
-    pos.y = v_RenderSize.y - (vertexPos[vert].y) * v_Size.y - v_Position.y;
+    int2 pos = vertexPos[vert] * v_Size + v_Position.xy;
     
-    float2 clipSpace = pos / v_RenderSize * 2 - 1;
+    int2 clipped = int2(
+        min(max(pos.x, v_clipMin.x), v_clipMax.x), 
+        min(max(pos.y, v_clipMin.y), v_clipMax.x)
+    );
+    
+    float2 clipSpace = clipped / v_RenderSize * 2 - 1;
+    clipSpace.y = -clipSpace.y;
     
     output.Position = float4(clipSpace, 0, 1);
     output.SpriteIndex = spriteIndex;
-    output.UV = vertexPos[vert];
+    output.UV = float2(
+        (clipped.x - v_Position.x) / v_Size.x, 
+        (clipped.y - v_Position.y) / v_Size.y
+    );
     
     return output;
 }
@@ -48,6 +57,8 @@ cbuffer FragUniforms : register(b0, space3) {
     float4 f_BorderRadius;
     float4 f_BorderColor;
     float2 f_RenderSize;
+    float2 f_clipMin;
+    float2 f_clipMax;
     float f_BorderSize;
 }
 
@@ -74,6 +85,8 @@ float4 fsMain(VertexOutput input) : SV_Target {
     float2 uv = float2(input.UV.x, input.UV.y);
 
     float4 color = Texture.Sample(Sampler, uv);
+    
+    color = lerp(f_Color, color, color.a);
     
     color = lerp(color, f_BorderColor, saturate(alpha + f_BorderSize) * saturate(f_BorderSize));
     
