@@ -21,6 +21,7 @@ public struct Color(float red, float green, float blue, float alpha = 1.0f)
     public float w { get => a; set => a = value;  }
 
     public Color WithAlphaOne() => new Color(r, g, b, 1);
+    public Color WithAlpha(float alpha) => new Color(r, g, b, alpha);
 
     public static implicit operator Vector4(Color color) => new Vector4(color.r, color.g, color.b, color.a);
     public static implicit operator SDL.Color(Color color) => new SDL.Color() { R = color.r255, G = color.g255, B = color.b255, A = color.a255 };
@@ -111,6 +112,8 @@ public struct OklabColor
 
     public OklabColor(Color color)
     {
+        // Expects linear working-space input; pass display colors through
+        // ToLinear() first.
         this = fromRGB(color.r, color.g, color.b);
     }
 
@@ -131,6 +134,9 @@ public struct OklabColor
         return new OklabColor(L, A, B);
     }
 
+    // Display-ready sRGB: the matrix yields linear light, converted to gamma
+    // here so every Oklch/Oklab color (including all Color statics) arrives
+    // encoded and no call site needs to convert.
     public Color ToRGB()
     {
         float l_ = L + 0.3963377774f * A + 0.2158037573f * B;
@@ -145,7 +151,7 @@ public struct OklabColor
         float.Clamp(+4.0767416621f * l - 3.3077115913f * m + 0.2309699292f * s, 0, 1),
         float.Clamp(-1.2684380046f * l + 2.6097574011f * m - 0.3413193965f * s, 0, 1),
         float.Clamp(-0.0041960863f * l - 0.7034186147f * m + 1.7076147010f * s, 0, 1)
-        );
+        ).ToGamma();
     }
 }
 
@@ -173,7 +179,8 @@ public struct OklchColor
         OklabColor lab = new OklabColor(color);
         Lightness = lab.L;
         Chroma = MathF.Sqrt(lab.A * lab.A + lab.B * lab.B);
-        Hue = MathF.Atan2(lab.B, lab.A);
+        // Degrees, matching ToLAB and the Color statics.
+        Hue = MathF.Atan2(lab.B, lab.A) * 180.0f / MathF.PI;
     }
 
     public OklabColor ToLAB()

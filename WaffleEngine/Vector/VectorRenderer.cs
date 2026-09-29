@@ -6,6 +6,7 @@ namespace WaffleEngine.Vector;
 public class VectorRenderer
 {
     public List<Curve> Curves = new();
+    public List<Color> CurveColors = new();
     
     public struct Instance
     {
@@ -19,9 +20,12 @@ public class VectorRenderer
     public Buffer<Instance> InstanceBuffer;
     public Buffer<Point> PointBuffer;
 
-    public void AddCurve(Curve curve)
+    // Colors are display-referred (gamma-encoded sRGB, as all Oklch/Oklab
+    // colors now arrive) and uploaded as-is.
+    public void AddCurve(Curve curve, Color? color = null)
     {
         Curves.Add(curve);
+        CurveColors.Add(color ?? Color.Green);
     }
 
     public VectorRenderer()
@@ -74,9 +78,12 @@ public class VectorRenderer
         PointBuffer.Clear();
 
         int offset = 0;
-        
+        int curveIndex = 0;
+
         foreach (var curve in Curves)
         {
+            Color curveColor = curveIndex < CurveColors.Count ? CurveColors[curveIndex] : Color.Green;
+            curveIndex++;
             ResetMinMax();
             
             AddPoint(curve.Points[0]);
@@ -97,6 +104,10 @@ public class VectorRenderer
 
             if (start.y == end.y && start.y == control.y)
             {
+                // Degenerate closing edge (e.g. a lone pen dot): emit no
+                // instance but advance past its points so later curves keep
+                // exact ranges.
+                offset = PointBuffer.Count;
                 continue;
             }
             
@@ -104,14 +115,14 @@ public class VectorRenderer
             
             InstanceBuffer.Add(new Instance()
             {
-                Color = Color.Green.ToGamma(),
+                Color = curveColor,
                 Min = min,
                 Max = max,
                 Offset = offset,
-                Length = PointBuffer.Count,
+                Length = PointBuffer.Count - offset,
             });
-            
-            offset += PointBuffer.Count;
+
+            offset = PointBuffer.Count;
         }
         
         var copypass = queue.AddCopyPass();
@@ -139,6 +150,7 @@ public class VectorRenderer
         renderPass.End();
         
         Curves.Clear();
+        CurveColors.Clear();
     }
 
     private void SplitAndAddBezier(System.Numerics.Vector2 start, System.Numerics.Vector2 control, System.Numerics.Vector2 end)

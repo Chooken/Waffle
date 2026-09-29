@@ -406,12 +406,12 @@ public struct Rect
         }
 
         Vector2 overlap_min = new Vector2(
-            Math.Min(min.x, rect_min.x),
-            Math.Min(min.y, rect_min.y));
+            Math.Max(min.x, rect_min.x),
+            Math.Max(min.y, rect_min.y));
         
         Vector2 overlap_max = new Vector2(
-            Math.Max(max.x, rect_max.x),
-            Math.Max(max.y, rect_max.y));
+            Math.Min(max.x, rect_max.x),
+            Math.Min(max.y, rect_max.y));
         
         return new Rect(
             overlap_min.x, 
@@ -591,12 +591,12 @@ public struct IRect
         }
 
         IVector2 overlap_min = new IVector2(
-            Math.Min(min.x, rect_min.x),
-            Math.Min(min.y, rect_min.y));
+            Math.Max(min.x, rect_min.x),
+            Math.Max(min.y, rect_min.y));
         
         IVector2 overlap_max = new IVector2(
-            Math.Max(max.x, rect_max.x),
-            Math.Max(max.y, rect_max.y));
+            Math.Min(max.x, rect_max.x),
+            Math.Min(max.y, rect_max.y));
         
         return new IRect(
             overlap_min.x, 

@@ -16,13 +16,15 @@ public class AtlasedText
     private static Shader? _shader;
 
     private Buffer<Vertex> _vertexBuffer = new Buffer<Vertex>(BufferUsage.Vertex);
-    private RenderBuffer<int> _indexBuffer = new RenderBuffer<int>(BufferUsage.Index);
+    private Buffer<int> _indexBuffer = new Buffer<int>(BufferUsage.Index);
 
     private IntPtr _texture;
     private IntPtr _sampler;
+    private Color _color;
 
     public AtlasedText(string text, Font font, Color color)
     {
+        _color = color;
         if (_textEngine == IntPtr.Zero)
         {
             _textEngine = TTF.CreateGPUTextEngine(Device.Handle);
@@ -59,6 +61,7 @@ public class AtlasedText
 
     public void SetColor(Color color)
     {
+        _color = color;
         TTF.SetTextColorFloat(Handle, color.r, color.g, color.b, color.a);
     }
 
@@ -106,47 +109,80 @@ public class AtlasedText
             return;
         }
 
-        _empty = false;
-        
-        var formatted = GPUAtlasDrawSequenceFormatted.From(sequence.Value);
-        
         _vertexBuffer.Clear();
-        
-        for (int i = 0; i < formatted.Vertices.Length; i++)
+        _indexBuffer.Clear();
+        _texture = IntPtr.Zero;
+
+        // SDL hands us y-up vertices, origin at the text's top-left with the
+        // body extending into negative Y. Our UI space is y-down, so mirror
+        // positions here and keep ui-mesh y-down-native. UVs are passed
+        // through untouched: they address rows of the atlas texture as
+        // stored, so flipping them samples empty texels (invisible text).
+        // (SDL docs: "positive Y upwards ... transform the vertices yourself".)
+        for (var seq = sequence; !seq.IsNull; seq = seq.Value.Next)
         {
-            _vertexBuffer.Add(new Vertex()
+            var formatted = GPUAtlasDrawSequenceFormatted.From(seq.Value);
+
+            // Solid-fill sequences (underline/strikethrough backings) have no
+            // atlas/UVs and need a different pipeline — skip them for now.
+            if (formatted.AtlasTexture == IntPtr.Zero)
+                continue;
+
+            if (_texture == IntPtr.Zero)
+                _texture = formatted.AtlasTexture;
+
+            int vertexBase = _vertexBuffer.Count;
+
+            for (int i = 0; i < formatted.Vertices.Length; i++)
             {
-                Position = formatted.Vertices[i],
-                Uv = formatted.UVs[i],
-            });
+                var pos = formatted.Vertices[i];
+                var uv = formatted.UVs[i];
+                _vertexBuffer.Add(new Vertex()
+                {
+                    Color = _color,
+                    Position = new Vector4(pos.x, -pos.y, 0, 1),
+                    Uv = new Vector2(uv.x, uv.y),
+                });
+            }
+
+            for (int i = 0; i < formatted.Indices.Length; i++)
+                _indexBuffer.Add(vertexBase + formatted.Indices[i]);
         }
 
-        _texture = formatted.AtlasTexture;
+        if (_vertexBuffer.Count == 0 || _indexBuffer.Count == 0)
+        {
+            _empty = true;
+            return;
+        }
+
+        _empty = false;
 
         ImQueue queue = new ImQueue();
         ImCopyPass copyPass = queue.AddCopyPass();
         copyPass.Upload(_vertexBuffer);
-        _indexBuffer.UploadData(formatted.Indices.AsSpan, copyPass);
+        copyPass.Upload(_indexBuffer);
         copyPass.End();
         queue.Submit();
     }
 
-    public unsafe void Render(ImRenderPass renderPass, Vector3 position, Vector2 renderSize)
+    public unsafe void Render(
+        ImRenderPass renderPass, Vector2 position, Vector2 renderSize,
+        Vector2 clipMin, Vector2 clipMax)
     {
         if (_shader is null)
         {
-            if (!Assets.TryGetShader("builtin", "textured-quad", out _shader))
+            if (!Assets.TryGetShader("builtin", "ui-mesh", out _shader))
             {
-                WLog.Error("Shader not found: BuiltinShaders/textured-quad");
+                WLog.Error("Shader not found: builtin/ui-mesh");
                 return;
             }
         }
         
-        if (_empty)
+        if (_empty || _vertexBuffer.Count == 0)
             return;
-        
-        renderPass.SetUniforms((new AlignedVector3(position), renderSize));
-        
+
+        renderPass.SetUniforms(UiMeshData.Text(position, renderSize, clipMin, clipMax));
+
         _shader.Bind(renderPass);
         renderPass.Bind(_vertexBuffer);
         renderPass.Bind(_indexBuffer);
@@ -162,6 +198,6 @@ public class AtlasedText
         SDL.BindGPUVertexSamplers(renderPass.Handle, 0, ptr, 1);
         SDL.BindGPUFragmentSamplers(renderPass.Handle, 0, ptr, 1);
         
-        renderPass.DrawIndexedPrimatives((uint)_indexBuffer.Length, 1, 0, 0, 0);
+        renderPass.DrawIndexedPrimatives((uint)_indexBuffer.Count, 1, 0, 0, 0);
     }
 }

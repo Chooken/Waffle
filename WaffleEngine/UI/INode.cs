@@ -171,11 +171,13 @@ public abstract class INode
 
         if (Clipped)
         {
+            // NB: TryPeek overwrites its out var with default on failure,
+            // so only touch clippedRect when the peek succeeds.
             IRect clippedRect = Rect;
 
-            if (Tree.Clipstack.TryPeek(out clippedRect))
+            if (Tree.Clipstack.TryPeek(out IRect clipTop))
             {
-                clippedRect = clippedRect.GetOverlap(Rect) ?? IRect.Zero;
+                clippedRect = clipTop.GetOverlap(Rect) ?? IRect.Zero;
             }
             
             Tree.Clipstack.Push(clippedRect);

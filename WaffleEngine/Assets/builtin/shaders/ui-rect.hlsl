@@ -34,7 +34,7 @@ VertexOutput vsMain(uint vertexID : SV_VertexID) {
     
     int2 clipped = int2(
         min(max(pos.x, v_clipMin.x), v_clipMax.x), 
-        min(max(pos.y, v_clipMin.y), v_clipMax.x)
+        min(max(pos.y, v_clipMin.y), v_clipMax.y)
     );
     
     float2 clipSpace = clipped / v_RenderSize * 2 - 1;

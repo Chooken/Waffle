@@ -1,4 +1,5 @@
-﻿using WaffleEngine;
+﻿using Vector.Editor.UI;
+using WaffleEngine;
 using WaffleEngine.Rendering;
 using WaffleEngine.Rendering.Immediate;
 using WaffleEngine.UI;
@@ -16,6 +17,9 @@ public class Editor : IScene
 
     public NodeTree NodeTree;
     public AssetEditor AssetEditor;
+    public Toolbar Toolbar;
+    public ShapeListPanel ShapeList;
+    public ColorPanel Fill;
     
     public bool OnSceneLoaded()
     {
@@ -32,11 +36,18 @@ public class Editor : IScene
         Application.SetUpdateRate(60);
         
         AssetEditor = new AssetEditor(new IVector2(32, 32));
+        Toolbar = new Toolbar { Editor = AssetEditor };
+        ShapeList = new ShapeListPanel { Editor = AssetEditor };
+        Fill = new ColorPanel { Editor = AssetEditor };
 
-        Rect root = new Rect();
-        NodeTree = new NodeTree(root);
-        NodeTree.Root.AddNode(AssetEditor);
-        NodeTree.SetClearColor(Color.Azure.ToGamma());
+        // Panels first so they win mouse events over the viewport.
+        EditorLayout layout = new();
+        NodeTree = new NodeTree(layout);
+        layout.AddNode(Toolbar);
+        layout.AddNode(ShapeList);
+        layout.AddNode(Fill);
+        layout.AddNode(AssetEditor);
+        NodeTree.SetClearColor(Theme.SceneBackground);
         
         return true;
     }
