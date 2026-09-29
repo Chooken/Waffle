@@ -115,7 +115,7 @@ public class Slider : Rect
                     Position = new AlignedVector3(trackX, barY, 0),
                     Size = new Vector2(trackW, TrackH),
                     Color = Theme.Highlight,
-                    BorderRadius = new Vector4(2, 2, 2, 2),
+                    BorderRadius = new Vector4(TrackH, TrackH, TrackH, TrackH),
                     BorderColor = new Vector4(0, 0, 0, 0),
                     ScreenSize = screen,
                     BorderSize = 0f,

@@ -177,5 +177,5 @@ float4 fsMain(VertexOutput input) : SV_Target {
         }
     }
     
-    return instance.Color * step(1, CalcCoverage(xcov, xwgt));
+    return instance.Color * step(0.5, CalcCoverage(xcov, xwgt));
 }

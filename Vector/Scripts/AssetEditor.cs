@@ -519,13 +519,12 @@ public class AssetEditor : INode
                 break;
 
             bool isActive = Selection.IsShapeActive(shape.Id);
-            bool showAll = isActive || Document.Shapes.Count == 1;
 
             var pts = shape.Curve.Points;
             for (int i = 0; i < pts.Count; i++)
             {
                 // Non-active shapes only show their selected points.
-                if (!showAll && !Selection.IsPointActive(shape.Id, i))
+                if (!isActive && !Selection.IsPointActive(shape.Id, i))
                     continue;
                 bool isAnchor = i % 2 == 0;
                 if (!isAnchor && !Settings.ShowControls)
