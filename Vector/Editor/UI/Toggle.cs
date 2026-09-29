@@ -18,8 +18,7 @@ public class Toggle : Rect
 
     public override void OnEvent(NodeEvent node_event)
     {
-        if (node_event == NodeEvent.MouseClick
-            && Rect.Contains(Input.Mouse.Position))
+        if (node_event == NodeEvent.MouseClick)
         {
             Value = !Value;
             OnChange?.Invoke(Value);

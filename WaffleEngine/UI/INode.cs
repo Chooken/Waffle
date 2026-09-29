@@ -134,13 +134,13 @@ public abstract class INode
 
         if (process_events)
         {
-            if (Rect.Contains(Input.Mouse.Position))
+            if (Rect.Contains(Tree.Input.Mouse.Position))
             {
                 process_events = false;
                 
                 IsHovered = true;
 
-                if (Input.Mouse.IsLeftPressed || Input.Mouse.IsRightPressed)
+                if (Tree.Input.Mouse.IsLeftPressed || Tree.Input.Mouse.IsRightPressed)
                 {
                     Tree.SetFocused(this);
                     Tree.SetActive(this);
@@ -150,7 +150,7 @@ public abstract class INode
 
         if (IsActive)
         {
-            if (Input.Mouse.IsLeftDown || Input.Mouse.IsRightDown)
+            if (Tree.Input.Mouse.IsLeftDown || Tree.Input.Mouse.IsRightDown)
             {
                 OnEvent(NodeEvent.MouseHold);
             }

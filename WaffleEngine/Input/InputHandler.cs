@@ -4,7 +4,7 @@ public sealed class InputHandler
 {
     // Mouse
     private MouseData _mouseData;
-    public MouseData MouseData => _mouseData;
+    public MouseData Mouse => _mouseData;
 
     // Keyboard
     private EventSpace _defaultEventSpace = new();

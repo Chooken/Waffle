@@ -31,12 +31,11 @@ public class SegmentedControl : Rect
     public override void OnEvent(NodeEvent node_event)
     {
         if (node_event != NodeEvent.MouseClick
-            || !Rect.Contains(Input.Mouse.Position)
             || Options.Count == 0)
             return;
 
         int index = Math.Clamp(
-            (int)((Input.Mouse.Position.x - Rect.x) / Rect.w * Options.Count),
+            (int)((Tree.Input.Mouse.Position.x - Rect.x) / Rect.w * Options.Count),
             0, Options.Count - 1);
         if (index != Selected)
         {

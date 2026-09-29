@@ -61,15 +61,15 @@ public class Slider : Rect
         switch (node_event)
         {
             case NodeEvent.MouseHold:
-                if (Input.Mouse.IsLeftPressed && Rect.Contains(Input.Mouse.Position))
+                if (Tree.Input.Mouse.IsLeftPressed)
                 {
                     _drag = true;
                     OnGrab?.Invoke();
-                    SetFromMouse(Input.Mouse.Position.x);
+                    SetFromMouse(Tree.Input.Mouse.Position.x);
                 }
-                else if (_drag && Input.Mouse.IsLeftDown)
+                else if (_drag && Tree.Input.Mouse.IsLeftDown)
                 {
-                    SetFromMouse(Input.Mouse.Position.x);
+                    SetFromMouse(Tree.Input.Mouse.Position.x);
                 }
                 break;
             case NodeEvent.MouseClick when _drag:

@@ -12,6 +12,7 @@ public class NodeTree
     public Color? ClearColor { get; private set; }
 
     public IRect UnitRect = IRect.Zero;
+    public InputHandler Input = WaffleEngine.Input.GlobalInputHandler;
     
     public NodeTree(INode root)
     {
@@ -19,6 +20,11 @@ public class NodeTree
         this.Root = root;
         this.Clipstack = new Stack<IRect>();
         root.OnInit();
+    }
+
+    public void SetInputHandler(InputHandler inputHandler)
+    {
+        Input = inputHandler;
     }
 
     public void SetClearColor(Color? color)

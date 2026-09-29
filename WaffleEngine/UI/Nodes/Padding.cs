@@ -5,17 +5,11 @@ namespace WaffleEngine.UI.Nodes;
 // full-bleed overlays). Layouts that position children individually
 // (scrolling lists, toolbars) keep their own math but should derive it
 // from IRect.Inset() instead of spreading padding arithmetic around.
-public class Padding : INode
+public class Padding(int Left, int Right, int Top, int Bottom) : INode
 {
-    public int Left;
-    public int Top;
-    public int Right;
-    public int Bottom;
-
-    public Padding Uniform(int pad)
+    public static Padding Uniform(int pad)
     {
-        Left = Top = Right = Bottom = pad;
-        return this;
+        return new Padding(pad, pad, pad, pad);
     }
 
     public override void OnUpdate()

@@ -111,9 +111,9 @@ public class InspectorPanel : Rect
         _rigTitle.Sync();
         _hint.Sync();
 
-        _hue.Label = $"H {_intent.H * 360f:0}";
-        _light.Label = $"L {_intent.L:0.00}";
-        _chroma.Label = $"C {_intent.C * ColorIntent.MaxChroma:0.00}";
+        _hue.Label = $"H";
+        _light.Label = $"L";
+        _chroma.Label = $"C";
         _hue.Value = _intent.H;
         _light.Value = _intent.L;
         _chroma.Value = _intent.C;
@@ -123,7 +123,7 @@ public class InspectorPanel : Rect
         var oklch = _intent.ToOklch();
         _hue.GradientTrack = true;
         _hue.Gradient = UiGradientData.Ramp(Vector2.Zero, Vector2.Zero, Vector2.Zero,
-            Vector2.Zero, Vector2.Zero, 0, oklch.Lightness, 0f, 0f);
+            Vector2.Zero, Vector2.Zero, 0, oklch.Lightness, oklch.Chroma, 0f);
         _light.GradientTrack = true;
         _light.Gradient = UiGradientData.Ramp(Vector2.Zero, Vector2.Zero, Vector2.Zero,
             Vector2.Zero, Vector2.Zero, 1, 0f, oklch.Chroma, oklch.Hue);

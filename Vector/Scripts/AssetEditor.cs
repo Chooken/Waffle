@@ -205,11 +205,11 @@ public class AssetEditor : INode
 
         // Wheel zoom around cursor, only when hovering the viewport so the
         // side panels keep the wheel free for future scrolling.
-        float wheel = Input.Mouse.MouseWheelTicksDelta;
-        if (wheel != 0 && Rect.Contains(Input.Mouse.Position))
+        float wheel = Tree.Input.Mouse.MouseWheelTicksDelta;
+        if (wheel != 0 && Rect.Contains(Tree.Input.Mouse.Position))
         {
             var (center, baseSize) = ComputeLayout();
-            Camera.ApplyZoom(wheel, Input.Mouse.Position, center, baseSize);
+            Camera.ApplyZoom(wheel, Tree.Input.Mouse.Position, center, baseSize);
         }
 
         SyncToolContext();
@@ -364,33 +364,33 @@ public class AssetEditor : INode
 
         SyncToolContext();
         var (center, baseSize) = ComputeLayout();
-        Vector2 mouseScreen = Input.Mouse.Position;
+        Vector2 mouseScreen = Tree.Input.Mouse.Position;
         Vector2 mouseWorld = Camera.ScreenToWorld(mouseScreen, center, baseSize);
 
-        if (Input.Mouse.IsRightPressed)
+        if (Tree.Input.Mouse.IsRightPressed)
         {
             _panning = true;
             _grabScreen = mouseScreen;
             _grabPan = Camera.Pan;
         }
-        else if (Input.Mouse.IsRightDown && _panning)
+        else if (Tree.Input.Mouse.IsRightDown && _panning)
         {
             Vector2 delta = mouseScreen - _grabScreen;
             Camera.Pan = new Vector2(_grabPan.x + delta.x, _grabPan.y + delta.y);
             return;
         }
-        else if (!Input.Mouse.IsRightDown)
+        else if (!Tree.Input.Mouse.IsRightDown)
         {
             _panning = false;
         }
 
-        if (Input.Mouse.IsLeftPressed)
+        if (Tree.Input.Mouse.IsLeftPressed)
         {
             _grabWorld = mouseWorld;
             _toolDragging = true;
             ActiveTool.OnPress(mouseScreen, mouseWorld);
         }
-        else if (Input.Mouse.IsLeftDown && _toolDragging)
+        else if (Tree.Input.Mouse.IsLeftDown && _toolDragging)
         {
             ActiveTool.OnDrag(mouseScreen, mouseWorld, _grabWorld);
         }

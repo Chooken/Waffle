@@ -94,7 +94,6 @@ float4 fsMain(VertexOutput input) : SV_Target {
 
     if (f_Mode.x < 0.5) {
         H = t * 360.0;
-        C = 0.25;
     } else if (f_Mode.x < 1.5) {
         L = t;
     } else {

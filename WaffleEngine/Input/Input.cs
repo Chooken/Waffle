@@ -8,5 +8,5 @@ public static class Input
     public static EventSpace GetEventSpace(Modifier modifier) => GlobalInputHandler.GetEventSpace(modifier);
     public static void AddEventSpace(Modifier modifier) => GlobalInputHandler.AddEventSpace(modifier);
 
-    public static MouseData Mouse => GlobalInputHandler.MouseData;
+    public static MouseData Mouse => GlobalInputHandler.Mouse;
 }

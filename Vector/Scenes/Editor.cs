@@ -48,8 +48,9 @@ public class Editor : IScene
         // Popup first so the modal wins mouse events over everything.
         Rect root = new Rect();
         NodeTree = new NodeTree(root);
+        NodeTree.SetInputHandler(Window.WindowInput);
+        
         root.AddNode(Popup);
-        EditorLayout layout = new();
         
         INode topbar_splitview = root.AddNode(new FixedSplitView(Theme.ToolbarHeight, true, false));
         topbar_splitview.AddNode(Toolbar);
@@ -57,10 +58,10 @@ public class Editor : IScene
         INode bottombar_splitview = topbar_splitview.AddNode(new FixedSplitView(Theme.StatusHeight, false, false));
         bottombar_splitview.AddNode(Status);
         
-        INode shapelist_splitview = bottombar_splitview.AddNode(new SplitView(Theme.SideWidth, 12));
+        INode shapelist_splitview = bottombar_splitview.AddNode(new SplitView(true, Theme.SideWidth, 12));
         shapelist_splitview.AddNode(ShapeList);
 
-        INode inspector_splitview = shapelist_splitview.AddNode(new SplitView(Theme.SideWidth, 12));
+        INode inspector_splitview = shapelist_splitview.AddNode(new SplitView(false, Theme.SideWidth, 12));
         inspector_splitview.AddNode(AssetEditor);
         inspector_splitview.AddNode(Inspector);
         

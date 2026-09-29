@@ -78,11 +78,11 @@ public class ShapeListPanel : Rect
         int contentH = units * (Theme.RowHeight + Theme.RowGap);
         int maxScroll = Math.Max(0, contentH - (listBottom - listTop));
 
-        if (Rect.Contains(Input.Mouse.Position)
-            && Input.Mouse.Position.y < listBottom
-            && Input.Mouse.MouseWheelTicksDelta != 0)
+        if (Rect.Contains(Tree.Input.Mouse.Position)
+            && Tree.Input.Mouse.Position.y < listBottom
+            && Tree.Input.Mouse.MouseWheelTicksDelta != 0)
         {
-            _scroll = Math.Clamp(_scroll - Input.Mouse.MouseWheelTicksDelta * 20, 0, maxScroll);
+            _scroll = Math.Clamp(_scroll - Tree.Input.Mouse.MouseWheelTicksDelta * 20, 0, maxScroll);
         }
         else
         {
@@ -174,7 +174,7 @@ public class ShapeListPanel : Rect
         }
         if (dragging && Assets.TryGetShader("builtin", "ui-rect", out var lineShader))
         {
-            float mouseY = Input.Mouse.Position.y;
+            float mouseY = Tree.Input.Mouse.Position.y;
             float lineY = Rect.y + Rect.h;
             foreach (var child in Children.OfType<ShapeRow>())
             {
@@ -245,7 +245,7 @@ public class ShapeRow : Rect
     public bool ReorderArmed() => _armed;
 
     public bool ReorderDragging =>
-        _armed && Math.Abs(Input.Mouse.Position.y - _pressY) > DragThreshold;
+        _armed && Math.Abs(Tree.Input.Mouse.Position.y - _pressY) > DragThreshold;
 
     public override void OnUpdate()
     {
@@ -275,10 +275,10 @@ public class ShapeRow : Rect
     {
         if (node_event == NodeEvent.MouseHold)
         {
-            if (Input.Mouse.IsLeftPressed && Rect.Contains(Input.Mouse.Position))
+            if (Tree.Input.Mouse.IsLeftPressed)
             {
-                _pressDeleteZone = Input.Mouse.Position.x >= Rect.x + Rect.w - DeleteW;
-                _pressY = Input.Mouse.Position.y;
+                _pressDeleteZone = Tree.Input.Mouse.Position.x >= Rect.x + Rect.w - DeleteW;
+                _pressY = Tree.Input.Mouse.Position.y;
                 _armed = !_pressDeleteZone;
                 Editor.Selection.SelectShape(ShapeId);
             }
@@ -288,10 +288,10 @@ public class ShapeRow : Rect
         if (node_event != NodeEvent.MouseClick)
             return;
 
-        if (_armed && ReorderDragging && Panel.Rect.Contains(Input.Mouse.Position))
-            Editor.MoveShapeTo(ShapeId, Panel.DropIndexFor(Input.Mouse.Position.y));
-        else if (_pressDeleteZone && Rect.Contains(Input.Mouse.Position)
-            && Input.Mouse.Position.x >= Rect.x + Rect.w - DeleteW)
+        if (_armed && ReorderDragging)
+            Editor.MoveShapeTo(ShapeId, Panel.DropIndexFor(Tree.Input.Mouse.Position.y));
+        else if (_pressDeleteZone && Rect.Contains(Tree.Input.Mouse.Position)
+            && Tree.Input.Mouse.Position.x >= Rect.x + Rect.w - DeleteW)
             Editor.DeleteShape(ShapeId);
 
         _armed = false;
@@ -383,11 +383,10 @@ public class BoneRow : Rect
 
     public override void OnEvent(NodeEvent node_event)
     {
-        if (node_event != NodeEvent.MouseClick
-            || !Rect.Contains(Input.Mouse.Position))
+        if (node_event != NodeEvent.MouseClick)
             return;
 
-        if (Input.Mouse.Position.x >= Rect.x + Rect.w - DeleteW)
+        if (Tree.Input.Mouse.Position.x >= Rect.x + Rect.w - DeleteW)
             Editor.DeleteBone(BoneId);
         else
             Editor.Selection.SelectBone(BoneId);

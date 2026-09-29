@@ -1,27 +1,40 @@
 ﻿namespace WaffleEngine.UI.Nodes;
 
-public class SplitView(int size, int gap) : INode
+public class SplitView(bool left, int size, int gap) : INode
 {
     public int Size = size;
     private bool _resizing;
 
     public override void OnEvent(NodeEvent node_event)
     {
-        if (node_event == NodeEvent.MouseHold)
+        int left_size = left ? Size : Rect.w - Size;
+        
+        if (Tree.Input.Mouse.IsLeftPressed)
         {
-            if (Math.Abs((int)Input.Mouse.Position.x - (Rect.x + Size)) < gap / 2)
+            if (Math.Abs((int)Tree.Input.Mouse.Position.x - (Rect.x + left_size)) < gap / 2)
             {
-                Size = (int)Input.Mouse.Position.x - Rect.x;
+                _resizing = true;
             }
+        } 
+        else if (node_event == NodeEvent.MouseClick)
+        {
+            _resizing = false;
         }
     }
 
     public override void OnUpdate()
     {
+        if (_resizing)
+        {
+            Size = left ? (int)Tree.Input.Mouse.Position.x - Rect.x : Rect.w - ((int)Tree.Input.Mouse.Position.x - Rect.x);
+        }
+        
+        int left_size = left ? Size : Rect.w - Size;
+        
         Children[0].SetRect(new IRect(
             Rect.x,
             Rect.y,
-            Size - gap / 2,
+            left_size - gap / 2,
             Rect.h
         ));
 
@@ -30,9 +43,9 @@ public class SplitView(int size, int gap) : INode
         }
         
         Children[1].SetRect(new IRect(
-            Rect.x + Size + gap / 2,
+            Rect.x + left_size + gap / 2,
             Rect.y,
-            Rect.w - Size - gap / 2,
+            Rect.w - left_size - gap / 2,
             Rect.h
         ));
     }

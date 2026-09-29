@@ -62,11 +62,13 @@ internal sealed class WindowEventSystemSdl : IWindowEventSystem
 
         if (WindowManager.TryGetWindowWithId(sdlEvent.WindowID, out var window))
         {
+            float scale = window.GetDisplayScale();
+            
             window.WindowInput.UpdateMouseMotion(
-                sdlEvent.X * window.GetDisplayScale(), 
-                sdlEvent.Y * window.GetDisplayScale(), 
-                sdlEvent.XRel * window.GetDisplayScale(), 
-                sdlEvent.YRel * window.GetDisplayScale());
+                sdlEvent.X * scale, 
+                sdlEvent.Y * scale, 
+                sdlEvent.XRel * scale, 
+                sdlEvent.YRel * scale);
         }
     }
     

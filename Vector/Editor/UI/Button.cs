@@ -76,8 +76,7 @@ public class Button : Rect
 
     public override void OnEvent(NodeEvent node_event)
     {
-        if (!Dimmed && node_event == NodeEvent.MouseClick
-            && Rect.Contains(Input.Mouse.Position))
+        if (!Dimmed && node_event == NodeEvent.MouseClick)
         {
             OnClick?.Invoke();
         }
