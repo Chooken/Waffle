@@ -2,52 +2,79 @@ using WaffleEngine;
 
 namespace Vector.Editor.UI;
 
-// Single source of truth for editor look-and-feel. All values are
-// display-space (gamma-encoded) colors — Oklch/Oklab statics already arrive
-// that way, raw floats here were picked on screen. Nothing outside this
-// file should hardcode a UI color or metric.
+// The whole editor theme: 8 colors. Everything else is an alias below or a
+// WithAlpha derivation at the use site — add a color here only if no
+// existing one (possibly alpha-adjusted) does the job. All values are
+// display-space (gamma-encoded); Oklch/Oklab statics already arrive that way.
 public static class Theme
 {
-    // Window background behind everything.
-    public static readonly Color SceneBackground = new(0.08f, 0.09f, 0.11f, 1f);
+    public static int Generation { get; private set; }
+    public static bool IsDark { get; private set; } = true;
 
-    // Panels.
-    public static readonly Color BarBackground = new(0.11f, 0.12f, 0.14f, 1f);
-    public static readonly Color PanelBackground = new(0.13f, 0.14f, 0.17f, 1f);
+    // Runtime scale for curve handles (Settings).
+    public static float HandleScale = 1f;
 
-    // Buttons / rows.
-    public static readonly Color ControlNormal = new(0.16f, 0.17f, 0.20f, 1f);
-    public static readonly Color ControlHover = new(0.24f, 0.26f, 0.31f, 1f);
-    public static readonly Color ControlSelected = new(0.20f, 0.36f, 0.52f, 1f);
-    public static readonly Color ControlBorderColor = new(0.55f, 0.75f, 1f, 1f);
-    public static readonly Color RowHover = new(0.22f, 0.24f, 0.29f, 1f);
-    public static readonly Color RowNormal = new(0.17f, 0.18f, 0.22f, 1f);
+    public static Color Bg;
+    public static Color BgLight;
+    public static Color Text;
+    public static Color TextDim;
+    public static Color Border;
+    public static Color Accent;
+    public static Color AccentLight;
+    public static Color Highlight;
 
-    // Slider track.
-    public static readonly Color TrackBackground = new(0.10f, 0.11f, 0.13f, 1f);
-    public static readonly Color TrackRest = new(0.25f, 0.27f, 0.32f, 1f);
-    public static readonly Color TrackFill = new(0.35f, 0.58f, 0.88f, 1f);
+    // Fixed universal constants (not theme choices).
+    public static readonly Color Scrim = new(0, 0, 0, 0.45f);
 
-    // Canvas viewport.
-    public static readonly Color CanvasBackdrop = new(0.07f, 0.08f, 0.10f, 1f);
-    public static readonly Color CanvasBorder = new(0.55f, 0.75f, 1f, 1f);
+    // Curve handles, expressed in the palette so the count stays at 8.
+    // Bone joints share AccentLight with the open-start marker; the two
+    // never collide because Bone mode hides curve handles.
+    public static Color HandleAnchor => TextDim;
+    public static Color HandleOpenStart => AccentLight;
+    public static Color HandleControl => Accent;
+    public static Color HandleBone => AccentLight;
+    public static Color HandleSelected => Text;
+    public static Color HandleBorder => Text;
+    public static Color ChipFallback => TextDim;
 
-    // Curve handles (all display-ready Oklch statics — no conversion).
-    public static readonly Color HandleAnchor = Color.Gray;
-    public static readonly Color HandleOpenStart = Color.Lime;
-    public static readonly Color HandleControl = Color.Orange;
-    public static readonly Color HandleSelected = Color.White;
-    public static readonly Color HandleBorderColor = Color.White;
+    static Theme() => ApplyDark();
 
-    public static readonly Color Text = Color.White;
-    public static readonly Color ChipFallback = Color.Gray;
+    public static void ApplyDark()
+    {
+        IsDark = true;
+        Bg = new Color(0.08f, 0.09f, 0.11f, 1f);
+        BgLight = new Color(0.15f, 0.16f, 0.19f, 1f);
+        Text = Color.White;
+        TextDim = new Color(0.62f, 0.63f, 0.66f, 1f);
+        Border = new Color(1f, 1f, 1f, 0.10f);
+        Accent = Color.Purple;
+        AccentLight = new Color(0.35f, 0.68f, 1f, 1f);
+        Highlight = new Color(0.22f, 0.24f, 0.29f, 1f);
+        Generation++;
+    }
+
+    public static void ApplyLight()
+    {
+        IsDark = false;
+        Bg = new Color(0.93f, 0.93f, 0.94f, 1f);
+        BgLight = new Color(1f, 1f, 1f, 1f);
+        Text = new Color(0.31f, 0.31f, 0.32f, 1f);
+        TextDim = new Color(0.65f, 0.65f, 0.67f, 1f);
+        Border = new Color(0f, 0f, 0f, 0.14f);
+        Accent = Color.Purple;
+        AccentLight = new Color(0.45f, 0.72f, 1f, 1f);
+        Highlight = new Color(0.88f, 0.88f, 0.90f, 1f);
+        Generation++;
+    }
 
     public const float DisabledAlpha = 0.45f;
 
     // Layout metrics (pixels).
-    public const int CornerRadius = 6;
+    public const int CornerRadius = 8;
     public const int ChipRadius = 4;
-    public const float ControlBorderWidth = 2f;
+    public const int ChipSize = 14;
+    public const int ChipGap = 8;
+    public const float ControlBorderWidth = 1f;
     public const float HandleBorderWidth = 2.5f;
     public const float ChipBorder = 1f;
     public const float SwatchBorder = 1.5f;
@@ -57,9 +84,9 @@ public static class Theme
     public const int GroupGap = 12;
     public const int RowHeight = 30;
     public const int RowGap = 4;
-    public const int PanelPad = 6;
+    public const int PanelPad = 12;
     public const int HeaderHeight = 28;
-    public const int FooterHeight = 34;
+    public const int FooterHeight = 68;
     public const int SliderHeight = 28;
     public const int HandleAnchorSize = 10;
     public const int HandleControlSize = 7;
@@ -67,5 +94,7 @@ public static class Theme
     public const float CanvasPad = 10f;
     public const float CanvasBorderWidth = 2f;
     public const int SideWidth = 220;
-    public const int ToolbarHeight = 38;
+    public const int InspectorWidth = 240;
+    public const int ToolbarHeight = 52;
+    public const int StatusHeight = 28;
 }

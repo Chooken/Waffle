@@ -419,6 +419,17 @@ public struct Rect
             overlap_max.x - overlap_min.x, 
             overlap_max.y - overlap_min.y);
     }
+
+    public Rect Inset(float pad) => Inset(pad, pad, pad, pad);
+
+    public Rect Inset(float left, float top, float right, float bottom)
+    {
+        float x = this.x + left;
+        float y = this.y + top;
+        float w = Math.Max(0, this.w - left - right);
+        float h = Math.Max(0, this.h - top - bottom);
+        return new Rect(x, y, w, h);
+    }
 }
 
 [StructLayout(LayoutKind.Sequential, Size = 8)]
@@ -603,5 +614,16 @@ public struct IRect
             overlap_min.y, 
             overlap_max.x - overlap_min.x, 
             overlap_max.y - overlap_min.y);
+    }
+
+    public IRect Inset(int pad) => Inset(pad, pad, pad, pad);
+
+    public IRect Inset(int left, int top, int right, int bottom)
+    {
+        int x = this.x + left;
+        int y = this.y + top;
+        int w = Math.Max(0, this.w - left - right);
+        int h = Math.Max(0, this.h - top - bottom);
+        return new IRect(x, y, w, h);
     }
 }

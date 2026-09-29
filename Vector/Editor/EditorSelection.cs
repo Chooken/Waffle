@@ -16,6 +16,7 @@ public struct PointSelection
 public sealed class EditorSelection
 {
     public int ActiveShapeId = -1;
+    public int ActiveBoneId = -1;
     private readonly List<PointSelection> _points = new();
 
     public IReadOnlyList<PointSelection> Points => _points;
@@ -63,13 +64,25 @@ public sealed class EditorSelection
 
     public void ClearPoints() => _points.Clear();
 
+    public void SelectBone(int boneId)
+    {
+        ActiveBoneId = boneId;
+    }
+
+    public void ClearBone()
+    {
+        ActiveBoneId = -1;
+    }
+
     public void Clear()
     {
         ActiveShapeId = -1;
+        ActiveBoneId = -1;
         _points.Clear();
     }
 
     public bool IsShapeActive(int shapeId) => ActiveShapeId == shapeId;
+    public bool IsBoneActive(int boneId) => ActiveBoneId == boneId;
 
     public bool IsPointActive(int shapeId, int pointIndex)
     {

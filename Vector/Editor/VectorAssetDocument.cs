@@ -25,6 +25,12 @@ public sealed class Shape
     public bool Closed = true;
     public Curve Curve = new(new Point(Vector2.Zero));
 
+    // Rigid skinning, parallel to Curve.Points: bound bone id per point
+    // (-1 = static) and the point position at bind time. Structural edits
+    // keep these aligned — see RemoveAnchor / AddCurvePoint / CloseLoop.
+    public List<int> BoneBinding = new();
+    public List<Vector2> BindPose = new();
+
     public int AnchorCount => Closed ? Curve.Points.Count / 2 : (Curve.Points.Count + 1) / 2;
 
     public Shape Clone()
@@ -36,7 +42,81 @@ public sealed class Shape
             Color = Color,
             Closed = Closed,
             Curve = Curve.Clone(),
+            BoneBinding = new List<int>(BoneBinding),
+            BindPose = new List<Vector2>(BindPose),
         };
+    }
+
+    // Direct point write that keeps skinning attached: the bind pose follows
+    // so the bone keeps its current offset instead of snapping the point back.
+    public void SetPoint(int index, Vector2 position)
+    {
+        Curve.Points[index] = new Point(position);
+        EnsureSkinArrays();
+        BindPose[index] = position;
+    }
+
+    // Linear append that keeps skinning aligned (new points bind nearest).
+    public void AddCurvePoint(Vector2 position, IReadOnlyList<Bone> bones,
+        IReadOnlyDictionary<int, RigidPose> worlds)
+    {
+        Curve.AddLinear(new Point(position));
+        SyncNewPoints(bones, worlds);
+    }
+
+    public void CloseLoop(IReadOnlyList<Bone> bones,
+        IReadOnlyDictionary<int, RigidPose> worlds)
+    {
+        Curve.Close();
+        SyncNewPoints(bones, worlds);
+    }
+
+    // Bind any points appended outside the helpers above.
+    public void SyncNewPoints(IReadOnlyList<Bone> bones,
+        IReadOnlyDictionary<int, RigidPose> worlds)
+    {
+        EnsureSkinArrays();
+        for (int i = BindPose.Count; i < Curve.Points.Count; i++)
+        {
+            Vector2 p = Curve.Points[i].Position;
+            BindPose.Add(p);
+            BoneBinding.Add(Skinning.NearestBone(p, bones, worlds));
+        }
+    }
+
+    // Bind every point to its nearest bone and snapshot rest state.
+    // After this the pose is identity everywhere (no visual jump).
+    public void AutoBind(IReadOnlyList<Bone> bones,
+        IReadOnlyDictionary<int, RigidPose> worlds)
+    {
+        foreach (var bone in bones)
+        {
+            if (worlds.TryGetValue(bone.Id, out var world))
+            {
+                bone.BindPosition = world.Position;
+                bone.BindAngle = world.AngleDeg;
+            }
+        }
+        EnsureSkinArrays();
+        BindPose.Clear();
+        BoneBinding.Clear();
+        foreach (var pt in Curve.Points)
+        {
+            BindPose.Add(pt.Position);
+            BoneBinding.Add(Skinning.NearestBone(pt.Position, bones, worlds));
+        }
+    }
+
+    private void EnsureSkinArrays()
+    {
+        while (BoneBinding.Count < Curve.Points.Count)
+            BoneBinding.Add(-1);
+        while (BindPose.Count < Curve.Points.Count)
+            BindPose.Add(Curve.Points[BindPose.Count].Position);
+        while (BoneBinding.Count > Curve.Points.Count)
+            BoneBinding.RemoveAt(BoneBinding.Count - 1);
+        while (BindPose.Count > Curve.Points.Count)
+            BindPose.RemoveAt(BindPose.Count - 1);
     }
 
     // Remove the anchor at pointIndex (must be even). The anchor and one
@@ -50,6 +130,27 @@ public sealed class Shape
         var pts = Curve.Points;
         if (pointIndex < 0 || pointIndex >= pts.Count || pointIndex % 2 != 0)
             return false;
+        EnsureSkinArrays();
+
+        // Every structural edit splices the skin arrays identically so they
+        // stay parallel to Curve.Points.
+        void RemoveAt(int index)
+        {
+            pts.RemoveAt(index);
+            BoneBinding.RemoveAt(index);
+            BindPose.RemoveAt(index);
+        }
+        void RemoveRange(int index, int count)
+        {
+            pts.RemoveRange(index, count);
+            BoneBinding.RemoveRange(index, count);
+            BindPose.RemoveRange(index, count);
+        }
+        void SetMidpoint(int index, Vector2 a, Vector2 b)
+        {
+            pts[index] = Midpoint(a, b);
+            BindPose[index] = pts[index].Position;
+        }
 
         if (Closed)
         {
@@ -57,24 +158,24 @@ public sealed class Shape
                 return false;
             if (pointIndex == 0)
             {
-                pts.RemoveRange(0, 2);
-                pts[^1] = Midpoint(pts[^2].Position, pts[0].Position);
+                RemoveRange(0, 2);
+                SetMidpoint(pts.Count - 1, pts[^2].Position, pts[0].Position);
             }
             else if (pointIndex == pts.Count - 2)
             {
                 Vector2 prev = pts[pointIndex - 2].Position;
                 Vector2 first = pts[0].Position;
-                pts.RemoveAt(pointIndex);
-                pts.RemoveAt(pointIndex - 1);
-                pts[pointIndex - 1] = Midpoint(prev, first);
+                RemoveAt(pointIndex);
+                RemoveAt(pointIndex - 1);
+                SetMidpoint(pointIndex - 1, prev, first);
             }
             else
             {
                 Vector2 prev = pts[pointIndex - 2].Position;
                 Vector2 next = pts[pointIndex + 2].Position;
-                pts.RemoveAt(pointIndex);
-                pts.RemoveAt(pointIndex - 1);
-                pts[pointIndex - 1] = Midpoint(prev, next);
+                RemoveAt(pointIndex);
+                RemoveAt(pointIndex - 1);
+                SetMidpoint(pointIndex - 1, prev, next);
             }
         }
         else
@@ -84,15 +185,15 @@ public sealed class Shape
             if (pointIndex == 0 || pointIndex == pts.Count - 1)
             {
                 int at = pointIndex == 0 ? 0 : pointIndex - 1;
-                pts.RemoveRange(at, 2);
+                RemoveRange(at, 2);
             }
             else
             {
                 Vector2 prev = pts[pointIndex - 2].Position;
                 Vector2 next = pts[pointIndex + 2].Position;
-                pts.RemoveAt(pointIndex);
-                pts.RemoveAt(pointIndex - 1);
-                pts[pointIndex - 1] = Midpoint(prev, next);
+                RemoveAt(pointIndex);
+                RemoveAt(pointIndex - 1);
+                SetMidpoint(pointIndex - 1, prev, next);
             }
         }
 
@@ -211,16 +312,29 @@ public sealed class Shape
     }
 }
 
-// Future-proofing hook for bones/animation (interfaces only in Phase 1).
-// The document owns the bind pose; a future AnimationSystem will implement
-// IVertexDeformer and pass it to the renderer without changing the file format
-// beyond the already-reserved `bones` node.
+// Skeletal rig. Bones carry a hierarchical LOCAL pose (current) plus a
+// snapshotted BIND world pose; Skinning maps bind->current per bound point.
+// Angles are degrees. ParentId -1 = root.
 public sealed class Bone
 {
     public int Id;
     public string Name = "Bone";
     public int ParentId = -1;
+    public Vector2 LocalPosition;
+    public float LocalAngle;
     public Vector2 BindPosition;
+    public float BindAngle;
+
+    public Bone Clone() => new()
+    {
+        Id = Id,
+        Name = Name,
+        ParentId = ParentId,
+        LocalPosition = LocalPosition,
+        LocalAngle = LocalAngle,
+        BindPosition = BindPosition,
+        BindAngle = BindAngle,
+    };
 }
 
 public interface IVertexDeformer
@@ -236,13 +350,21 @@ public sealed class NullDeformer : IVertexDeformer
 
 public sealed class VectorAssetDocument : ISerializable, IDeserializable<VectorAssetDocument>
 {
-    public const int CurrentVersion = 2;
+    public const int CurrentVersion = 3;
 
     public IVector2 CanvasSize = new(32, 32);
     public List<Shape> Shapes = new();
-    public List<Bone> Bones = new(); // empty in Phase 1, reserved for skeleton
+    public List<Bone> Bones = new();
     public int NextShapeId;
     public int NextBoneId;
+
+    public Bone? FindBone(int boneId)
+    {
+        foreach (var b in Bones)
+            if (b.Id == boneId)
+                return b;
+        return null;
+    }
 
     public static VectorAssetDocument CreateDefault()
     {
@@ -267,7 +389,7 @@ public sealed class VectorAssetDocument : ISerializable, IDeserializable<VectorA
         foreach (var s in Shapes)
             copy.Shapes.Add(s.Clone());
         foreach (var b in Bones)
-            copy.Bones.Add(new Bone { Id = b.Id, Name = b.Name, ParentId = b.ParentId, BindPosition = b.BindPosition });
+            copy.Bones.Add(b.Clone());
         return copy;
     }
 
@@ -326,6 +448,20 @@ public sealed class VectorAssetDocument : ISerializable, IDeserializable<VectorA
                 emitter.WriteFloat(p.Position.y);
             }
             emitter.EndSequence();
+            // Rigid skinning parallel to points: bind positions + bone ids.
+            emitter.WriteString("bind");
+            emitter.BeginSequence(SequenceStyle.Flow);
+            foreach (var p in s.BindPose)
+            {
+                emitter.WriteFloat(p.x);
+                emitter.WriteFloat(p.y);
+            }
+            emitter.EndSequence();
+            emitter.WriteString("skinning");
+            emitter.BeginSequence(SequenceStyle.Flow);
+            foreach (int boneId in s.BoneBinding)
+                emitter.WriteInt32(boneId);
+            emitter.EndSequence();
             emitter.EndMapping();
         }
         emitter.EndSequence();
@@ -343,9 +479,18 @@ public sealed class VectorAssetDocument : ISerializable, IDeserializable<VectorA
             emitter.WriteInt32(b.ParentId);
             emitter.WriteString("pos");
             emitter.BeginSequence(SequenceStyle.Flow);
+            emitter.WriteFloat(b.LocalPosition.x);
+            emitter.WriteFloat(b.LocalPosition.y);
+            emitter.EndSequence();
+            emitter.WriteString("angle");
+            emitter.WriteFloat(b.LocalAngle);
+            emitter.WriteString("bindPos");
+            emitter.BeginSequence(SequenceStyle.Flow);
             emitter.WriteFloat(b.BindPosition.x);
             emitter.WriteFloat(b.BindPosition.y);
             emitter.EndSequence();
+            emitter.WriteString("bindAngle");
+            emitter.WriteFloat(b.BindAngle);
             emitter.EndMapping();
         }
         emitter.EndSequence();
@@ -542,6 +687,15 @@ public sealed class VectorAssetDocument : ISerializable, IDeserializable<VectorA
                 case "points":
                     ReadRawPoints(ref parser, shape);
                     break;
+                case "bind":
+                    shape.BindPose.Clear();
+                    var bp = ReadFloatList(ref parser);
+                    for (int i = 0; i + 1 < bp.Count; i += 2)
+                        shape.BindPose.Add(new Vector2(bp[i], bp[i + 1]));
+                    break;
+                case "skinning":
+                    shape.BoneBinding = ReadIntList(ref parser);
+                    break;
                 case "anchors":
                     // v1 files: migrate once via the global smoother. Their
                     // colors were stored linear; encode to display gamma so
@@ -567,6 +721,19 @@ public sealed class VectorAssetDocument : ISerializable, IDeserializable<VectorA
         }
         if (legacyColors && hasColor)
             shape.Color = shape.Color.ToGamma();
+        // v2 files predate skinning: rest pose = current points, unbound.
+        if (shape.BindPose.Count != shape.Curve.Points.Count)
+        {
+            shape.BindPose.Clear();
+            foreach (var pt in shape.Curve.Points)
+                shape.BindPose.Add(pt.Position);
+        }
+        if (shape.BoneBinding.Count != shape.Curve.Points.Count)
+        {
+            shape.BoneBinding.Clear();
+            for (int i = 0; i < shape.Curve.Points.Count; i++)
+                shape.BoneBinding.Add(-1);
+        }
         parser.Read(); // skip MappingEnd
         return shape;
     }
@@ -668,8 +835,15 @@ public sealed class VectorAssetDocument : ISerializable, IDeserializable<VectorA
                     case "parent": bone.ParentId = ReadIntScalar(ref parser); break;
                     case "pos":
                         var f = ReadFloatList(ref parser);
-                        if (f.Count >= 2) bone.BindPosition = new Vector2(f[0], f[1]);
+                        if (f.Count >= 2) bone.LocalPosition = new Vector2(f[0], f[1]);
                         break;
+                    case "angle": bone.LocalAngle = ReadFloat(ref parser, 0f); break;
+                    case "bindPos":
+                        var bp = ReadFloatList(ref parser);
+                        if (bp.Count >= 2) bone.BindPosition = new Vector2(bp[0], bp[1]);
+                        else bone.BindPosition = bone.LocalPosition;
+                        break;
+                    case "bindAngle": bone.BindAngle = ReadFloat(ref parser, 0f); break;
                     default: parser.SkipCurrentNode(); break;
                 }
             }
@@ -690,6 +864,22 @@ public sealed class VectorAssetDocument : ISerializable, IDeserializable<VectorA
         int v = parser.GetScalarAsInt32();
         parser.Read();
         return v;
+    }
+
+    private static float ReadFloat(ref YamlParser parser, float fallback)
+    {
+        if (parser.CurrentEventType != ParseEventType.Scalar)
+        {
+            parser.SkipCurrentNode();
+            return fallback;
+        }
+        if (parser.TryGetScalarAsFloat(out float v))
+        {
+            parser.Read();
+            return v;
+        }
+        parser.Read();
+        return fallback;
     }
 
     private static string ReadStringScalar(ref YamlParser parser, string fallback)

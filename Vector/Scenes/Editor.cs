@@ -19,7 +19,9 @@ public class Editor : IScene
     public AssetEditor AssetEditor;
     public Toolbar Toolbar;
     public ShapeListPanel ShapeList;
-    public ColorPanel Fill;
+    public InspectorPanel Inspector;
+    public StatusBar Status;
+    public SettingsPopup Popup;
     
     public bool OnSceneLoaded()
     {
@@ -28,7 +30,7 @@ public class Editor : IScene
             return false;
         }
 
-        if (!WindowManager.TryOpenMainWindow("Editor", 800, 600, out Window))
+        if (!WindowManager.TryOpenMainWindow("Vector", 1280, 800, out Window))
         {
             return false;
         }
@@ -38,16 +40,31 @@ public class Editor : IScene
         AssetEditor = new AssetEditor(new IVector2(32, 32));
         Toolbar = new Toolbar { Editor = AssetEditor };
         ShapeList = new ShapeListPanel { Editor = AssetEditor };
-        Fill = new ColorPanel { Editor = AssetEditor };
+        Inspector = new InspectorPanel { Editor = AssetEditor };
+        Status = new StatusBar { Editor = AssetEditor };
+        Popup = new SettingsPopup { Editor = AssetEditor };
+        AssetEditor.Popup = Popup;
 
-        // Panels first so they win mouse events over the viewport.
+        // Popup first so the modal wins mouse events over everything.
+        Rect root = new Rect();
+        NodeTree = new NodeTree(root);
+        root.AddNode(Popup);
         EditorLayout layout = new();
-        NodeTree = new NodeTree(layout);
-        layout.AddNode(Toolbar);
-        layout.AddNode(ShapeList);
-        layout.AddNode(Fill);
-        layout.AddNode(AssetEditor);
-        NodeTree.SetClearColor(Theme.SceneBackground);
+        
+        INode topbar_splitview = root.AddNode(new FixedSplitView(Theme.ToolbarHeight, true, false));
+        topbar_splitview.AddNode(Toolbar);
+
+        INode bottombar_splitview = topbar_splitview.AddNode(new FixedSplitView(Theme.StatusHeight, false, false));
+        bottombar_splitview.AddNode(Status);
+        
+        INode shapelist_splitview = bottombar_splitview.AddNode(new SplitView(Theme.SideWidth, 12));
+        shapelist_splitview.AddNode(ShapeList);
+
+        INode inspector_splitview = shapelist_splitview.AddNode(new SplitView(Theme.SideWidth, 12));
+        inspector_splitview.AddNode(AssetEditor);
+        inspector_splitview.AddNode(Inspector);
+        
+        NodeTree.SetClearColor(Theme.Bg);
         
         return true;
     }
@@ -62,6 +79,8 @@ public class Editor : IScene
 
     private void Update()
     {
+        // Live so theme switches re-tint the background immediately.
+        NodeTree.SetClearColor(Theme.Bg);
         NodeTree.Update(SwapchainTexture);
     }
 
@@ -69,11 +88,30 @@ public class Editor : IScene
     {
         ImQueue queue = new ImQueue();
         queue.TryGetSwapchainTexture(Window, ref SwapchainTexture);
-        
+
         AssetEditor.RenderAsset(queue);
-        
+
+        // The modal draws in an overlay pass so it always lands on top of
+        // the asset; event priority is separate (popup is the root's first
+        // child, so it still wins mouse while open).
+        Popup.SetEnabled(false);
         NodeTree.Draw(queue, SwapchainTexture, true);
-        
+        if (Popup.IsOpen)
+        {
+            Popup.SetEnabled(true);
+            var overlay = queue.AddRenderPass(new ColorTargetSettings
+            {
+                ClearColor = new Color(0, 0, 0, 0),
+                GpuTexture = SwapchainTexture,
+                LoadOperation = LoadOperation.Load,
+                StoreOperation = StoreOperation.Store,
+            });
+            Popup.Draw(overlay, NodeTree.UnitRect);
+            overlay.End();
+            Popup.SetEnabled(false);
+        }
+        Popup.SetEnabled(Popup.IsOpen);
+
         queue.Submit();
     }
 

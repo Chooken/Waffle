@@ -15,26 +15,33 @@ public sealed class UiText
     public const string FontPath = "builtin/fonts/Nunito-Regular.ttf";
     public const int FontSize = 16;
 
-    private static Font? _font;
-    private static bool _fontTried;
+    private static readonly Dictionary<string, Font?> _fonts = new();
 
     private AtlasedText? _text;
     private string _current = "";
-    private bool _dirty;
+    private bool _dirty = true;
+    private int _gen = -1;
+    private int _builtSize = -1;
+    private string _builtFont = "";
     private Vector2 _size;
+
+    // Font file for this label (UiText.FontPath default, MaterialIcons.Font
+    // for glyphs). Point size for this label (headers use smaller type).
+    public string FontFile = FontPath;
+    public int TextSize = FontSize;
+
+    // Fixed color, ignoring theme switches. Null follows Theme.Text.
+    public Color? TextColorOverride;
 
     public Vector2 Size => _size;
 
-    private static bool TryFont(out Font? font)
+    private static bool TryFont(string path, int size, out Font? font)
     {
-        if (_fontTried)
-        {
-            font = _font;
+        string key = $"{path}_{size}";
+        if (_fonts.TryGetValue(key, out font))
             return font is not null;
-        }
-        _fontTried = true;
-        font = FontLoader.TryGetFont(FontPath, FontSize, out var loaded) ? loaded : null;
-        _font = font;
+        font = FontLoader.TryGetFont(path, size, out var loaded) ? loaded : null;
+        _fonts[key] = font;
         return font is not null;
     }
 
@@ -48,14 +55,42 @@ public sealed class UiText
 
     public void Sync()
     {
+        // Theme switches bake a new text color; rebuild then (old native
+        // object is dropped — switches are rare). Fixed overrides skip this.
+        if (TextColorOverride is null && _gen != Theme.Generation)
+        {
+            _gen = Theme.Generation;
+            _text = null;
+            _dirty = true;
+        }
+        if (TextSize != _builtSize || FontFile != _builtFont)
+        {
+            _text = null;
+            _dirty = true;
+            _builtSize = TextSize;
+            _builtFont = FontFile;
+        }
         if (!_dirty)
             return;
-        if (!TryFont(out var font) || font is null)
+        // Empty strings have no geometry: stay textless instead of building
+        // an empty native object (which also logs every time).
+        if (_current.Length == 0)
+        {
+            _text = null;
+            _size = Vector2.Zero;
+            _dirty = false;
             return;
+        }
+        if (!TryFont(FontFile, TextSize, out var font) || font is null)
+            return;
+        Color color = TextColorOverride ?? Theme.Text;
         if (_text is null)
-            _text = new AtlasedText(_current, font, Theme.Text);
+            _text = new AtlasedText(_current, font, color);
         else
+        {
             _text.SetText(_current);
+            _text.SetColor(color);
+        }
         _text.Update();
         _size = _text.GetSize();
         _dirty = false;

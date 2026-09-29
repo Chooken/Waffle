@@ -31,8 +31,10 @@ public class AtlasedText
         }
 
         _fontSize = (int)font.Size;
-        
-        Handle = TTF.CreateText(_textEngine, font.Handle, text, (uint)text.Length);
+
+        // Length is UTF-8 bytes, not UTF-16 chars (matters for non-ASCII).
+        Handle = TTF.CreateText(_textEngine, font.Handle, text,
+            (uint)System.Text.Encoding.UTF8.GetByteCount(text));
         TTF.SetTextColor(Handle, color.r255, color.g255, color.b255, color.a255);
         
         var samplerCreateInfo = new SDL.GPUSamplerCreateInfo
@@ -67,7 +69,7 @@ public class AtlasedText
 
     public void SetText(string text)
     {
-        TTF.SetTextString(Handle, text, (uint)text.Length);
+        TTF.SetTextString(Handle, text, (uint)System.Text.Encoding.UTF8.GetByteCount(text));
     }
 
     public void SetWrapWidth(int width)

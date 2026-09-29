@@ -81,5 +81,10 @@ float4 fsMain(VertexOutput input) : SV_Target {
     
     float4 color = lerp(f_Color, f_BorderColor, saturate(alpha + f_BorderSize) * saturate(f_BorderSize));
 
-    return float4(color.rgb, color.a * -alpha);
+    // Coverage is 1 deep inside, gradient across the edge, 0 outside. It must
+    // be saturated separately: -alpha is a raw distance (hundreds inside),
+    // and feeding that to the blend factor makes every fill opaque.
+    float coverage = saturate(-alpha);
+
+    return float4(color.rgb, color.a * coverage);
 }

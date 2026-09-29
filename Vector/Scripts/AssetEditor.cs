@@ -16,7 +16,7 @@ namespace Vector.Scenes;
 // Shortcuts (Phase 1, no modifier combos to stay compatible with EventSpace):
 //   V select · P pen · N new shape · Del delete point · Enter close shape
 //   Z undo · Y redo · G snap toggle · S save · L load · -/= canvas size
-//   Esc clear · Right-drag pan · Wheel zoom (over viewport)
+//   B bone tool · , settings · Esc clear/close · Right-drag pan · Wheel zoom
 public class AssetEditor : INode
 {
     public string AssetPath = "Assets/sprite.vec.yaml";
@@ -26,6 +26,8 @@ public class AssetEditor : INode
     public EditorSelection Selection = new();
     public EditorHistory History = new();
     public ToolMode ActiveToolMode = ToolMode.Select;
+    public EditorSettings Settings = new();
+    public SettingsPopup? Popup;
 
     public GpuTexture AssetTexture;
     public VectorRenderer Renderer = new();
@@ -33,6 +35,12 @@ public class AssetEditor : INode
     private readonly ToolContext _toolCtx = new();
     private readonly SelectTool _selectTool;
     private readonly PenTool _penTool;
+    private readonly BoneTool _boneTool;
+    private ToolDock? _dock;
+
+    // Current bone world poses, refreshed in OnUpdate for drawing. Null when
+    // the document has no bones.
+    private Dictionary<int, RigidPose>? _boneWorlds;
 
     private Vector2 _grabScreen;
     private Vector2 _grabPan;
@@ -40,10 +48,9 @@ public class AssetEditor : INode
     private bool _panning;
     private bool _toolDragging;
 
-    public bool SnapEnabled = true;
-
     public AssetEditor(IVector2 size)
     {
+        Settings = EditorSettings.LoadOrDefault();
         Document = VectorAssetDocument.CreateDefault();
         Document.CanvasSize = size;
         Selection.SelectShape(Document.Shapes.Count > 0 ? Document.Shapes[0].Id : -1);
@@ -56,10 +63,17 @@ public class AssetEditor : INode
         _toolCtx.History = History;
         _selectTool = new SelectTool(_toolCtx);
         _penTool = new PenTool(_toolCtx);
+        _boneTool = new BoneTool(_toolCtx);
 
         if (File.Exists(AssetPath)
             && Yaml.TryDeserialize(AssetPath, out VectorAssetDocument? loaded) && loaded is not null)
             SetDocument(loaded);
+    }
+
+    public override void OnInit()
+    {
+        _dock = new ToolDock { Editor = this };
+        AddNode(_dock);
     }
 
     private static GpuTexture CreateAssetTexture(IVector2 size) => new(
@@ -126,7 +140,7 @@ public class AssetEditor : INode
         if (shape is null || shape.Closed || shape.AnchorCount < 2)
             return;
         History.Checkpoint(Document);
-        shape.Curve.Close();
+        shape.CloseLoop(Document.Bones, Skinning.ComputeWorlds(Document.Bones));
         shape.Closed = true;
     }
 
@@ -173,7 +187,17 @@ public class AssetEditor : INode
     public void GrowCanvas() => SetCanvasSize(Document.CanvasSize.x * 2);
     public void ShrinkCanvas() => SetCanvasSize(Document.CanvasSize.x / 2);
 
-    private IEditorTool ActiveTool => ActiveToolMode == ToolMode.Pen ? _penTool : _selectTool;
+    public void DeleteBone(int boneId) =>
+        Rigging.DeleteBone(Document, History, Selection, boneId);
+
+    public void BindSkin() => Rigging.AutoBindAll(Document, History);
+
+    private IEditorTool ActiveTool => ActiveToolMode switch
+    {
+        ToolMode.Pen => _penTool,
+        ToolMode.Bone => _boneTool,
+        _ => _selectTool,
+    };
 
     public override void OnUpdate()
     {
@@ -193,12 +217,53 @@ public class AssetEditor : INode
         // Reversed: the layers panel reads top-down, so the first shape is
         // fed last and blends front-most. (No depth buffer exists in this
         // pass — overlap order is purely instance order.)
+        // Posed bones deform into scratch curves; untouched rigs feed the
+        // live curves with zero extra cost.
+        _boneWorlds = null;
+        bool posed = false;
+        if (Document.Bones.Count > 0)
+        {
+            _boneWorlds = Skinning.ComputeWorlds(Document.Bones);
+            foreach (var bone in Document.Bones)
+            {
+                if (_boneWorlds.TryGetValue(bone.Id, out var world)
+                    && (world.Position != bone.BindPosition || world.AngleDeg != bone.BindAngle))
+                {
+                    posed = true;
+                    break;
+                }
+            }
+        }
         for (int i = Document.Shapes.Count - 1; i >= 0; i--)
         {
             var shape = Document.Shapes[i];
-            if (shape.Curve.Points.Count > 0)
-                Renderer.AddCurve(shape.Curve, shape.Color);
+            Curve curve = shape.Curve;
+            if (posed && _boneWorlds is not null)
+                curve = DeformedCurve(shape, _boneWorlds);
+            if (curve.Points.Count > 0)
+                Renderer.AddCurve(curve, shape.Color);
         }
+    }
+
+    private Curve DeformedCurve(Shape shape, Dictionary<int, RigidPose> worlds)
+    {
+        var curve = shape.Curve.Clone();
+        for (int i = 0; i < curve.Points.Count; i++)
+        {
+            if (i >= shape.BoneBinding.Count || i >= shape.BindPose.Count)
+                continue;
+            int boneId = shape.BoneBinding[i];
+            if (boneId < 0)
+                continue;
+            var bone = Document.FindBone(boneId);
+            if (bone is null || !worlds.TryGetValue(boneId, out var current))
+                continue;
+            var bind = new RigidPose(bone.BindPosition, bone.BindAngle);
+            if (current.Position == bind.Position && current.AngleDeg == bind.AngleDeg)
+                continue;
+            curve.Points[i] = new Point(Skinning.DeformPoint(shape.BindPose[i], bind, current));
+        }
+        return curve;
     }
 
     private void SyncToolContext()
@@ -206,15 +271,41 @@ public class AssetEditor : INode
         var (center, baseSize) = ComputeLayout();
         _toolCtx.ViewportCenter = center;
         _toolCtx.BaseSize = baseSize;
-        _toolCtx.SnapEnabled = SnapEnabled;
+        _toolCtx.SnapEnabled = Settings.SnapEnabled;
+
+        // Floating dock, left edge of the viewport.
+        if (_dock is not null)
+        {
+            int h = ToolDock.DockHeight();
+            _dock.SetRect(new IRect
+            {
+                x = Rect.x + 12,
+                y = Rect.y + (Rect.h - h) / 2,
+                w = ToolDock.DockWidth,
+                h = h,
+            });
+        }
+    }
+
+    private void ToggleSnap()
+    {
+        Settings.SnapEnabled = !Settings.SnapEnabled;
+        Settings.Save();
     }
 
     private void PollShortcuts()
     {
         var keys = Input.GetDefaultEventSpace;
+        if (Popup is not null && Popup.IsOpen)
+        {
+            if (keys.KeyPressed(Keycode.Escape) || keys.KeyPressed(Keycode.Comma))
+                Popup.Close();
+            return;
+        }
         if (keys.KeyPressed(Keycode.V)) ActiveToolMode = ToolMode.Select;
         else if (keys.KeyPressed(Keycode.P)) ActiveToolMode = ToolMode.Pen;
-        else if (keys.KeyPressed(Keycode.G)) SnapEnabled = !SnapEnabled;
+        else if (keys.KeyPressed(Keycode.B)) ActiveToolMode = ToolMode.Bone;
+        else if (keys.KeyPressed(Keycode.G)) ToggleSnap();
         else if (keys.KeyPressed(Keycode.Z)) Undo();
         else if (keys.KeyPressed(Keycode.Y)) Redo();
         else if (keys.KeyPressed(Keycode.S)) Save();
@@ -222,6 +313,7 @@ public class AssetEditor : INode
         else if (keys.KeyPressed(Keycode.N)) NewShape();
         else if (keys.KeyPressed(Keycode.Minus)) ShrinkCanvas();
         else if (keys.KeyPressed(Keycode.Equals)) GrowCanvas();
+        else if (keys.KeyPressed(Keycode.Comma)) Popup?.Toggle();
         else if (keys.KeyPressed(Keycode.Return) || keys.KeyPressed(Keycode.Escape)
                  || keys.KeyPressed(Keycode.Delete) || keys.KeyPressed(Keycode.Backspace))
         {
@@ -253,6 +345,20 @@ public class AssetEditor : INode
 
     public override void OnEvent(NodeEvent node_event)
     {
+        // The tree dispatches release as MouseClick, not MouseHold — without
+        // this branch tool OnRelease (marquee clear, click-collapse) would
+        // never run in-app.
+        if (node_event == NodeEvent.MouseClick)
+        {
+            if (_toolDragging)
+            {
+                ActiveTool.OnRelease();
+                _toolDragging = false;
+            }
+            _panning = false;
+            return;
+        }
+
         if (node_event != NodeEvent.MouseHold)
             return;
 
@@ -287,11 +393,6 @@ public class AssetEditor : INode
         else if (Input.Mouse.IsLeftDown && _toolDragging)
         {
             ActiveTool.OnDrag(mouseScreen, mouseWorld, _grabWorld);
-        }
-        else if (!Input.Mouse.IsLeftDown && _toolDragging)
-        {
-            ActiveTool.OnRelease();
-            _toolDragging = false;
         }
     }
 
@@ -340,7 +441,7 @@ public class AssetEditor : INode
         {
             Position = new AlignedVector3(quadX - Theme.CanvasPad, quadY - Theme.CanvasPad, 0),
             Size = new Vector2(drawSize + Theme.CanvasPad * 2, drawSize + Theme.CanvasPad * 2),
-            Color = Theme.CanvasBackdrop,
+            Color = Theme.Highlight,
             BorderRadius = new Vector4(Theme.ChipRadius, Theme.ChipRadius, Theme.ChipRadius, Theme.ChipRadius),
             BorderColor = new Vector4(0, 0, 0, 0),
             ScreenSize = screen,
@@ -353,6 +454,23 @@ public class AssetEditor : INode
         if (!Assets.TryGetShader("builtin", "textured-quad", out var quadShader))
             throw new NullReferenceException();
 
+        // Transparency grid in one procedural draw, locked to canvas texels
+        // so squares stay glued to asset pixels at any zoom.
+        if (Assets.TryGetShader("builtin", "ui-checker", out var gridShader))
+        {
+            renderPass.Bind(gridShader);
+            renderPass.SetUniforms(UiCheckerData.GridQuad(
+                new Vector2(quadX, quadY),
+                new Vector2(drawSize, drawSize),
+                new Vector2(screenSize.Width, screenSize.Height),
+                clipMin, clipMax,
+                Document.CanvasSize.x,
+                Settings.GridSquarePixels,
+                Theme.TextDim.WithAlpha(0.4f),
+                Theme.TextDim.WithAlpha(0.15f)));
+            renderPass.DrawPrimatives(6, 1, 0, 0);
+        }
+
         renderPass.Bind(quadShader);
         renderPass.Bind(AssetTexture, 0);
         renderPass.SetUniforms(new TexturedQuad
@@ -363,23 +481,13 @@ public class AssetEditor : INode
             Clip = new Vector4(clipMin.x, clipMin.y, clipMax.x, clipMax.y),
         });
         renderPass.DrawPrimatives(6, 1, 0, 0);
-
+        
         renderPass.Bind(handleShader);
-        renderPass.SetUniforms(new Rect.UIRectData()
-        {
-            Position = new AlignedVector3(quadX, quadY, 0),
-            Size = new Vector2(drawSize, drawSize),
-            Color = new Vector4(0, 0, 0, 0),
-            BorderRadius = Vector4.Zero,
-            BorderColor = Theme.CanvasBorder,
-            ScreenSize = screen,
-            BorderSize = Theme.CanvasBorderWidth,
-            ClipMin = clipMin,
-            ClipMax = clipMax,
-        });
-        renderPass.DrawPrimatives(6, 1, 0, 0);
 
-        renderPass.Bind(handleShader);
+        // Child nodes (floating tool dock). Drawn here — after the canvas,
+        // before selection feedback — rather than via base.OnDraw, which this
+        // override replaces.
+        DrawAllChildren(renderPass, screenSize);
 
         // Marquee overlay while rubber-banding.
         if (_toolCtx.MarqueeActive)
@@ -392,9 +500,9 @@ public class AssetEditor : INode
             {
                 Position = new AlignedVector3(mMin.x, mMin.y, 0),
                 Size = new Vector2(Math.Max(1, mMax.x - mMin.x), Math.Max(1, mMax.y - mMin.y)),
-                Color = new Vector4(0.35f, 0.58f, 0.88f, 0.15f),
+                Color = Theme.Accent.WithAlpha(0.15f),
                 BorderRadius = Vector4.Zero,
-                BorderColor = Theme.CanvasBorder,
+                BorderColor = Theme.Accent,
                 ScreenSize = new Vector2(screenSize.w, screenSize.h),
                 BorderSize = 1.5f,
                 ClipMin = clip.Min,
@@ -405,6 +513,11 @@ public class AssetEditor : INode
 
         foreach (var shape in Document.Shapes)
         {
+            // In Bone mode the rig is the interface: hide curve handles so
+            // the joints read clearly (deformed art still renders underneath).
+            if (ActiveToolMode == ToolMode.Bone)
+                break;
+
             bool isActive = Selection.IsShapeActive(shape.Id);
             bool showAll = isActive || Document.Shapes.Count == 1;
 
@@ -415,11 +528,14 @@ public class AssetEditor : INode
                 if (!showAll && !Selection.IsPointActive(shape.Id, i))
                     continue;
                 bool isAnchor = i % 2 == 0;
+                if (!isAnchor && !Settings.ShowControls)
+                    continue;
                 Vector2 sp = Camera.WorldToScreen(pts[i].Position, center, baseSize);
                 bool selected = Selection.IsPointActive(shape.Id, i);
-                float size = isAnchor ? Theme.HandleAnchorSize : Theme.HandleControlSize;
+                float size = (isAnchor ? Theme.HandleAnchorSize : Theme.HandleControlSize)
+                    * Theme.HandleScale;
                 if (selected)
-                    size += Theme.HandleSelectedGrow;
+                    size += Theme.HandleSelectedGrow * Theme.HandleScale;
                 Vector4 color = selected ? Theme.HandleSelected
                     : isAnchor
                         ? i == 0 && !shape.Closed ? Theme.HandleOpenStart : Theme.HandleAnchor
@@ -427,11 +543,11 @@ public class AssetEditor : INode
 
                 renderPass.SetUniforms(new Rect.UIRectData()
                 {
-                    Position = new AlignedVector3(sp.x, sp.y, 0),
+                    Position = new AlignedVector3(sp.x - size * 0.5f, sp.y - size * 0.5f, 0),
                     Size = new Vector2(size, size),
                     Color = color,
                     BorderRadius = new Vector4(5, 5, 5, 5),
-                    BorderColor = Theme.HandleBorderColor,
+                    BorderColor = Theme.Text,
                     ScreenSize = new Vector2(screenSize.w, screenSize.h),
                     BorderSize = Theme.HandleBorderWidth,
                     ClipMin = clip.Min,
@@ -440,5 +556,70 @@ public class AssetEditor : INode
                 renderPass.DrawPrimatives(6, 1, 0, 0);
             }
         }
+
+        DrawBones(renderPass, screenSize, center, baseSize, clipMin, clipMax);
+    }
+
+    private void DrawBones(ImRenderPass renderPass, IRect screenSize,
+        Vector2 center, float baseSize, Vector2 clipMin, Vector2 clipMax)
+    {
+        if (Document.Bones.Count == 0)
+            return;
+
+        var worlds = _boneWorlds ?? Skinning.ComputeWorlds(Document.Bones);
+        var screen = new Vector2(screenSize.w, screenSize.h);
+
+        foreach (var bone in Document.Bones)
+        {
+            if (!worlds.TryGetValue(bone.Id, out var world))
+                continue;
+            Vector2 joint = Camera.WorldToScreen(world.Position, center, baseSize);
+            bool selected = Selection.IsBoneActive(bone.Id);
+
+            if (bone.ParentId >= 0 && worlds.TryGetValue(bone.ParentId, out var parentWorld))
+            {
+                Vector2 parent = Camera.WorldToScreen(parentWorld.Position, center, baseSize);
+                for (int d = 1; d <= 3; d++)
+                {
+                    float t = d / 4f;
+                    Vector2 dot = new(
+                        parent.x + (joint.x - parent.x) * t,
+                        parent.y + (joint.y - parent.y) * t);
+                    DrawHandle(renderPass, screen, clipMin, clipMax, dot,
+                        5f * Theme.HandleScale, Theme.HandleBone, 2f);
+                }
+            }
+
+            float size = (selected ? 12f : 10f) * Theme.HandleScale;
+            DrawHandle(renderPass, screen, clipMin, clipMax, joint, size,
+                selected ? Theme.HandleSelected : Theme.HandleBone, 4f);
+
+            if (selected)
+            {
+                Vector2 rotate = joint + new Vector2(
+                    BoneTool.RotateHandleDX, BoneTool.RotateHandleDY);
+                DrawHandle(renderPass, screen, clipMin, clipMax, rotate,
+                    8f * Theme.HandleScale, Theme.HandleControl, 4f);
+            }
+        }
+    }
+
+    private static void DrawHandle(ImRenderPass renderPass, Vector2 screen,
+        Vector2 clipMin, Vector2 clipMax, Vector2 pos, float size, Color color,
+        float radius)
+    {
+        renderPass.SetUniforms(new Rect.UIRectData()
+        {
+            Position = new AlignedVector3(pos.x - size * 0.5f, pos.y - size * 0.5f, 0),
+            Size = new Vector2(size, size),
+            Color = color,
+            BorderRadius = new Vector4(radius, radius, radius, radius),
+            BorderColor = Theme.Text,
+            ScreenSize = screen,
+            BorderSize = Theme.HandleBorderWidth,
+            ClipMin = clipMin,
+            ClipMax = clipMax,
+        });
+        renderPass.DrawPrimatives(6, 1, 0, 0);
     }
 }

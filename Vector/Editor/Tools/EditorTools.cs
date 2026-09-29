@@ -7,6 +7,7 @@ public enum ToolMode
 {
     Select,
     Pen,
+    Bone,
 }
 
 public sealed class ToolContext
@@ -23,6 +24,9 @@ public sealed class ToolContext
     public bool MarqueeActive;
     public Vector2 MarqueeStartScreen;
     public Vector2 MarqueeEndScreen;
+
+    public Dictionary<int, RigidPose> BoneWorlds() =>
+        Skinning.ComputeWorlds(Document.Bones);
 }
 
 public interface IEditorTool
@@ -255,7 +259,7 @@ public sealed class SelectTool : IEditorTool
         }
 
         foreach (var grab in _grabs)
-            grab.Shape.Curve.Points[grab.Index] = new Point(grab.Start + delta);
+            grab.Shape.SetPoint(grab.Index, grab.Start + delta);
     }
 
     private void ApplyMarquee()
@@ -273,11 +277,14 @@ public sealed class SelectTool : IEditorTool
         foreach (var shape in _ctx.Document.Shapes)
         {
             var pts = shape.Curve.Points;
-            for (int i = 0; i < pts.Count; i += 2)
+            for (int i = 0; i < pts.Count; i++)
             {
                 Vector2 p = pts[i].Position;
                 if (p.x >= min.x && p.x <= max.x && p.y >= min.y && p.y <= max.y)
-                    _ctx.Selection.AddPoint(shape.Id, i, HandleKind.Anchor);
+                {
+                    _ctx.Selection.AddPoint(shape.Id, i,
+                        i % 2 == 0 ? HandleKind.Anchor : HandleKind.Control);
+                }
             }
         }
         if (!_marqueeUnion && _ctx.Selection.Points.Count == 0)
@@ -358,6 +365,7 @@ public sealed class PenTool : IEditorTool
             target = _ctx.Camera.SnapToPixel(target, _ctx.BaseSize, _ctx.Document.CanvasSize.x);
 
         Shape? shape = _ctx.Document.FindShape(_ctx.Selection.ActiveShapeId);
+        var boneWorlds = _ctx.BoneWorlds();
         if (shape is null || shape.Closed)
         {
             _ctx.History.Checkpoint(_ctx.Document);
@@ -368,6 +376,7 @@ public sealed class PenTool : IEditorTool
                 Closed = false,
                 Curve = new Curve(new Point(target)),
             };
+            shape.SyncNewPoints(_ctx.Document.Bones, boneWorlds);
             // New layers go on top (front) of the stack.
             _ctx.Document.Shapes.Insert(0, shape);
             _ctx.Selection.SelectPoint(shape.Id, 0, HandleKind.Anchor);
@@ -384,13 +393,13 @@ public sealed class PenTool : IEditorTool
             float tolWorld = 10f / MathF.Max(1f, _ctx.Camera.PixelsPerWorldUnit(_ctx.BaseSize));
             if ((pts[0].Position - target).Length() < tolWorld)
             {
-                shape.Curve.Close();
+                shape.CloseLoop(_ctx.Document.Bones, boneWorlds);
                 shape.Closed = true;
                 return;
             }
         }
 
-        shape.Curve.AddLinear(new Point(target));
+        shape.AddCurvePoint(target, _ctx.Document.Bones, boneWorlds);
         _ctx.Selection.SelectPoint(shape.Id, shape.Curve.Points.Count - 1, HandleKind.Anchor);
     }
 
@@ -405,7 +414,7 @@ public sealed class PenTool : IEditorTool
             if (shape is not null && !shape.Closed && shape.AnchorCount >= 3)
             {
                 _ctx.History.Checkpoint(_ctx.Document);
-                shape.Curve.Close();
+                shape.CloseLoop(_ctx.Document.Bones, _ctx.BoneWorlds());
                 shape.Closed = true;
             }
         }
@@ -414,4 +423,185 @@ public sealed class PenTool : IEditorTool
             _ctx.Selection.Clear();
         }
     }
+}
+
+
+public sealed class BoneTool : IEditorTool
+{
+    public ToolMode Mode => ToolMode.Bone;
+
+    // Screen-space offset of the rotate handle from its joint. AssetEditor
+    // draws it with the same constants — keep them in sync.
+    public const int RotateHandleDX = 20;
+    public const int RotateHandleDY = -20;
+    private const float GrabRadiusPx = 10f;
+
+    private enum DragMode
+    {
+        None,
+        Move,
+        Rotate,
+    }
+
+    private readonly ToolContext _ctx;
+    private DragMode _drag;
+    private int _boneId = -1;
+    private Vector2 _grabOffset;
+    private Vector2 _jointWorld;
+    private float _grabAngleDeg;
+    private bool _checkpointTaken;
+
+    public BoneTool(ToolContext ctx) => _ctx = ctx;
+
+    public void OnPress(Vector2 mouseScreen, Vector2 mouseWorld)
+    {
+        _drag = DragMode.None;
+        _checkpointTaken = false;
+        _boneId = -1;
+
+        var worlds = _ctx.BoneWorlds();
+
+        // Rotate handle of the selected bone first.
+        var selected = _ctx.Document.FindBone(_ctx.Selection.ActiveBoneId);
+        if (selected is not null && worlds.TryGetValue(selected.Id, out var selWorld))
+        {
+            Vector2 jointScreen = _ctx.Camera.WorldToScreen(
+                selWorld.Position, _ctx.ViewportCenter, _ctx.BaseSize);
+            Vector2 rotateScreen = jointScreen + new Vector2(RotateHandleDX, RotateHandleDY);
+            if ((mouseScreen - rotateScreen).Length() < GrabRadiusPx)
+            {
+                _ctx.Selection.SelectBone(selected.Id);
+                _drag = DragMode.Rotate;
+                _boneId = selected.Id;
+                _jointWorld = selWorld.Position;
+                _grabAngleDeg = MouseAngleDeg(mouseWorld, _jointWorld);
+                return;
+            }
+        }
+
+        // Joints, nearest wins.
+        Bone? best = null;
+        float bestDist = GrabRadiusPx;
+        Vector2 bestWorld = Vector2.Zero;
+        foreach (var candidate in _ctx.Document.Bones)
+        {
+            if (!worlds.TryGetValue(candidate.Id, out var world))
+                continue;
+            Vector2 screen = _ctx.Camera.WorldToScreen(
+                world.Position, _ctx.ViewportCenter, _ctx.BaseSize);
+            float d = (mouseScreen - screen).Length();
+            if (d < bestDist)
+            {
+                bestDist = d;
+                best = candidate;
+                bestWorld = world.Position;
+            }
+        }
+
+        if (best is not null)
+        {
+            _ctx.Selection.SelectBone(best.Id);
+            _ctx.Selection.ClearPoints();
+            _drag = DragMode.Move;
+            _boneId = best.Id;
+            _grabOffset = mouseWorld - bestWorld;
+            _jointWorld = bestWorld;
+            return;
+        }
+
+        // Empty space: create a bone parented to the selection (or a root).
+        _ctx.History.Checkpoint(_ctx.Document);
+        Vector2 target = mouseWorld;
+        if (_ctx.SnapEnabled)
+            target = _ctx.Camera.SnapToPixel(target, _ctx.BaseSize, _ctx.Document.CanvasSize.x);
+
+        int parentId = -1;
+        RigidPose parentWorld = new(Vector2.Zero, 0f);
+        var parent = _ctx.Document.FindBone(_ctx.Selection.ActiveBoneId);
+        if (parent is not null && worlds.TryGetValue(parent.Id, out var pw))
+        {
+            parentId = parent.Id;
+            parentWorld = pw;
+        }
+
+        var bone = new Bone
+        {
+            Id = _ctx.Document.NextBoneId++,
+            Name = $"Bone {_ctx.Document.Bones.Count + 1}",
+            ParentId = parentId,
+        };
+        var local = Skinning.RelativeTo(new RigidPose(target, parentWorld.AngleDeg), parentWorld);
+        bone.LocalPosition = local.Position;
+        bone.LocalAngle = 0f;
+        bone.BindPosition = target;
+        bone.BindAngle = parentWorld.AngleDeg;
+        _ctx.Document.Bones.Add(bone);
+        _ctx.Selection.SelectBone(bone.Id);
+        _ctx.Selection.ClearPoints();
+    }
+
+    public void OnDrag(Vector2 mouseScreen, Vector2 mouseWorld, Vector2 grabWorld)
+    {
+        if (_drag == DragMode.None)
+            return;
+
+        var bone = _ctx.Document.FindBone(_boneId);
+        if (bone is null)
+            return;
+
+        if (!_checkpointTaken)
+        {
+            _ctx.History.Checkpoint(_ctx.Document);
+            _checkpointTaken = true;
+        }
+
+        if (_drag == DragMode.Move)
+        {
+            Vector2 target = mouseWorld - _grabOffset;
+            if (_ctx.SnapEnabled)
+                target = _ctx.Camera.SnapToPixel(target, _ctx.BaseSize, _ctx.Document.CanvasSize.x);
+
+            var worlds = _ctx.BoneWorlds();
+            RigidPose parentWorld = new(Vector2.Zero, 0f);
+            if (bone.ParentId >= 0
+                && _ctx.Document.FindBone(bone.ParentId) is not null
+                && worlds.TryGetValue(bone.ParentId, out var pw))
+            {
+                parentWorld = pw;
+            }
+            // Keep the current world angle; only the joint translates.
+            var current = worlds.TryGetValue(bone.Id, out var w)
+                ? w
+                : new RigidPose(bone.LocalPosition, bone.LocalAngle);
+            var local = Skinning.RelativeTo(
+                new RigidPose(target, current.AngleDeg), parentWorld);
+            bone.LocalPosition = local.Position;
+        }
+        else
+        {
+            float angle = MouseAngleDeg(mouseWorld, _jointWorld);
+            bone.LocalAngle += angle - _grabAngleDeg;
+            _grabAngleDeg = angle;
+        }
+    }
+
+    public void OnRelease() => _drag = DragMode.None;
+
+    public void OnKeyShortcut(Keycode key)
+    {
+        if (key == Keycode.Delete || key == Keycode.Backspace)
+        {
+            if (_ctx.Selection.ActiveBoneId >= 0)
+                Rigging.DeleteBone(_ctx.Document, _ctx.History, _ctx.Selection,
+                    _ctx.Selection.ActiveBoneId);
+        }
+        else if (key == Keycode.Escape)
+        {
+            _ctx.Selection.ClearBone();
+        }
+    }
+
+    private static float MouseAngleDeg(Vector2 mouseWorld, Vector2 jointWorld) =>
+        MathF.Atan2(mouseWorld.y - jointWorld.y, mouseWorld.x - jointWorld.x)
+            * 180f / MathF.PI;
 }

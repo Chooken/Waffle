@@ -1,11 +1,13 @@
 using WaffleEngine;
+using WaffleEngine.Rendering;
 using WaffleEngine.Rendering.Immediate;
 using WaffleEngine.UI;
 using Rect = WaffleEngine.UI.Nodes.Rect;
 
 namespace Vector.Editor.UI;
 
-// Horizontal 0..1 slider. Owner sets Label/Value; drag calls OnChange.
+// Horizontal 0..1 slider in the macOS idiom: thin track, accent fill,
+// round white knob. Owner sets Label/Value; drag calls OnChange.
 // Grab/release actions let owners checkpoint once per gesture.
 public class Slider : Rect
 {
@@ -15,15 +17,21 @@ public class Slider : Rect
     public Action? OnGrab;
     public Action? OnRelease;
 
+    // Gradient track (color pickers): when true the bar renders Gradient
+    // through ui-gradient instead of the flat rest/fill look.
+    public bool GradientTrack;
+    public UiGradientData Gradient;
+
     private const int Pad = 8;
     private const int LabelW = 52;
+    private const float TrackH = 10f;
+    private const float KnobD = 16f;
     private bool _drag;
     private readonly UiText _label = new();
 
     public override void OnInit()
     {
-        Color = Theme.TrackBackground;
-        BorderRadius = new Vector4(Theme.CornerRadius, Theme.CornerRadius, Theme.CornerRadius, Theme.CornerRadius);
+        Color = new Color(0, 0, 0, 0);
     }
 
     public override void OnUpdate()
@@ -82,18 +90,32 @@ public class Slider : Rect
         {
             float trackX = Rect.x + LabelW + Pad * 2;
             float trackW = Math.Max(0, Rect.w - LabelW - Pad * 3);
-            float barH = 8;
-            float barY = Rect.y + (Rect.h - barH) / 2;
+            float barY = Rect.y + (Rect.h - TrackH) / 2;
+            float knobX = trackX + trackW * Value;
             renderPass.Bind(shader);
-            float restW = trackW * (1 - Value);
-            if (restW > 0.5f)
+            bool gradientDrawn = false;
+            if (GradientTrack
+                && Assets.TryGetShader("builtin", "ui-gradient", out var gradient))
+            {
+                var g = Gradient;
+                g.Position = new Vector4(trackX, barY, 0, 0);
+                g.Size = new Vector4(trackW, TrackH, 0, 0);
+                g.RenderSize = new Vector4(screen.x, screen.y, 0, 0);
+                g.Clip = new Vector4(clip.Min.x, clip.Min.y, clip.Max.x, clip.Max.y);
+                renderPass.Bind(gradient);
+                renderPass.SetUniforms(g);
+                renderPass.DrawPrimatives(6, 1, 0, 0);
+                renderPass.Bind(shader);
+                gradientDrawn = true;
+            }
+            if (!gradientDrawn && trackW > 0.5f)
             {
                 renderPass.SetUniforms(new Rect.UIRectData
                 {
-                    Position = new AlignedVector3(trackX + trackW * Value, barY, 0),
-                    Size = new Vector2(restW, barH),
-                    Color = Theme.TrackRest,
-                    BorderRadius = new Vector4(Theme.ChipRadius, Theme.ChipRadius, Theme.ChipRadius, Theme.ChipRadius),
+                    Position = new AlignedVector3(trackX, barY, 0),
+                    Size = new Vector2(trackW, TrackH),
+                    Color = Theme.Highlight,
+                    BorderRadius = new Vector4(2, 2, 2, 2),
                     BorderColor = new Vector4(0, 0, 0, 0),
                     ScreenSize = screen,
                     BorderSize = 0f,
@@ -103,14 +125,14 @@ public class Slider : Rect
                 renderPass.DrawPrimatives(6, 1, 0, 0);
             }
             float fillW = trackW * Value;
-            if (fillW > 0.5f)
+            if (!gradientDrawn && fillW > 0.5f)
             {
                 renderPass.SetUniforms(new Rect.UIRectData
                 {
                     Position = new AlignedVector3(trackX, barY, 0),
-                    Size = new Vector2(fillW, barH),
-                    Color = Theme.TrackFill,
-                    BorderRadius = new Vector4(Theme.ChipRadius, Theme.ChipRadius, Theme.ChipRadius, Theme.ChipRadius),
+                    Size = new Vector2(fillW, TrackH),
+                    Color = Theme.Accent,
+                    BorderRadius = new Vector4(2, 2, 2, 2),
                     BorderColor = new Vector4(0, 0, 0, 0),
                     ScreenSize = screen,
                     BorderSize = 0f,
@@ -119,6 +141,19 @@ public class Slider : Rect
                 });
                 renderPass.DrawPrimatives(6, 1, 0, 0);
             }
+            renderPass.SetUniforms(new Rect.UIRectData
+            {
+                Position = new AlignedVector3(knobX - KnobD / 2, Rect.y + (Rect.h - KnobD) / 2, 0),
+                Size = new Vector2(KnobD, KnobD),
+                Color = Color.White,
+                BorderRadius = new Vector4(KnobD / 2, KnobD / 2, KnobD / 2, KnobD / 2),
+                BorderColor = Theme.Border,
+                ScreenSize = screen,
+                BorderSize = 2f,
+                ClipMin = clip.Min,
+                ClipMax = clip.Max,
+            });
+            renderPass.DrawPrimatives(6, 1, 0, 0);
         }
 
         _label.Draw(renderPass,
